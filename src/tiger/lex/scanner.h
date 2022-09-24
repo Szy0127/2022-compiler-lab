@@ -53,7 +53,8 @@ private:
 
   // std::string string_before_ignore;
   // bool ignore_newline_flag = false;
-  size_t ignore_begin_length;
+  size_t ignore_begin_length=0;
+  int comment_depth=0;
 
   /**
    * NOTE: do not change all the funtion signature below, which is used by
@@ -78,6 +79,9 @@ private:
   // void ignore_newline();
   void ignore_begin();
   void ignore_finish();
+
+  void comment_begin();
+  void comment_finish();
 };
 
 inline int Scanner::lex() { return lex__(); }
@@ -166,6 +170,21 @@ inline void Scanner::ignore_finish(){
   char_pos_ += s.length()-ignore_begin_length+1;
   s.erase(s.begin()+ignore_begin_length-1,s.end());
   setMatched(s);
+}
+
+inline void Scanner::comment_begin(){
+  if(comment_depth == 0){
+    begin(StartCondition__::COMMENT);
+  }
+  comment_depth++;
+  // std::cout<<"comment_begin"<<comment_depth<<std::endl;
+}
+inline void Scanner::comment_finish(){
+  comment_depth--;
+  if(comment_depth==0){
+    begin(StartCondition__::INITIAL);
+  }
+  // std::cout<<"comment_finish"<<comment_depth<<std::endl;
 }
 // inline void Scanner::ignore(){
 //   if(ignore_newline_flag){

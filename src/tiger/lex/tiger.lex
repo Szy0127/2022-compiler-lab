@@ -17,7 +17,8 @@
  /* TODO: Put your lab2 code here */
 
 <COMMENT>{
-  "*/"   {adjust();begin(StartCondition__::INITIAL);}
+  "*/"   {adjust();comment_finish();}
+  "/*"   {adjust();comment_begin();}
   \n      {adjust();}
   .      {adjust();}
 }
@@ -41,7 +42,7 @@
 
 <INITIAL>{
 
-  "/*" {adjust();begin(StartCondition__::COMMENT);}
+  "/*" {adjust();comment_begin();}
   \" {adjust();handle_string_begin();more();begin(StartCondition__::STR);}
 
 
