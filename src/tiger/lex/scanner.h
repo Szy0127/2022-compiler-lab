@@ -51,6 +51,10 @@ private:
   int char_pos_;
   std::unique_ptr<err::ErrorMsg> errormsg_;
 
+  // std::string string_before_ignore;
+  // bool ignore_newline_flag = false;
+  size_t ignore_begin_length;
+
   /**
    * NOTE: do not change all the funtion signature below, which is used by
    * flexc++ internally
@@ -70,8 +74,10 @@ private:
   void handle_ddd();
   void handle_ctrl();
 
-  void ignore();
-
+  // void ignore();
+  // void ignore_newline();
+  void ignore_begin();
+  void ignore_finish();
 };
 
 inline int Scanner::lex() { return lex__(); }
@@ -99,6 +105,7 @@ inline void Scanner::handle_string_finish(){
   s.pop_back();
   setMatched(s);
   char_pos_ += 1;
+  // std::cout<<"string:"<<s<<std::endl;
 }
 inline void Scanner::handle_string_begin(){
   setMatched("");
@@ -148,11 +155,42 @@ inline void Scanner::handle_ddd(){
 
 }
 
-inline void Scanner::ignore(){
+
+inline void Scanner::ignore_begin(){
+  ignore_begin_length = matched().length();
+  // std::cout<<ignore_begin_length<<std::endl;
+}
+
+inline void Scanner::ignore_finish(){
   std::string s = matched();
-  s.pop_back();
+  char_pos_ += s.length()-ignore_begin_length+1;
+  s.erase(s.begin()+ignore_begin_length-1,s.end());
   setMatched(s);
 }
+// inline void Scanner::ignore(){
+//   if(ignore_newline_flag){
+//     setMatched(string_before_ignore);
+//     std::cout<<"reset:"<<string_before_ignore<<std::endl;
+//   }else{
+//       std::string s = matched();
+//       std::cout<<"before ignore:"<<s<<"#"<<std::endl;
+//       s.pop_back();
+//       std::cout<<"after ignore:"<<s<<"#"<<std::endl;
+//       setMatched(s);
+//       string_before_ignore = s;
+//   }
+//   ignore_newline_flag = false;
+
+// }
+
+// inline void Scanner::ignore_newline(){
+//   std::string s = matched();
+//   std::cout<<"ignore newline:"<<s<<std::endl;
+//   s.pop_back();
+//   setMatched(s);
+//   string_before_ignore = s;
+//   ignore_newline_flag = true;
+// }
 
 
 #endif // TIGER_LEX_SCANNER_H_

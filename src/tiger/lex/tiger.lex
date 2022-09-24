@@ -22,15 +22,17 @@
 
 <IGNORE>{
 
-  \\  {ignore();begin(StartCondition__::STR);more();}
-  .   {ignore();more();}
+  \\      {ignore_finish();begin(StartCondition__::STR);more();}
+  [ \t]+  {more();}
+  \n      {more(); }/*errormsg_->Newline();}*/
+  /*.       {more();}*/
 }
 <STR>{
 \"                  {begin(StartCondition__::INITIAL);handle_string_finish();adjustStr();return Parser::STRING;}
 \\[tn"\\]           {handle_tn();more();}
 \\[0-9][0-9][0-9]   {handle_ddd();more();}
 \\\^[A-Z]           {handle_ctrl();more();}
-\\                  {ignore();begin(StartCondition__::IGNORE);more();}
+\\                  {ignore_begin();begin(StartCondition__::IGNORE);more();}
 .                   {more();}
 }
 
