@@ -63,6 +63,15 @@ private:
   void postCode(PostEnum__ type);
   void adjust();
   void adjustStr();
+
+  void handle_string_begin();
+  void handle_string_finish();
+  void handle_tn();
+  void handle_ddd();
+  void handle_ctrl();
+
+  void ignore();
+
 };
 
 inline int Scanner::lex() { return lex__(); }
@@ -83,5 +92,67 @@ inline void Scanner::adjust() {
 }
 
 inline void Scanner::adjustStr() { char_pos_ += length(); }
+
+inline void Scanner::handle_string_finish(){
+  std::string s = matched();
+  // s.erase(0,1);
+  s.pop_back();
+  setMatched(s);
+  char_pos_ += 1;
+}
+inline void Scanner::handle_string_begin(){
+  setMatched("");
+  // char_pos_ += 1;
+  // errormsg_->tok_pos_++;
+  // according to answer, pos of string is the location after "
+}
+
+
+inline void Scanner::handle_tn(){
+  std::string s = matched();
+  char c = s[s.length()-1];
+  // std::cout<<c<<std::endl;
+  s.erase(s.end()-2,s.end());
+  switch(c){
+    case 'n':s.push_back('\n');break;
+    case 't':s.push_back('\t');break;
+    case '"':s.push_back('"');break;
+    case '\\':s.push_back('\\');break;
+  }
+  // std::cout<<s<<std::endl;
+  setMatched(s);
+  char_pos_ += 1;
+}
+inline void Scanner::handle_ctrl(){
+  std::string s = matched();
+  char c = s[s.length()-1];
+  // std::cout<<c<<std::endl;
+  s.erase(s.end()-3,s.end());
+  s.push_back(c-'A'+1);
+  // std::cout<<s<<std::endl;
+  setMatched(s);
+  char_pos_ += 2;
+}
+
+
+inline void Scanner::handle_ddd(){
+  std::string s = matched();
+  std::string code = s.substr(s.length()-3);
+  s.erase(s.end()-4,s.end());
+  char c = std::stoi(code);
+  // std::cout<<c<<std::endl;
+  s.push_back(c);
+  setMatched(s);
+
+  char_pos_ += 3;
+
+}
+
+inline void Scanner::ignore(){
+  std::string s = matched();
+  s.pop_back();
+  setMatched(s);
+}
+
 
 #endif // TIGER_LEX_SCANNER_H_
