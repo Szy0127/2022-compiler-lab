@@ -91,8 +91,8 @@
 "of" {adjust(); return Parser::OF;}
 
 
-[[:alpha:]] {adjust(); return Parser::ID;}
-[[:alpha:]][[:alnum:]]* {adjust(); return Parser::ID;}
+
+[[:alpha:]][[:alnum:]_]* {adjust(); return Parser::ID;}
 [[:digit:]]+ {adjust(); return Parser::INT;}
 
 
