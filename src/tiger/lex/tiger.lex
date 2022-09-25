@@ -12,12 +12,12 @@
 %%
 
 
- /* reserved words */
-"array" {adjust(); return Parser::ARRAY;}
- /* TODO: Put your lab2 code here */
+<COMMENT><<EOF>>  {errormsg_->Error(errormsg_->tok_pos_, "illegal comment: lost */");return 0;}
+<STRING><<EOF>>   {errormsg_->Error(errormsg_->tok_pos_, "illegal string: lost \"");return 0;}
+<IGNORE><<EOF>>   {errormsg_->Error(errormsg_->tok_pos_, "illegal string: lost \\");return 0;}
+/*<INITIAL><<EOF>>  {if(number.empty())return 0;else{setMatched(number);number.clear();return Parser::INT;}}*/
 
 <COMMENT>{
-  <<EOF>> {errormsg_->Error(errormsg_->tok_pos_, "illegal comment: lost */");}
   "*/"   {adjust();comment_finish();}
   "/*"   {adjust();comment_begin();}
   \n      {adjust();errormsg_->Newline();}
@@ -26,14 +26,12 @@
 
 
 <IGNORE>{
-  <<EOF>> {errormsg_->Error(errormsg_->tok_pos_, "illegal string: lost \"");}
   \\      {ignore_finish();begin(StartCondition__::STRING);more();}
   [ \t]+  {more();}
   \n      {more();errormsg_->Newline();}
-  .       {more();errormsg_->Error(char_pos_, "illegal string literal: only white space can be used between / ");}
+  .       {more();errormsg_->Error(char_pos_, "illegal string literal: only white space can be used between \\ ");}
 }
 <STRING>{
-  <<EOF>> {errormsg_->Error(errormsg_->tok_pos_, "illegal string: lost \"");}
   \"                  {begin(StartCondition__::INITIAL);handle_string_finish();adjustStr();return Parser::STRING;}
   \\[tn"\\]           {handle_tn();more();}
   \\[[:digit:]]{3,3}    {handle_number();more();}
@@ -77,12 +75,12 @@
   ">" {adjust(); return Parser::GT;}
   ">=" {adjust(); return Parser::GE;}
 
-
-
   ":=" {adjust(); return Parser::ASSIGN;}
+
+ /* reserved words */
   "nil" {adjust(); return Parser::NIL;}
   "var" {adjust(); return Parser::VAR;}
-
+  "array" {adjust(); return Parser::ARRAY;}
   "if" {adjust(); return Parser::IF;}
   "then" {adjust(); return Parser::THEN;}
   "else" {adjust(); return Parser::ELSE;}
@@ -99,10 +97,18 @@
   "of" {adjust(); return Parser::OF;}
 
 
+  /*
+  [[:alpha:]][[:alnum:]_]* {adjust(); if(int_flag){errormsg_->Error(errormsg_->tok_pos_, "illegal token");int_flag=false;}else{int_flag=false;return Parser::ID;}}
+  */
+  [[:alpha:]][[:alnum:]_]* {adjust();return Parser::ID;}
 
-  [[:alpha:]][[:alnum:]_]* {adjust(); return Parser::ID;}
-  [[:digit:]]+ {adjust(); return Parser::INT;}
+  [[:digit:]]+ {adjust();return Parser::INT;}
 
+  /*
+  [[:digit:]]+[ \t]+ {adjust();return Parser::INT;}
+  [[:digit:]]+\n {adjust();errormsg_->Newline();return Parser::INT;}
+  [[:digit:]]+ {adjust();number=matched();}
+  */
 
   /*
     * skip white space chars.

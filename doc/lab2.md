@@ -127,8 +127,8 @@ void Scanner::ignore_finish() {
 
 ## error handling
 
-- \ddd not belongs to 0-127:scanner.h
-- \f___f\ contains character which is not white space:scanner.h
+- \ddd not belongs to 0-127: check in scanner.h
+- \f___f\ contains character which is not white space: check in scanner.h
 - dismatch of " and /*: EOF in tiger.lex
 - wrong token: tiger.lex
 
@@ -136,7 +136,10 @@ void Scanner::ignore_finish() {
 
 ```
 //tiger.lex
-<COMMENT><<EOF>> {errormsg_->Error(tok_pos_, "illegal comment: lost */");}
-<STRING><<EOF>> {errormsg_->Error(tok_pos_, "illegal string: lost \"");}
-<IGNORE><<EOF>> {errormsg_->Error(tok_pos_, "illegal string: lost \"");}
+<COMMENT><<EOF>>{errormsg_->Error(errormsg_->tok_pos_, "illegal comment: lost */");return 0;}
+<STRING><<EOF>> {errormsg_->Error(errormsg_->tok_pos_, "illegal string: lost \"");return 0;}
+<IGNORE><<EOF>> {errormsg_->Error(errormsg_->tok_pos_, "illegal string: lost \\");return 0;}
 ```
+
+After digging into the code in *lex.cc* and *scannerbase.h*, I found that the priority of a matched state is higher than EOF. EOF can easily make function return, while if matched, we have to explicit return in tiger.lex, otherwise an infinite loop will appear.Besides, *lex.cc* returns 0 when encouting EOF so we must also return 0 to achieve the same behaviour.
+

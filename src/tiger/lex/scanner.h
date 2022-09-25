@@ -53,8 +53,11 @@ private:
 
   // std::string string_before_ignore;
   // bool ignore_newline_flag = false;
-  size_t ignore_begin_length = 0;
+  size_t ignore_begin_length = 0; 
   int comment_depth = 0;
+  bool int_flag = false;
+
+  std::string number="";
 
   /**
    * NOTE: do not change all the funtion signature below, which is used by
@@ -82,6 +85,7 @@ private:
 
   void comment_begin();
   void comment_finish();
+
 };
 
 inline int Scanner::lex() { return lex__(); }
@@ -146,7 +150,7 @@ inline void Scanner::handle_ctrl() {
   char c = s[s.length() - 1];
   // std::cout<<c<<std::endl;
   if(c < 'A' || c > 'Z'){
-    errormsg_->Error(char_pos_, "illegal string literal: /^C A-Z");
+    errormsg_->Error(char_pos_, "illegal string literal: \\^C A-Z");
     return;
   }
   s.erase(s.end() - 3, s.end());
@@ -161,7 +165,7 @@ inline void Scanner::handle_number() {
   std::string code = s.substr(s.length() - 3);
   int ci = std::stoi(code);
   if(ci >= 128){
-    errormsg_->Error(char_pos_, "illegal string literal: /ddd 0-127");
+    errormsg_->Error(char_pos_, "illegal string literal: \\ddd 0-127");
     return;
   }
   char c = static_cast<char>(ci);
@@ -199,6 +203,8 @@ inline void Scanner::comment_finish() {
   }
   // std::cout<<"comment_finish"<<comment_depth<<std::endl;
 }
+
+
 // inline void Scanner::ignore(){
 //   if(ignore_newline_flag){
 //     setMatched(string_before_ignore);
