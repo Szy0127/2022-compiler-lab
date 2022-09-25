@@ -143,3 +143,39 @@ void Scanner::ignore_finish() {
 
 After digging into the code in *lex.cc* and *scannerbase.h*, I found that the priority of a matched state is higher than EOF. EOF can easily make function return, while if matched, we have to explicit return in tiger.lex, otherwise an infinite loop will appear.Besides, *lex.cc* returns 0 when encouting EOF so we must also return 0 to achieve the same behaviour.
 
+## other interesting features 
+
+As we all know `var a:= 1a` is wrong because 1a is a wrong identifier
+
+however,if we use correct regular expression in *tiger.lex*, the result will be (INT,1),(ID,2).We can only find the mistake in next phase.
+
+ After trying at least 3 methods,I choose to use a more flexible regular expression to match both ID and INT in *tiger.lex*, and make judge by myself in *scanner.h*
+
+```
+//tiger.lex
+[[:alnum:]][[:alnum:]_]* {adjust();switch(dispose_id()){case 0:return Parser::ID;case 1:return Parser::INT;default:errormsg_->Error(errormsg_->tok_pos_, "illegal token");}}
+```
+
+```c++
+//scanner.h
+int Scanner::dispose_id(){
+  std::string s = matched();
+  //id can't start with _
+  if(s[0] == '_'){
+    return 2;
+  }
+  //id
+  if(s[0] > '9'){
+    return 0;
+  }
+  auto len = s.length();
+  //int
+  for(auto i = 1 ; i < len ;i++){
+    if(s[i] > '9'){
+      return 2;//error starts with number and follows not number
+    }
+  }
+  return 1;//int
+}
+```
+

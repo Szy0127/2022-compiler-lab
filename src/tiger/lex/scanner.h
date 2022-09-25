@@ -55,9 +55,9 @@ private:
   // bool ignore_newline_flag = false;
   size_t ignore_begin_length = 0; 
   int comment_depth = 0;
-  bool int_flag = false;
+  // bool int_flag = false;
 
-  std::string number="";
+  // std::string number="";
 
   /**
    * NOTE: do not change all the funtion signature below, which is used by
@@ -85,6 +85,8 @@ private:
 
   void comment_begin();
   void comment_finish();
+
+  int dispose_id();
 
 };
 
@@ -204,6 +206,28 @@ inline void Scanner::comment_finish() {
   // std::cout<<"comment_finish"<<comment_depth<<std::endl;
 }
 
+
+inline int Scanner::dispose_id(){
+  std::string s = matched();
+  // std::cout<<"id:"<<s<<"#"<<std::endl;
+  //id can't start with _
+  if(s[0] == '_'){
+    return 2;
+  }
+  //id
+  if(s[0] > '9'){
+    return 0;
+  }
+
+  auto len = s.length();
+  //int
+  for(auto i = 1 ; i < len ;i++){
+    if(s[i] > '9'){
+      return 2;//error starts with number and follows not number
+    }
+  }
+  return 1;//int
+}
 
 // inline void Scanner::ignore(){
 //   if(ignore_newline_flag){

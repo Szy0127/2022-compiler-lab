@@ -97,13 +97,17 @@
   "of" {adjust(); return Parser::OF;}
 
 
+  [[:alnum:]][[:alnum:]_]* {adjust();switch(dispose_id()){case 0:return Parser::ID;case 1:return Parser::INT;default:errormsg_->Error(errormsg_->tok_pos_, "illegal token");}}
+
   /*
   [[:alpha:]][[:alnum:]_]* {adjust(); if(int_flag){errormsg_->Error(errormsg_->tok_pos_, "illegal token");int_flag=false;}else{int_flag=false;return Parser::ID;}}
   */
-  [[:alpha:]][[:alnum:]_]* {adjust();return Parser::ID;}
 
+  /*
+  [[:alpha:]][[:alnum:]_]* {adjust();return Parser::ID;}
   [[:digit:]]+ {adjust();return Parser::INT;}
 
+  */
   /*
   [[:digit:]]+[ \t]+ {adjust();return Parser::INT;}
   [[:digit:]]+\n {adjust();errormsg_->Newline();return Parser::INT;}
