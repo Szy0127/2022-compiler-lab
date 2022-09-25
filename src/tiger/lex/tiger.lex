@@ -7,7 +7,7 @@
  /* You can add lex definitions here. */
  /* TODO: Put your lab2 code here */
 
-%x COMMENT STR IGNORE
+%x COMMENT STRING IGNORE
 
 %%
 
@@ -17,24 +17,26 @@
  /* TODO: Put your lab2 code here */
 
 <COMMENT>{
+  <<EOF>> {errormsg_->Error(errormsg_->tok_pos_, "illegal comment: lost */");}
   "*/"   {adjust();comment_finish();}
   "/*"   {adjust();comment_begin();}
-  \n      {adjust();}
+  \n      {adjust();errormsg_->Newline();}
   .      {adjust();}
 }
 
 
 <IGNORE>{
-
-  \\      {ignore_finish();begin(StartCondition__::STR);more();}
+  <<EOF>> {errormsg_->Error(errormsg_->tok_pos_, "illegal string: lost \"");}
+  \\      {ignore_finish();begin(StartCondition__::STRING);more();}
   [ \t]+  {more();}
-  \n      {more(); }/*errormsg_->Newline();}*/
-  /*.       {more();}*/
+  \n      {more();errormsg_->Newline();}
+  .       {more();errormsg_->Error(char_pos_, "illegal string literal: only white space can be used between / ");}
 }
-<STR>{
+<STRING>{
+  <<EOF>> {errormsg_->Error(errormsg_->tok_pos_, "illegal string: lost \"");}
   \"                  {begin(StartCondition__::INITIAL);handle_string_finish();adjustStr();return Parser::STRING;}
   \\[tn"\\]           {handle_tn();more();}
-  \\[0-9][0-9][0-9]   {handle_ddd();more();}
+  \\[[:digit:]]{3,3}    {handle_number();more();}
   \\\^[A-Z]           {handle_ctrl();more();}
   \\                  {ignore_begin();begin(StartCondition__::IGNORE);more();}
   .                   {more();}
@@ -43,7 +45,7 @@
 <INITIAL>{
 
   "/*" {adjust();comment_begin();}
-  \" {adjust();handle_string_begin();more();begin(StartCondition__::STR);}
+  \" {adjust();handle_string_begin();more();begin(StartCondition__::STRING);}
 
 
   "," {adjust(); return Parser::COMMA;}
