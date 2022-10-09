@@ -51,6 +51,14 @@ private:
   int char_pos_;
   std::unique_ptr<err::ErrorMsg> errormsg_;
 
+  // std::string string_before_ignore;
+  // bool ignore_newline_flag = false;
+  size_t ignore_begin_length = 0; 
+  int comment_depth = 0;
+  // bool int_flag = false;
+
+  // std::string number="";
+
   /**
    * NOTE: do not change all the funtion signature below, which is used by
    * flexc++ internally
@@ -63,6 +71,23 @@ private:
   void postCode(PostEnum__ type);
   void adjust();
   void adjustStr();
+
+  void handle_string_begin();
+  void handle_string_finish();
+  void handle_tn();
+  void handle_number();
+  void handle_ctrl();
+
+  // void ignore();
+  // void ignore_newline();
+  void ignore_begin();
+  void ignore_finish();
+
+  void comment_begin();
+  void comment_finish();
+
+  int dispose_id();
+
 };
 
 inline int Scanner::lex() { return lex__(); }
@@ -83,5 +108,150 @@ inline void Scanner::adjust() {
 }
 
 inline void Scanner::adjustStr() { char_pos_ += length(); }
+
+inline void Scanner::handle_string_finish() {
+  std::string s = matched();
+  // s.erase(0,1);
+  s.pop_back();
+  setMatched(s);
+  char_pos_ += 1;
+  // std::cout<<"string:"<<s<<std::endl;
+}
+inline void Scanner::handle_string_begin() {
+  setMatched("");
+  // char_pos_ += 1;
+  // errormsg_->tok_pos_++;
+  // according to answer, pos of string is the location after "
+}
+
+inline void Scanner::handle_tn() {
+  std::string s = matched();
+  char c = s[s.length() - 1];
+  // std::cout<<c<<std::endl;
+  s.erase(s.end() - 2, s.end());
+  switch (c) {
+  case 'n':
+    s.push_back('\n');
+    break;
+  case 't':
+    s.push_back('\t');
+    break;
+  case '"':
+    s.push_back('"');
+    break;
+  case '\\':
+    s.push_back('\\');
+    break;
+  }
+  // std::cout<<s<<std::endl;
+  setMatched(s);
+  char_pos_ += 1;
+}
+inline void Scanner::handle_ctrl() {
+  std::string s = matched();
+  char c = s[s.length() - 1];
+  // std::cout<<c<<std::endl;
+  if(c < 'A' || c > 'Z'){
+    errormsg_->Error(char_pos_, "illegal string literal: \\^C A-Z");
+    return;
+  }
+  s.erase(s.end() - 3, s.end());
+  s.push_back(c - 'A' + 1);
+  // std::cout<<s<<std::endl;
+  setMatched(s);
+  char_pos_ += 2;
+}
+
+inline void Scanner::handle_number() {
+  std::string s = matched();
+  std::string code = s.substr(s.length() - 3);
+  int ci = std::stoi(code);
+  if(ci >= 128){
+    errormsg_->Error(char_pos_, "illegal string literal: \\ddd 0-127");
+    return;
+  }
+  char c = static_cast<char>(ci);
+  s.erase(s.end() - 4, s.end());
+  // std::cout<<c<<std::endl;
+  s.push_back(c);
+  setMatched(s);
+
+  char_pos_ += 3;
+}
+
+inline void Scanner::ignore_begin() {
+  ignore_begin_length = matched().length();
+  // std::cout<<ignore_begin_length<<std::endl;
+}
+
+inline void Scanner::ignore_finish() {
+  std::string s = matched();
+  char_pos_ += s.length() - ignore_begin_length + 1;
+  s.erase(s.begin() + ignore_begin_length - 1, s.end());
+  setMatched(s);
+}
+
+inline void Scanner::comment_begin() {
+  if (comment_depth == 0) {
+    begin(StartCondition__::COMMENT);
+  }
+  comment_depth++;
+  // std::cout<<"comment_begin"<<comment_depth<<std::endl;
+}
+inline void Scanner::comment_finish() {
+  comment_depth--;
+  if (comment_depth == 0) {
+    begin(StartCondition__::INITIAL);
+  }
+  // std::cout<<"comment_finish"<<comment_depth<<std::endl;
+}
+
+
+inline int Scanner::dispose_id(){
+  std::string s = matched();
+  // std::cout<<"id:"<<s<<"#"<<std::endl;
+  //id can't start with _
+  if(s[0] == '_'){
+    return 2;
+  }
+  //id
+  if(s[0] > '9'){
+    return 0;
+  }
+
+  auto len = s.length();
+  //int
+  for(auto i = 1 ; i < len ;i++){
+    if(s[i] > '9'){
+      return 2;//error starts with number and follows not number
+    }
+  }
+  return 1;//int
+}
+
+// inline void Scanner::ignore(){
+//   if(ignore_newline_flag){
+//     setMatched(string_before_ignore);
+//     std::cout<<"reset:"<<string_before_ignore<<std::endl;
+//   }else{
+//       std::string s = matched();
+//       std::cout<<"before ignore:"<<s<<"#"<<std::endl;
+//       s.pop_back();
+//       std::cout<<"after ignore:"<<s<<"#"<<std::endl;
+//       setMatched(s);
+//       string_before_ignore = s;
+//   }
+//   ignore_newline_flag = false;
+
+// }
+
+// inline void Scanner::ignore_newline(){
+//   std::string s = matched();
+//   std::cout<<"ignore newline:"<<s<<std::endl;
+//   s.pop_back();
+//   setMatched(s);
+//   string_before_ignore = s;
+//   ignore_newline_flag = true;
+// }
 
 #endif // TIGER_LEX_SCANNER_H_

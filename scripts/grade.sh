@@ -44,7 +44,7 @@ test_lab2() {
     ./test_lex "$testcase" >&/tmp/output.txt
     diff /tmp/output.txt "${ref}"
     if [[ $? != 0 ]]; then
-      echo "Error: Output mismatch"
+      echo "Error: ${testcase} Output mismatch"
       echo "${score_str}: 0"
       exit 1
     fi
