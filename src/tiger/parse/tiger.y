@@ -72,10 +72,19 @@ lvalue:  lvalue DOT ID {$$ = new absyn::FieldVar(scanner_.GetTokPos(), $1,$3);}
   | ID  {$$ = new absyn::SimpleVar(scanner_.GetTokPos(), $1);}
   ;
 
+
+/* shift/reduce conflict in a[10] and a[10] of 1 */
+one : ID LBRACK exp RBRACK {$$ = new absyn::SubscriptVar(scanner_.GetTokPos(), new absyn::SimpleVar(scanner_.GetTokPos(), $1),$3);};
+
  /* TODO: Put your lab3 code here */
 
 exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.GetTokPos(),$2,new absyn::SeqExp(scanner_.GetTokPos(),$4));}
-  | ID LBRACK exp RBRACK OF exp {$$ = new absyn::ArrayExp(scanner_.GetTokPos(),$1,$3,$6);}
+  /*| ID LBRACK exp RBRACK OF exp {$$ = new absyn::ArrayExp(scanner_.GetTokPos(),$1,$3,$6);}*/
+  | one OF exp {auto scvar = static_cast<absyn::SubscriptVar*>($1);
+    auto svar = static_cast<absyn::SimpleVar*>(scvar->var_);
+    $$ = new absyn::ArrayExp(scanner_.GetTokPos(),svar->sym_,scvar->subscript_,$3);}
+    /*fake subscriptvar is unused*/
+  | one {$$ = new absyn::VarExp(scanner_.GetTokPos(),$1);}
   | INT {$$ = new absyn::IntExp(scanner_.GetTokPos(),$1);}
   | lvalue {$$ = new absyn::VarExp(scanner_.GetTokPos(),$1);}
   | ID LBRACE rec RBRACE {$$ = new absyn::RecordExp(scanner_.GetTokPos(),$1,$3);}
