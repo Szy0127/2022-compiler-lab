@@ -61,8 +61,8 @@ test_lab3() {
   local testcase_name
 
   build test_parse
-  # for testcase in "$testcase_dir"/*.tig; do
-    testcase="/home/stu/tiger-compiler/testdata/lab3/testcases/test3.tig"
+  for testcase in "$testcase_dir"/*.tig; do
+    # testcase="/home/stu/tiger-compiler/testdata/lab3/testcases/test24.tig"
     testcase_name=$(basename "$testcase" | cut -f1 -d".")
     local ref=${ref_dir}/${testcase_name}.out
 
@@ -104,7 +104,7 @@ test_lab3() {
       fi
     fi
     echo "pass [$testcase_name]"
-  # done
+  done
 
   echo "[^_^]: Pass"
   echo "${score_str}: 100"

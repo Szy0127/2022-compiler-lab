@@ -62,8 +62,9 @@
 %%
 program:  exp  {absyn_tree_ = std::make_unique<absyn::AbsynTree>($1);};
 
-lvalue:  ID  {$$ = new absyn::SimpleVar(scanner_.GetTokPos(), $1);}
-  |  oneormore  {$$ = $1;}
+lvalue:  lvalue DOT ID {$$ = new absyn::FieldVar(scanner_.GetTokPos(), $1,$3);}
+  | lvalue LBRACK exp RBRACK {$$ = new absyn::SubscriptVar(scanner_.GetTokPos(), $1,$3);}
+  | ID  {$$ = new absyn::SimpleVar(scanner_.GetTokPos(), $1);}
   ;
 
  /* TODO: Put your lab3 code here */
@@ -72,12 +73,48 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
   | ID LBRACK exp RBRACK OF exp {$$ = new absyn::ArrayExp(scanner_.GetTokPos(),$1,$3,$6);}
   | INT {$$ = new absyn::IntExp(scanner_.GetTokPos(),$1);}
   | lvalue {$$ = new absyn::VarExp(scanner_.GetTokPos(),$1);}
+  | ID LBRACE rec RBRACE {$$ = new absyn::RecordExp(scanner_.GetTokPos(),$1,$3);}
+  | STRING {$$ = new absyn::StringExp(scanner_.GetTokPos(), $1);}
+  | lvalue ASSIGN exp {$$ = new absyn::AssignExp(scanner_.GetTokPos(),$1,$3);}
+  | IF exp THEN exp ELSE exp {$$ = new absyn::IfExp(scanner_.GetTokPos(),$2,$4,$6);}
+  | IF exp THEN exp {$$ = new absyn::IfExp(scanner_.GetTokPos(),$2,$4,nullptr);}
+  | ID LPAREN RPAREN {$$ = new absyn::CallExp(scanner_.GetTokPos(),$1,new absyn::ExpList());}
+  | ID LPAREN actuals RPAREN {$$ = new absyn::CallExp(scanner_.GetTokPos(),$1,$3);}
+  | exp EQ exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::EQ_OP,$1,$3);}
+  | exp NEQ exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::NEQ_OP,$1,$3);}
+  | exp TIMES exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::TIMES_OP,$1,$3);}
+  | exp DIVIDE exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::DIVIDE_OP,$1,$3);}
+  | exp MINUS exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::MINUS_OP,$1,$3);}
+  | exp PLUS exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::PLUS_OP,$1,$3);}
+  | exp GT exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::GT_OP,$1,$3);}
+  | exp LT exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::LT_OP,$1,$3);}
+  | exp LE exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::LE_OP,$1,$3);}
+  | exp GE exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::GE_OP,$1,$3);}
+  | exp AND exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::AND_OP,$1,$3);}
+  | exp OR exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::OR_OP,$1,$3);}
+  | MINUS exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::MINUS_OP,new absyn::IntExp(scanner_.GetTokPos(),0),$2); }
+  | NIL {$$ = new absyn::NilExp(scanner_.GetTokPos());}
+  | LPAREN exp RPAREN {$$ = $2;}
+  | LPAREN sequencing_exps RPAREN {$$ = new absyn::SeqExp(scanner_.GetTokPos(),$2);}
+  | WHILE exp DO exp {$$ = new absyn::WhileExp(scanner_.GetTokPos(),$2,$4);}
+  | FOR ID ASSIGN exp TO exp DO exp {$$ = new absyn::ForExp(scanner_.GetTokPos(),$2,$4,$6,$8);}
+  | {$$ = new absyn::VoidExp(scanner_.GetTokPos());}
   ;
 
+nonemptyactuals : exp COMMA actuals  {$$=$3->Prepend($1);}
+  | exp {$$ = new absyn::ExpList($1);}
+  ;
+actuals : exp COMMA actuals  {$$=$3->Prepend($1);}
+  | exp {$$ = new absyn::ExpList($1);}
+  | {$$ = new absyn::ExpList();}
+  ;
 
-sequencing_exps : exp sequencing {if($2)$$=$2->Prepend($1);else $$ = new absyn::ExpList($1);};
-sequencing : exp sequencing {if($2)$$=$2->Prepend($1);else $$ = new absyn::ExpList($1);}
-  |
+sequencing_exps : exp SEMICOLON sequencing {$$=$3->Prepend($1);}
+  | exp {$$ = new absyn::ExpList($1);}
+  ;
+sequencing : exp SEMICOLON sequencing {$$=$3->Prepend($1);}
+  | exp {$$ = new absyn::ExpList($1);}
+  | {$$ = new absyn::ExpList();}
   ;
 
 decs_nonempty : decs_nonempty_s decs {if($2)$$=$2->Prepend($1);else $$ = new absyn::DecList($1);};
@@ -114,14 +151,25 @@ ty : ID {$$ = new absyn::NameTy(scanner_.GetTokPos(),$1);}
   | ARRAY OF ID {$$ = new absyn::ArrayTy(scanner_.GetTokPos(),$3);}
   ;
 
-tyfields_nonempty : tyfield COMMA tyfields {if($3)$$=$3->Prepend($1);else $$ = new absyn::FieldList($1);}
+tyfields_nonempty : tyfield COMMA tyfields {$$=$3->Prepend($1);}
   | tyfield {$$ = new absyn::FieldList($1);}
   ;
-tyfields : tyfield COMMA tyfields {if($3)$$=$3->Prepend($1);else $$ = new absyn::FieldList($1);}
+tyfields : tyfield COMMA tyfields {$$=$3->Prepend($1);}
   | tyfield {$$ = new absyn::FieldList($1);}
-  |
+  | {$$ = new absyn::FieldList();}
   ;
 
 tyfield : ID COLON ID {$$ = new absyn::Field(scanner_.GetTokPos(),$1,$3);};
 
 
+rec_nonempty : rec_one COMMA rec {if($3)$$=$3->Prepend($1);else $$ = new absyn::EFieldList($1);}
+  | rec_one {$$ = new absyn::EFieldList($1);}
+  ;
+
+rec : rec_one COMMA rec {$$=$3->Prepend($1);}
+  | rec_one {$$ = new absyn::EFieldList($1);}
+  | {$$ = new absyn::EFieldList();}
+  ;
+
+
+rec_one : ID EQ exp {$$ = new absyn::EField($1,$3);};
