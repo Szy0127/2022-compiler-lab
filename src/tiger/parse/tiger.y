@@ -33,13 +33,18 @@
 %token
   COMMA COLON SEMICOLON LPAREN RPAREN LBRACK RBRACK
   LBRACE RBRACE DOT
-  PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE
-  AND OR ASSIGN
+  ASSIGN
   ARRAY IF THEN ELSE WHILE FOR TO DO LET IN END OF
   BREAK NIL
   FUNCTION VAR TYPE
 
  /* token priority */
+
+%left OR 
+%left AND
+%nonassoc GE GT LE LT EQ NEQ
+%left MINUS PLUS
+%left DIVIDE TIMES
  /* TODO: Put your lab3 code here */
 
 %type <exp> exp expseq
