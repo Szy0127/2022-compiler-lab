@@ -44,7 +44,7 @@ test_lab2() {
     ./test_lex "$testcase" >&/tmp/output.txt
     diff /tmp/output.txt "${ref}"
     if [[ $? != 0 ]]; then
-      echo "Error: Output mismatch"
+      echo "Error: ${testcase} Output mismatch"
       echo "${score_str}: 0"
       exit 1
     fi
@@ -62,12 +62,14 @@ test_lab3() {
 
   build test_parse
   for testcase in "$testcase_dir"/*.tig; do
+    # testcase="/home/stu/tiger-compiler/testdata/lab3/testcases/test24.tig"
     testcase_name=$(basename "$testcase" | cut -f1 -d".")
     local ref=${ref_dir}/${testcase_name}.out
 
     ./test_parse "$testcase" >&/tmp/output.txt
     res_run=$?
 
+    echo "testing [$testcase_name] [$testcase]"
     # Check result of the run
     if [[ $testcase_name == "test49" ]]; then
       # A negative testcase
@@ -85,11 +87,13 @@ test_lab3() {
       fi
     else
       # Positive testcases
+      echo "testing positive"
       if [[ $res_run != 0 ]]; then
         echo "Error: This testcase should not incur syntax error [$testcase_name]"
         echo "${score_str}: 0"
         exit 1
       fi
+      echo "passed syntax"
 
       # Check output
       diff /tmp/output.txt "${ref}"
@@ -99,6 +103,7 @@ test_lab3() {
         exit 1
       fi
     fi
+    echo "pass [$testcase_name]"
   done
 
   echo "[^_^]: Pass"
