@@ -24,12 +24,36 @@ type::Ty *SimpleVar::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
 type::Ty *FieldVar::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
                                int labelcount, err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab4 code here */
+  auto ty = var_->SemAnalyze(venv,tenv,labelcount,errormsg)->ActualTy();
+  if(typeid(*ty)!=typeid(type::RecordTy)){
+    errormsg->Error(var_->pos_,"not record type");
+    return type::IntTy::Instance();
+  }
+  for(const auto field:static_cast<type::RecordTy*>(ty)->fields_->GetList()){
+    if(field->name_==sym_){
+      return field->ty_;
+    }
+  }
+  errormsg->Error(var_->pos_,"record don't have this type");
+  return type::IntTy::Instance();
 }
 
 type::Ty *SubscriptVar::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
                                    int labelcount,
                                    err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab4 code here */
+  auto ty = var_->SemAnalyze(venv,tenv,labelcount,errormsg)->ActualTy();
+  if(typeid(*ty)!=typeid(type::ArrayTy)){
+    errormsg->Error(var_->pos_,"not array type");
+    return type::IntTy::Instance();
+  }
+  auto exp_ty = subscript_->SemAnalyze(venv,tenv,labelcount,errormsg)->ActualTy();
+  if(typeid(*exp_ty)!=typeid(type::IntTy)){
+    errormsg->Error(var_->pos_,"not int type in SubscriptVar");
+    return type::IntTy::Instance();
+  }
+  //exam length
+  return static_cast<type::ArrayTy*>(ty)->ty_->ActualTy();
 }
 
 type::Ty *VarExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
@@ -88,12 +112,30 @@ type::Ty *RecordExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
   /* TODO: Put your lab4 code here */
 
   auto ty = tenv->Look(typ_);
-  // for(auto efield:fields_->GetList()){
-
-  // }
   if(!ty){
     errormsg->Error(pos_, "undefined variable %s", typ_->Name().data());
     return type::VoidTy::Instance();
+  }
+  if(typeid(*ty)!=typeid(type::RecordTy)){
+    errormsg->Error(pos_, "not record type");
+    return type::VoidTy::Instance();
+  }
+  auto field_list = static_cast<type::RecordTy*>(ty)->fields_->GetList();
+  for(const auto efield:fields_->GetList()){
+    auto exp_ty = efield->exp_->SemAnalyze(venv,tenv,labelcount,errormsg)->ActualTy();
+    auto found = false;
+    for(const auto field:field_list){
+      if(efield->name_ == field->name_){
+        found = true;
+        if(!exp_ty->IsSameType(field->ty_)){
+          errormsg->Error(efield->exp_->pos_, "record type not match");
+        }
+        break;
+      }
+    }
+    if(!found){
+       errormsg->Error(pos_, "record type not found");
+    }
   }
   return ty;
 }
@@ -139,13 +181,18 @@ type::Ty *IfExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
   auto then_ty = then_->SemAnalyze(venv, tenv, labelcount, errormsg)->ActualTy();
   type::Ty *else_ty = type::VoidTy::Instance();
   if(elsee_){
-    else_ty = test_->SemAnalyze(venv, tenv, labelcount, errormsg)->ActualTy();
+    else_ty = elsee_->SemAnalyze(venv, tenv, labelcount, errormsg)->ActualTy();
   }
   if(typeid(*test_ty) != typeid(type::IntTy)) {
     errormsg->Error(test_->pos_, "if exp's range type is not integer");
   }
-  if(!then_ty->IsSameType(else_ty)) {
-    errormsg->Error(then_->pos_, "same type required");
+  if(!then_ty->IsSameType(else_ty)){
+    if(!elsee_){
+      errormsg->Error(pos_, "if-then exp's body must produce no value");
+    }else{
+      errormsg->Error(then_->pos_, "same type required");
+    }
+   
   }
   return then_ty;
 }
@@ -220,6 +267,23 @@ type::Ty *LetExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
 type::Ty *ArrayExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
                                int labelcount, err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab4 code here */
+  auto ty = tenv->Look(typ_);
+  if(!ty){
+    errormsg->Error(pos_, "undefined type %s", typ_->Name().data());
+  }
+  if(typeid(*ty)!=typeid(type::ArrayTy)){
+    errormsg->Error(pos_, "not array type");
+    return type::VoidTy::Instance();
+  }
+  auto size_ty = size_->SemAnalyze(venv,tenv,labelcount,errormsg)->ActualTy();
+  auto init_ty = init_->SemAnalyze(venv, tenv, labelcount, errormsg);
+  if(typeid(*size_ty)!=typeid(type::IntTy)){
+    errormsg->Error(pos_, "size should be int");
+  }
+  if(!init_ty->IsSameType(static_cast<type::ArrayTy*>(ty)->ty_)){
+    errormsg->Error(pos_, "array type mismatch");
+  }
+  return ty;
 }
 
 type::Ty *VoidExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,

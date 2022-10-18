@@ -1,6 +1,6 @@
 # Lab 4: Type Checking
 
-RecordExp FieldVar SubscriptVar CallExp BreakExp ArrayExp
+CallExp BreakExp 
 
-- field type记录
+- type cycle
 - break lab3
