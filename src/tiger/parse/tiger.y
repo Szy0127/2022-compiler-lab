@@ -113,6 +113,7 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
   | LPAREN sequencing_exps RPAREN {$$ = new absyn::SeqExp(scanner_.GetTokPos(),$2);}
   | WHILE exp DO exp {$$ = new absyn::WhileExp(scanner_.GetTokPos(),$2,$4);}
   | FOR ID ASSIGN exp TO exp DO exp {$$ = new absyn::ForExp(scanner_.GetTokPos(),$2,$4,$6,$8);}
+  | BREAK {$$ = new absyn::BreakExp(scanner_.GetTokPos());}
   | {$$ = new absyn::VoidExp(scanner_.GetTokPos());}
   ;
 
