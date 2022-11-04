@@ -20,7 +20,7 @@ private:
   static LabelFactory label_factory;
 };
 
-class Temp {
+class Temp {//virtual registers
   friend class TempFactory;
 
 public:

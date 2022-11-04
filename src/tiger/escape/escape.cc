@@ -15,7 +15,7 @@ void AbsynTree::Traverse(esc::EscEnvPtr env) {
 void SimpleVar::Traverse(esc::EscEnvPtr env, int depth) {
   /* TODO: Put your lab5 code here */
   auto entry = env->Look(sym_);
-  if(!entry){
+  if(!entry){ // type checking return error
     return;
   }
   if(entry->depth_ < depth){

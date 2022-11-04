@@ -71,11 +71,13 @@ public:
   /* TODO: Put your lab5 code here */
   
   virtual ~Access() = default;
-  
+  virtual tree::Exp *ToExp(tree::Exp *framePtr) const = 0;
+
 };
 
 class Frame {
   /* TODO: Put your lab5 code here */
+  std::list<frame::Access *> *formals_;
 };
 
 /**
