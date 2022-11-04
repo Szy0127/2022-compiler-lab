@@ -62,9 +62,9 @@ public:
 class ProgTr {
 public:
   // TODO: Put your lab5 code here */
-  
+
   //like lab4 semant(ProgSem in semant.h)
-  ProgTr::ProgTr(std::unique_ptr<absyn::AbsynTree> absyn_tree, std::unique_ptr<err::ErrorMsg> errormsg):
+  ProgTr(std::unique_ptr<absyn::AbsynTree> absyn_tree, std::unique_ptr<err::ErrorMsg> errormsg):
     absyn_tree_(std::move(absyn_tree)),errormsg_(std::move(errormsg)),
     tenv_(std::make_unique<env::TEnv>()),venv_(std::make_unique<env::VEnv>()){}
 
