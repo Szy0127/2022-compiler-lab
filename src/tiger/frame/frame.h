@@ -77,7 +77,17 @@ public:
 
 class Frame {
   /* TODO: Put your lab5 code here */
-  std::list<frame::Access *> *formals_;
+public:
+  Frame(temp::Label *name,std::list<bool> *f):name_(name){}
+  virtual Access *AllocLocal(bool escape) = 0;
+  virtual ~Frame()=default;
+protected:
+  unsigned long sp_off{0};//sp-fp
+  temp::Label *name_;
+  std::list<tree::Stm*> view_shift_;
+
+  //use list<bool> to allocate list<access>
+  std::list<frame::Access *> formals_;
 };
 
 /**

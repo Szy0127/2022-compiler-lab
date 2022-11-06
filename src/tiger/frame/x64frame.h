@@ -32,5 +32,13 @@ public:
   temp::Temp *ReturnValue() override;
 };
 
+//must be declared in .h instead of .cc
+class X64Frame : public Frame {
+  /* TODO: Put your lab5 code here */
+public:
+  X64Frame(temp::Label *name,std::list<bool> *f);
+  Access *AllocLocal(bool escape)override;
+};
+
 } // namespace frame
 #endif // TIGER_COMPILER_X64FRAME_H

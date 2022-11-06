@@ -15,6 +15,16 @@ namespace tr {
 
 Access *Access::AllocLocal(Level *level, bool escape) {
   /* TODO: Put your lab5 code here */
+  return new Access(level,level->frame_->AllocLocal(escape));
+}
+Level::Level(Level *parent,temp::Label *name, std::list<bool> *formals):parent_(parent){
+
+  //main level don't need static link
+  if(!formals){
+    formals->push_front(true);
+  }
+  // use x64 frame  
+  frame_ = new frame::X64Frame(name,formals);
 }
 
 class Cx {

@@ -35,10 +35,28 @@ public:
 
 };
 
-class X64Frame : public Frame {
-  /* TODO: Put your lab5 code here */
-};
+
 /* TODO: Put your lab5 code here */
+//NewFrame
+X64Frame::X64Frame(temp::Label *name,std::list<bool> *f):Frame(name,f){
+  if(!f){
+    return;
+  }
+  for(const auto &escape:*f){
+    formals_.push_back(AllocLocal(escape));
+  }
+  //view shift
+  
+}
+
+Access *X64Frame::AllocLocal(bool escape){
+  if(escape){
+    sp_off -= 8;//reg_manager->WordSize();
+    return new InFrameAccess(sp_off);
+  }
+  return new InRegAccess(temp::TempFactory::NewTemp());
+}
+
 
 X64RegManager::X64RegManager(){
   auto regs = std::vector<std::string>{
