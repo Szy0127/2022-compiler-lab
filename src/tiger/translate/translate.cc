@@ -20,7 +20,7 @@ Access *Access::AllocLocal(Level *level, bool escape) {
 Level::Level(Level *parent,temp::Label *name, std::list<bool> *formals):parent_(parent){
 
   //main level don't need static link
-  if(!formals){
+  if(formals){
     formals->push_front(true);
   }
   // use x64 frame  
@@ -60,12 +60,18 @@ public:
 
   [[nodiscard]] tree::Exp *UnEx() override { 
     /* TODO: Put your lab5 code here */
+    return exp_;
   }
   [[nodiscard]] tree::Stm *UnNx() override {
     /* TODO: Put your lab5 code here */
   }
   [[nodiscard]] Cx UnCx(err::ErrorMsg *errormsg) override {
     /* TODO: Put your lab5 code here */
+    //!=0 true  ==0 false
+    auto stm = new tree::CjumpStm(tree::RelOp::NE_OP, exp_, new tree::ConstExp(0), nullptr, nullptr);
+    PatchList trues{{&stm->true_label_}};
+    PatchList falses{{&stm->true_label_}};
+    return {trues,falses,stm};
   }
 };
 
@@ -77,12 +83,16 @@ public:
 
   [[nodiscard]] tree::Exp *UnEx() override {
     /* TODO: Put your lab5 code here */
+    return new tree::EseqExp(stm_, new tree::ConstExp(0));
   }
   [[nodiscard]] tree::Stm *UnNx() override { 
     /* TODO: Put your lab5 code here */
+    return stm_;
   }
   [[nodiscard]] Cx UnCx(err::ErrorMsg *errormsg) override {
     /* TODO: Put your lab5 code here */
+    //error
+    return {{},{},stm_};
   }
 };
 
@@ -95,12 +105,32 @@ public:
   
   [[nodiscard]] tree::Exp *UnEx() override {
     /* TODO: Put your lab5 code here */
+    temp::Temp *r = temp::TempFactory::NewTemp();
+    temp::Label *t = temp::LabelFactory::NewLabel();
+    temp::Label *f = temp::LabelFactory::NewLabel();
+    cx_.trues_.DoPatch(t);
+    cx_.falses_.DoPatch(f);
+    return new tree::EseqExp(
+        new tree::MoveStm(new tree::TempExp(r), new tree::ConstExp(1)),
+          new tree::EseqExp(
+            cx_.stm_,
+            new tree::EseqExp(
+              // if false return f=0
+              new tree::LabelStm(f),
+              new tree::EseqExp(
+                new tree::MoveStm(new tree::TempExp(r),new tree::ConstExp(0)),
+                  //if true return r=1
+                  new tree::EseqExp(new tree::LabelStm(t),new tree::TempExp(r))))));
+
   }
   [[nodiscard]] tree::Stm *UnNx() override {
     /* TODO: Put your lab5 code here */
+    //cant return cx_.stm_ because have not patch
+    return new tree::ExpStm(UnEx());
   }
   [[nodiscard]] Cx UnCx(err::ErrorMsg *errormsg) override { 
     /* TODO: Put your lab5 code here */
+    return cx_;
   }
 };
 
@@ -119,12 +149,21 @@ tr::ExpAndTy *AbsynTree::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                    tr::Level *level, temp::Label *label,
                                    err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  root_->Translate(venv,tenv,level,label,errormsg);
 }
 
 tr::ExpAndTy *SimpleVar::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                    tr::Level *level, temp::Label *label,
                                    err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  auto entry = static_cast<env::VarEntry*>(venv->Look(sym_));
+  //entry must not be null in type checking
+  return new tr::ExpAndTy(
+    //static link
+    //new tree::TempExp(reg_manager->FramePointer()
+    new tr::ExExp(entry->access_->access_->ToExp(nullptr)),
+    entry->ty_->ActualTy()
+  );
 }
 
 tr::ExpAndTy *FieldVar::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,

@@ -70,7 +70,8 @@ public:
   //like lab4 semant(ProgSem in semant.h)
   ProgTr(std::unique_ptr<absyn::AbsynTree> absyn_tree, std::unique_ptr<err::ErrorMsg> errormsg):
     absyn_tree_(std::move(absyn_tree)),errormsg_(std::move(errormsg)),
-    tenv_(std::make_unique<env::TEnv>()),venv_(std::make_unique<env::VEnv>()){}
+    tenv_(std::make_unique<env::TEnv>()),venv_(std::make_unique<env::VEnv>()),
+    main_level_{new Level(nullptr,temp::LabelFactory::NamedLabel("main"),nullptr)}{}
 
   /**
    * Translate IR tree
