@@ -37,6 +37,7 @@ public:
       : trues_(trues), falses_(falses), stm_(stm) {}
 };
 
+// tr::Exp != tree::Exp
 class Exp {
 public:
   [[nodiscard]] virtual tree::Exp *UnEx() = 0;
@@ -139,6 +140,7 @@ void ProgTr::Translate() {
   /* TODO: Put your lab5 code here */
   FillBaseVEnv();
   FillBaseTEnv();
+  absyn_tree_->Translate(venv_.get(),tenv_.get(),main_level_.get(),nullptr,errormsg_.get());
 }
 
 } // namespace tr
@@ -158,10 +160,20 @@ tr::ExpAndTy *SimpleVar::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   /* TODO: Put your lab5 code here */
   auto entry = static_cast<env::VarEntry*>(venv->Look(sym_));
   //entry must not be null in type checking
+  auto access = entry->access_->access_;
+  tree::Exp *framePtr = nullptr;
+  if(typeid(*access)==typeid(frame::InFrameAccess)){
+      auto target = entry->access_->level_;
+      framePtr = new tree::TempExp(reg_manager->FramePointer());
+      auto l = level->parent_;
+      while(l != target){
+        //only main dont have static link formal
+        framePtr = l->frame_->StaticLink()->ToExp(framePtr);
+        l = l->parent_;
+      }
+  }
   return new tr::ExpAndTy(
-    //static link
-    //new tree::TempExp(reg_manager->FramePointer()
-    new tr::ExExp(entry->access_->access_->ToExp(nullptr)),
+    new tr::ExExp(entry->access_->access_->ToExp(framePtr)),
     entry->ty_->ActualTy()
   );
 }
@@ -170,12 +182,65 @@ tr::ExpAndTy *FieldVar::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                   tr::Level *level, temp::Label *label,
                                   err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+
+  auto exp_ty = var_->Translate(venv,tenv,level,label,errormsg);
+  auto ty = static_cast<type::RecordTy*>(exp_ty->ty_);
+  type::Ty* var_ty = nullptr;
+  unsigned int offset = 0;
+  auto wordsize = reg_manager->WordSize();
+  for(const auto &field:ty->fields_->GetList()){
+    if(field->name_ == sym_){
+      var_ty = field->ty_;
+      break;
+    }
+    offset += wordsize;
+  }
+
+  return new tr::ExpAndTy(
+    new tr::ExExp(
+      new tree::MemExp(
+        new tree::BinopExp(
+          tree::PLUS_OP,
+          exp_ty->exp_->UnEx(),
+          new tree::ConstExp(offset)
+        )
+      )
+    ),
+    var_ty
+  );
 }
 
+
+/*
+  type intarray = array of int    type:intarray  value:addr
+  intarray[10] of 1               arrayexp       value:addr
+  var a:= intarray[10] of 1       vardec         mov a, addr
+*/
 tr::ExpAndTy *SubscriptVar::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                       tr::Level *level, temp::Label *label,
                                       err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  auto var_exp_ty = var_->Translate(venv,tenv,level,label,errormsg);
+  auto exp_exp_ty = subscript_->Translate(venv,tenv,level,label,errormsg);
+  auto base = var_exp_ty->exp_->UnEx();
+  auto offset = exp_exp_ty->exp_->UnEx();
+  auto size = new tree::ConstExp(reg_manager->WordSize());
+  
+  return new tr::ExpAndTy(
+    new tr::ExExp(
+      new tree::MemExp(
+        new tree::BinopExp(
+          tree::PLUS_OP,
+          base,
+          new tree::BinopExp(
+            tree::MUL_OP,
+            offset,size
+          )
+        )
+      )
+    ),
+    static_cast<type::ArrayTy*>(var_exp_ty->ty_)->ty_->ActualTy()
+  );
 }
 
 tr::ExpAndTy *VarExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
@@ -218,6 +283,20 @@ tr::ExpAndTy *RecordExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                    tr::Level *level, temp::Label *label,      
                                    err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  // auto ty = static_cast<type::RecordTy*>(tenv->Look(typ_));
+  // auto field_list = ty->fields_->GetList();
+  // for(const auto &efield:fields_->GetList()){
+  //   auto exp_ty = efield->exp_->Translate(venv,tenv,level,label,errormsg);
+  //   auto it = std::find_if(field_list.begin(),field_list.end()),
+  //     [&efield,&exp_ty](const auto &field){
+  //       return efield->name_ == field->name_ && exp_ty->ty_->IsSameType(field->ty_);
+  //     };
+    
+  // }
+  // return new tr::ExpAndTy(
+  //   new tr::ExExp(),
+  //   ty
+  // )
 }
 
 tr::ExpAndTy *SeqExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,

@@ -40,5 +40,39 @@ public:
   Access *AllocLocal(bool escape)override;
 };
 
+
+//must be declared in .h instead of .cc
+class InFrameAccess : public Access {
+public:
+  int offset;
+
+  explicit InFrameAccess(int offset) : offset(offset) {}
+  /* TODO: Put your lab5 code here */
+  tree::Exp *ToExp(tree::Exp *framePtr) const override {
+    return new tree::MemExp(
+      new tree::BinopExp(
+        tree::PLUS_OP,
+        framePtr,
+        new tree::ConstExp(offset)
+      )
+    );
+  }
+
+};
+
+
+class InRegAccess : public Access {
+public:
+  temp::Temp *reg;
+
+  explicit InRegAccess(temp::Temp *reg) : reg(reg) {}
+  /* TODO: Put your lab5 code here */
+  tree::Exp *ToExp(tree::Exp *framePtr) const override {
+    return new tree::TempExp(reg);
+  }
+
+};
+
+
 } // namespace frame
 #endif // TIGER_COMPILER_X64FRAME_H

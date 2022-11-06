@@ -58,7 +58,7 @@ public:
 
   /* TODO: Put your lab5 code here */
 
-  //NewLevel call NewFrame
+  //NewLevel call NewFrame  name for frame
   //use pointer to reduce copy
   Level(Level *parent,temp::Label *name, std::list<bool> *formals);
 };

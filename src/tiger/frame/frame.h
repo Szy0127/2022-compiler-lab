@@ -81,6 +81,8 @@ public:
   Frame(temp::Label *name,std::list<bool> *f):name_(name){}
   virtual Access *AllocLocal(bool escape) = 0;
   virtual ~Frame()=default;
+
+  frame::Access *StaticLink(){return formals_.front();}  
 protected:
   unsigned long sp_off{0};//sp-fp
   temp::Label *name_;
