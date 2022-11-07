@@ -247,36 +247,67 @@ tr::ExpAndTy *VarExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                 tr::Level *level, temp::Label *label,
                                 err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  auto exp_ty = var_->Translate(venv,tenv,level,label,errormsg);
+
+  return new tr::ExpAndTy(
+    new tr::ExExp(
+      exp_ty->exp_->UnEx()
+    ),
+    exp_ty->ty_
+  );
 }
 
 tr::ExpAndTy *NilExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                 tr::Level *level, temp::Label *label,
                                 err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  return new tr::ExpAndTy(
+    new tr::ExExp(
+      new tree::ConstExp(0)
+    ),
+    type::NilTy::Instance()
+  );
 }
 
 tr::ExpAndTy *IntExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                 tr::Level *level, temp::Label *label,
                                 err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  return new tr::ExpAndTy(
+    new tr::ExExp(
+      new tree::ConstExp(val_)
+    ),
+    type::IntTy::Instance()
+  );
 }
 
 tr::ExpAndTy *StringExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                    tr::Level *level, temp::Label *label,
                                    err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+
+  //frag
+
 }
 
 tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                  tr::Level *level, temp::Label *label,
                                  err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+
+  //view shift
 }
 
 tr::ExpAndTy *OpExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                tr::Level *level, temp::Label *label,
                                err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+
+  // cjump
+
+  // return new tr::ExpAndTy(
+  //   new tr::ExExp
+  // )
 }
 
 tr::ExpAndTy *RecordExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
@@ -339,21 +370,72 @@ tr::ExpAndTy *SeqExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                 tr::Level *level, temp::Label *label,
                                 err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
-  // return tr::ExpAndTy(
-  //   new tree::S
-  // )
+  auto exp_list = seq_->GetList();
+  tree::Stm* stm = nullptr;
+  auto exp_it = exp_list.rbegin();
+  for(;std::next(exp_it)!=exp_list.rend();exp_it++){
+    auto exp_ty = (*exp_it)->Translate(venv,tenv,level,label,errormsg);
+    if(stm){
+      stm = new tree::SeqStm(
+        exp_ty->exp_->UnNx(),
+        stm
+      );
+    }else{
+      stm = exp_ty->exp_->UnNx();
+    }
+  }
+  auto exp_ty = (*exp_it)->Translate(venv,tenv,level,label,errormsg);
+  return new tr::ExpAndTy(
+    new tr::ExExp(
+      new tree::EseqExp(
+        stm,
+        exp_ty->exp_->UnEx()
+      )
+    ),
+    exp_ty->ty_
+  );
 }
 
 tr::ExpAndTy *AssignExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                    tr::Level *level, temp::Label *label,                       
                                    err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  auto var_exp_ty = var_->Translate(venv,tenv,level,label,errormsg);
+  auto exp_exp_ty = exp_->Translate(venv,tenv,level,label,errormsg);
+  return new tr::ExpAndTy(
+    new tr::NxExp(
+      new tree::MoveStm(
+        var_exp_ty->exp_->UnEx(),
+        exp_exp_ty->exp_->UnEx()
+      )
+    ),
+    type::VoidTy::Instance()
+  );
 }
 
 tr::ExpAndTy *IfExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                tr::Level *level, temp::Label *label,
                                err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  
+  // auto test_exp_ty = test_->Translate(venv,tenv,level,label,errormsg);
+  // auto then_exp_ty = then_->Translate(venv,tenv,level,label,errormsg);
+  // ty::ExpAndTy* else_exp_ty = nullptr;
+  // if(elsee_){
+  //   else_exp_ty = elsee_->Translate(venv,tenv,level,label,errormsg);
+  // }
+
+  // auto t = temp::LabelFactory::NewLabel();
+  // auto f = temp::LabelFactory::NewLabel();
+  // auto cjump = new tree::CjumpStm(tree::NE_OP,then_exp_ty->exp_->UnCx(),else_exp_ty->exp_->Uncx(),t,f);
+
+  // return new tr::ExpAndTy(
+  //   new tr::CxExp(
+  //     {{&cjump->true_label_}},
+  //     {{&cjump->false_label_}},
+  //     cjump
+  //   )
+  // );
 }
 
 tr::ExpAndTy *WhileExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
@@ -378,6 +460,7 @@ tr::ExpAndTy *LetExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                 tr::Level *level, temp::Label *label,
                                 err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+
 }
 
 tr::ExpAndTy *ArrayExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
@@ -403,6 +486,13 @@ tr::ExpAndTy *VoidExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                  tr::Level *level, temp::Label *label,
                                  err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  
+  return new tr::ExpAndTy(
+    new tr::NxExp(
+      nullptr
+    ),
+    type::VoidTy::Instance()
+  );
 }
 
 tr::Exp *FunctionDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
@@ -415,25 +505,61 @@ tr::Exp *VarDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                            tr::Level *level, temp::Label *label,
                            err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  auto init_exp_ty = init_->Translate(venv,tenv,level,label,errormsg);
+  auto access = tr::Access::AllocLocal(level,escape_);
+  venv->Enter(var_,new env::VarEntry(access,init_exp_ty->ty_));
+
+  return new tr::NxExp(
+    new tree::MoveStm(
+      access->access_->ToExp(
+        new tree::TempExp(
+          reg_manager->FramePointer()
+          )
+        ),
+      init_exp_ty->exp_->UnEx()
+    )
+  );
 }
 
 tr::Exp *TypeDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                             tr::Level *level, temp::Label *label,
                             err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  auto type_list = types_->GetList();
+  for(const auto &type:type_list){
+    tenv->Enter(type->name_, type::VoidTy::Instance()); 
+  }
+  for(const auto &type:type_list){
+    auto ty = type->ty_->Translate(tenv,errormsg);
+    tenv->Enter(type->name_, ty); 
+  }
+
+
+  return new tr::NxExp(
+    nullptr
+  );
 }
 
 type::Ty *NameTy::Translate(env::TEnvPtr tenv, err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  return new type::NameTy(
+    name_,tenv->Look(name_)
+  );
 }
 
 type::Ty *RecordTy::Translate(env::TEnvPtr tenv,
                               err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  return new type::RecordTy(
+    record_->MakeFieldList(tenv,errormsg)
+  );
 }
 
 type::Ty *ArrayTy::Translate(env::TEnvPtr tenv, err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  return new type::ArrayTy(
+    tenv->Look(array_)
+  );
 }
 
 } // namespace absyn
