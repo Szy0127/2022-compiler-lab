@@ -129,6 +129,7 @@ private:
 };
 
 /* TODO: Put your lab5 code here */
+tree::Exp *externalCall(std::string s,tree::ExpList *args);
 
 } // namespace frame
 

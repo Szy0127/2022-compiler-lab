@@ -283,26 +283,65 @@ tr::ExpAndTy *RecordExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                    tr::Level *level, temp::Label *label,      
                                    err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
-  // auto ty = static_cast<type::RecordTy*>(tenv->Look(typ_));
-  // auto field_list = ty->fields_->GetList();
-  // for(const auto &efield:fields_->GetList()){
-  //   auto exp_ty = efield->exp_->Translate(venv,tenv,level,label,errormsg);
-  //   auto it = std::find_if(field_list.begin(),field_list.end()),
-  //     [&efield,&exp_ty](const auto &field){
-  //       return efield->name_ == field->name_ && exp_ty->ty_->IsSameType(field->ty_);
-  //     };
+  auto ty = static_cast<type::RecordTy*>(tenv->Look(typ_));
+  auto field_list = ty->fields_->GetList();
+  auto wordsize = reg_manager->WordSize();
+  auto record_len = field_list.size();
+  auto alloc_record = frame::externalCall("alloc_record",new tree::ExpList({new tree::ConstExp(record_len*wordsize)}));
+
+  auto r = temp::TempFactory::NewTemp();
+  auto move_addr_to_r = new tree::MoveStm(
+    new tree::TempExp(r),
+    alloc_record
+  );
+
+  auto offset = record_len-1;
+  auto efield_list = fields_->GetList();
+  auto efield_it = efield_list.rbegin();
+
+  tree::Stm * stm = nullptr;
+  for(auto efield_it = efield_list.rbegin();efield_it!=efield_list.rend();efield_it++){
+    auto exp_ty = (*efield_it)->exp_->Translate(venv,tenv,level,label,errormsg);
     
-  // }
-  // return new tr::ExpAndTy(
-  //   new tr::ExExp(),
-  //   ty
-  // )
+    auto move = new tree::MoveStm(
+                  new tree::MemExp(
+                    new tree::BinopExp(
+                      tree::PLUS_OP,
+                      new tree::TempExp(r),
+                      new tree::ConstExp(offset)
+                    )
+                  ),
+                  exp_ty->exp_->UnEx()
+                );
+    offset -= wordsize;
+    if(stm){
+      stm = new tree::SeqStm(move,stm);
+    }else{
+      stm = move;
+    }
+  }
+
+  return new tr::ExpAndTy(
+    new tr::ExExp(
+      new tree::EseqExp(
+        new tree::SeqStm(
+          move_addr_to_r,
+          stm
+        ),
+        new tree::TempExp(r)
+      )
+    ),
+    ty
+  );
 }
 
 tr::ExpAndTy *SeqExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                 tr::Level *level, temp::Label *label,
                                 err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  // return tr::ExpAndTy(
+  //   new tree::S
+  // )
 }
 
 tr::ExpAndTy *AssignExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
@@ -345,6 +384,19 @@ tr::ExpAndTy *ArrayExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                   tr::Level *level, temp::Label *label,                    
                                   err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  auto ty = static_cast<type::ArrayTy*>(tenv->Look(typ_));
+  auto size_exp_ty = size_->Translate(venv,tenv,level,label,errormsg);
+  auto init_exp_ty = init_->Translate(venv,tenv,level,label,errormsg);
+  auto init_array = frame::externalCall("init_array",new tree::ExpList({size_exp_ty->exp_->UnEx(),init_exp_ty->exp_->UnEx()}));
+
+  //externalcall already mov init value
+  return new tr::ExpAndTy(
+    new tr::ExExp(
+      init_array
+    ),
+    ty
+  );
+  
 }
 
 tr::ExpAndTy *VoidExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,

@@ -5,6 +5,11 @@ extern frame::RegManager *reg_manager;
 namespace frame {
 /* TODO: Put your lab5 code here */
 
+//if put in .h  multiple definition
+tree::Exp *externalCall(std::string s,tree::ExpList *args){
+  return new tree::CallExp(
+    new tree::NameExp(temp::LabelFactory::NamedLabel(s)),args);
+}
 
 
 /* TODO: Put your lab5 code here */
