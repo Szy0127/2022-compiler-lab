@@ -10,6 +10,15 @@ tree::Exp *externalCall(std::string s,tree::ExpList *args){
   return new tree::CallExp(
     new tree::NameExp(temp::LabelFactory::NamedLabel(s)),args);
 }
+// tree::Exp *staticLink(tr::Level *level_now,tr::Level *level_target){
+//   auto framePtr = new tree::TempExp(reg_manager->FramePointer());
+//   while(level_now != level_target){
+//     //only main dont have static link formal
+//     framePtr = l->frame_->StaticLink()->ToExp(framePtr);
+//     level_now = level_now->parent_;
+//   }
+//   return framePtr;
+// }
 
 
 /* TODO: Put your lab5 code here */
