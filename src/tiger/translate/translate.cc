@@ -475,25 +475,60 @@ tr::ExpAndTy *IfExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                tr::Level *level, temp::Label *label,
                                err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+
+  //can be optimized  p117
   
-  // auto test_exp_ty = test_->Translate(venv,tenv,level,label,errormsg);
-  // auto then_exp_ty = then_->Translate(venv,tenv,level,label,errormsg);
-  // ty::ExpAndTy* else_exp_ty = nullptr;
-  // if(elsee_){
-  //   else_exp_ty = elsee_->Translate(venv,tenv,level,label,errormsg);
-  // }
+  auto test_exp_ty = test_->Translate(venv,tenv,level,label,errormsg);
+  auto then_exp_ty = then_->Translate(venv,tenv,level,label,errormsg);
 
-  // auto t = temp::LabelFactory::NewLabel();
-  // auto f = temp::LabelFactory::NewLabel();
-  // auto cjump = new tree::CjumpStm(tree::NE_OP,then_exp_ty->exp_->UnCx(),else_exp_ty->exp_->Uncx(),t,f);
+  auto t = temp::LabelFactory::NewLabel();
+  auto f = temp::LabelFactory::NewLabel();
+  auto done = temp::LabelFactory::NewLabel();
 
-  // return new tr::ExpAndTy(
-  //   new tr::CxExp(
-  //     {{&cjump->true_label_}},
-  //     {{&cjump->false_label_}},
-  //     cjump
-  //   )
-  // );
+  auto cx = test_exp_ty->exp_->UnCx(errormsg);
+  cx.trues_.DoPatch(t);
+  cx.falses_.DoPatch(f);
+
+  if(!elsee_){//if then
+    auto stm = tr::list2tree({
+      cx.stm_,
+      new tree::LabelStm(t),
+      then_exp_ty->exp_->UnNx(),
+      new tree::LabelStm(f)
+    });
+    return new tr::ExpAndTy(
+      new tr::NxExp(stm),
+      type::VoidTy::Instance()
+    );
+  }
+  // if then else
+  auto r = temp::TempFactory::NewTemp();
+  auto else_exp_ty = elsee_->Translate(venv,tenv,level,label,errormsg);
+  auto stm = tr::list2tree({
+    cx.stm_,
+    new tree::LabelStm(t),
+    new tree::MoveStm(
+      new tree::TempExp(r),
+      then_exp_ty->exp_->UnEx()
+    ),
+    new tree::JumpStm(new tree::NameExp(done),new std::vector<temp::Label*>{done}),
+    new tree::LabelStm(f),
+    new tree::MoveStm(
+      new tree::TempExp(r),
+      else_exp_ty->exp_->UnEx()
+    ),
+    new tree::LabelStm(done)
+  });
+  
+  return new tr::ExpAndTy(
+    new tr::ExExp(
+      new tree::EseqExp(
+        stm,
+        new tree::TempExp(r)
+      )
+    ),
+    then_exp_ty->ty_
+  );
 }
 
 tr::ExpAndTy *WhileExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
