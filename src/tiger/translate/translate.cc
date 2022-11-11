@@ -363,9 +363,123 @@ tr::ExpAndTy *OpExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
 
   // cjump
 
-  // return new tr::ExpAndTy(
-  //   new tr::ExExp
-  // )
+  auto left_exp_ty = left_->Translate(venv,tenv,level,label,errormsg);
+  auto right_exp_ty = right_->Translate(venv,tenv,level,label,errormsg);
+  {
+    tree::BinOp op = tree::BinOp::BIN_OPER_COUNT;
+    switch (oper_)
+    {
+    case PLUS_OP:op = tree::PLUS_OP;break;
+    case MINUS_OP:op = tree::MINUS_OP;break;
+    case TIMES_OP:op = tree::MUL_OP;break;
+    case DIVIDE_OP:op = tree::DIV_OP;break;
+    default:
+      break;
+    }
+    if(op != tree::BIN_OPER_COUNT){
+      return new tr::ExpAndTy(
+        new tr::ExExp(
+          new tree::BinopExp(
+            op,
+            left_exp_ty->exp_->UnEx(),
+            right_exp_ty->exp_->UnEx()
+          )
+        ),
+        left_exp_ty->ty_
+      );
+    }
+  }
+
+  {
+    tree::RelOp op = tree::RelOp::REL_OPER_COUNT;
+    switch (oper_)
+    {
+    case LT_OP:op = tree::LT_OP;break;
+    case LE_OP:op = tree::LE_OP;break;
+    case GT_OP:op = tree::GT_OP;break;
+    case GE_OP:op = tree::GE_OP;break;
+    default:
+      break;
+    }
+    if(op != tree::REL_OPER_COUNT){
+      auto cj = new tree::CjumpStm(op,left_exp_ty->exp_->UnEx(),right_exp_ty->exp_->UnEx(),nullptr,nullptr);
+      tr::PatchList trues{{&cj->true_label_}};
+      tr::PatchList falses{{&cj->false_label_}};
+      return new tr::ExpAndTy(
+        new tr::CxExp(trues,falses,cj),
+        type::IntTy::Instance()
+      );
+    }
+  }
+
+  {
+    tree::RelOp op = tree::RelOp::REL_OPER_COUNT;
+    switch (oper_)
+    {
+    case EQ_OP:op = tree::EQ_OP;break;
+    case NEQ_OP:op = tree::NE_OP;break;
+    default:
+      break;
+    }
+    if(op != tree::REL_OPER_COUNT){
+      tree::CjumpStm* cj = nullptr;
+      if(left_exp_ty->ty_->IsSameType(type::StringTy::Instance())){
+        auto str_cmp = frame::externalCall("string_equal",new tree::ExpList({left_exp_ty->exp_->UnEx(),right_exp_ty->exp_->UnEx()}));
+        //1 eq  0 neq  order does not matter
+        cj = new tree::CjumpStm(op,str_cmp,new tree::ConstExp(1),nullptr,nullptr);
+      }else{
+        cj = new tree::CjumpStm(op,left_exp_ty->exp_->UnEx(),right_exp_ty->exp_->UnEx(),nullptr,nullptr);
+      }
+      tr::PatchList trues{{&cj->true_label_}};
+      tr::PatchList falses{{&cj->false_label_}};
+      return new tr::ExpAndTy(
+        new tr::CxExp(trues,falses,cj),
+        type::IntTy::Instance()
+      );
+    }
+  }
+
+  if(oper_ == AND_OP){
+    auto lcx = left_exp_ty->exp_->UnCx(errormsg);
+    auto rcx = right_exp_ty->exp_->UnCx(errormsg);
+    
+    auto right_label = temp::LabelFactory::NewLabel();
+    lcx.trues_.DoPatch(right_label);
+    auto stm = tr::list2tree({
+      lcx.stm_,
+      new tree::LabelStm(right_label),
+      rcx.stm_
+    });
+    return new tr::ExpAndTy(
+      new tr::CxExp(
+        rcx.trues_,
+        tr::PatchList::JoinPatch(lcx.falses_,rcx.falses_),
+        stm
+      ),
+      type::IntTy::Instance()
+    );
+  }
+
+  if(oper_ == OR_OP){
+    auto lcx = left_exp_ty->exp_->UnCx(errormsg);
+    auto rcx = right_exp_ty->exp_->UnCx(errormsg);
+    
+    auto right_label = temp::LabelFactory::NewLabel();
+    lcx.falses_.DoPatch(right_label);
+    auto stm = tr::list2tree({
+      lcx.stm_,
+      new tree::LabelStm(right_label),
+      rcx.stm_
+    });
+    return new tr::ExpAndTy(
+      new tr::CxExp(
+        tr::PatchList::JoinPatch(lcx.trues_,rcx.trues_),
+        rcx.falses_,
+        stm
+      ),
+      type::IntTy::Instance()
+    );
+  }
 }
 
 tr::ExpAndTy *RecordExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
