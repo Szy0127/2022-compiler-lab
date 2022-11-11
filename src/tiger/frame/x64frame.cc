@@ -27,16 +27,92 @@ X64Frame::X64Frame(temp::Label *name,std::list<bool> *f):Frame(name,f){
   if(!f){
     return;
   }
+  // although some escape params should be allocated in frame instead of register
+  // we should follow the x86 64 rules to move frame param to reg e.g. rdi rsi
   for(const auto &escape:*f){
     formals_.push_back(AllocLocal(escape));
   }
-  //view shift
+  auto i = 0;
+  auto reg_list = reg_manager->ArgRegs()->GetList();
+  auto max_index = reg_list.size();
+  auto reg_it = reg_list.begin();
+  auto frame_ptr = new tree::TempExp(reg_manager->FramePointer());
+  auto word_size = reg_manager->WordSize();
+  //here contains static link , in rdi
+  for(const auto&formal:formals_){
+    tree::MoveStm* move = nullptr;
+    if(i < max_index){
+      move = new tree::MoveStm(
+        formal->ToExp(frame_ptr),
+        new tree::TempExp(*reg_it)
+      );
+    }else{
+      /*
+          param 7th
+          ret addr
+                  <-- frame ptr       
+          local var 
+      */
+      move = new tree::MoveStm(
+        formal->ToExp(frame_ptr),
+        new tree::MemExp(
+          new tree::BinopExp(
+            tree::PLUS_OP,
+            frame_ptr,
+            new tree::ConstExp(word_size*(i-5))
+          )
+        )
+      );
+    }
+    view_shift_stm.push_back(move);
+  }
   
+}
+
+std::list<tree::Stm*> ProcEntryExit1(frame::Frame *frame, tree::Stm *func_body){
+
+  std::list<tree::Stm*> stm_list;
+  auto callee_saved_regs = reg_manager->CalleeSaves()->GetList();
+  std::vector<temp::Temp*> saved;
+
+  //save registers
+  for(const auto&reg:callee_saved_regs){
+    auto temp = temp::TempFactory::NewTemp();
+    saved.push_back(temp);
+    stm_list.push_back(
+      new tree::MoveStm(
+        new tree::TempExp(temp),
+        new tree::TempExp(reg)
+      )
+    );
+  }
+
+  //view shift, place params
+  auto view_shift = frame->GetVSList();
+  stm_list.splice(stm_list.end(),view_shift);
+
+  //func body codes
+  stm_list.push_back(func_body);
+
+
+  //restore registers
+  auto saved_reg_it = saved.begin();
+  for(const auto&reg:callee_saved_regs){
+    stm_list.push_back(
+      new tree::MoveStm(
+        new tree::TempExp(reg),
+        new tree::TempExp(*saved_reg_it)
+      )
+    );
+    saved_reg_it++;
+  }
+  return stm_list;
+
 }
 
 Access *X64Frame::AllocLocal(bool escape){
   if(escape){
-    sp_off -= 8;//reg_manager->WordSize();
+    sp_off -= reg_manager->WordSize();
     return new InFrameAccess(sp_off);
   }
   return new InRegAccess(temp::TempFactory::NewTemp());

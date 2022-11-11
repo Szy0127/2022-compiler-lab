@@ -8,6 +8,8 @@
 #include "tiger/frame/temp.h"
 #include "tiger/frame/frame.h"
 
+
+#define NOP (new tr::ExExp(new tree::ConstExp(0)))
 extern frame::Frags *frags;
 extern frame::RegManager *reg_manager;
 
@@ -342,8 +344,8 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   auto func_label = func_entry->label_;
   tree::Exp *call_exp;
   if(func_label){
-    //func->entry->level is the level defines func ,not the level of func
-    arg_list->Insert(staticLink(level,func_entry->level_));
+    //func->entry->level is the level of func itself, parent is the level defines func
+    arg_list->Insert(staticLink(level,func_entry->level_->parent_));
     call_exp = new tree::CallExp(new tree::NameExp(func_label),arg_list);
   }else{//env.cc externalcall label=nullptr
     //new NamedLabel
@@ -838,9 +840,57 @@ tr::Exp *FunctionDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                 tr::Level *level, temp::Label *label,
                                 err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
-  // return new tr::NxExp(
-  //   nullptr
-  // );
+
+  auto func_list = functions_->GetList();
+
+  for(const auto&function:func_list){
+    auto params = function->params_;
+    auto escape = new std::list<bool>;
+    //dont add static link here ,Level will add it in constructor
+    for(const auto&arg:params->GetList()){
+      escape->push_back(arg->escape_);
+    }
+    type::Ty *result_ty = type::VoidTy::Instance();
+    if(function->result_){
+      result_ty = tenv->Look(function->result_); 
+    }
+    auto formals = params->MakeFormalTyList(tenv, errormsg);
+    auto name = function->name_;
+    auto f_label = temp::LabelFactory::NamedLabel(name->Name());
+    auto f_level = new tr::Level(level,f_label,escape);
+    //must add level of the function to env instead of the level defines it
+    venv->Enter(name,new env::FunEntry(f_level,f_label,formals,result_ty));
+  }
+  for(const auto&function:func_list){
+    auto entry = static_cast<env::FunEntry*>(venv->Look(function->name_));
+    auto f_level = entry->level_;
+    auto params = function->params_;
+    auto formals = params->MakeFormalTyList(tenv, errormsg);
+    venv->BeginScope();
+
+    //after new frame,params will be allocated
+    auto formal_it = entry->level_->frame_->GetFormalList().begin();
+    formal_it++;//static link
+    auto ty_it = entry->formals_->GetList().begin();//not contain static link
+    auto param_it = params->GetList().begin();
+    for (; param_it != params->GetList().end(); formal_it++, param_it++){
+      //this access shows the level of where formal defines is the same as the function
+      venv->Enter((*param_it)->name_,new env::VarEntry(new tr::Access(f_level,*formal_it),*ty_it));
+    }
+    
+    auto res_exp_ty = function->body_->Translate(venv,tenv,f_level,entry->label_,errormsg);
+    venv->EndScope();
+
+    auto ret = new tree::MoveStm(
+      new tree::TempExp(reg_manager->ReturnValue()),
+      res_exp_ty->exp_->UnEx()
+    );
+
+    auto frag = new frame::ProcFrag(tr::list2tree(frame::ProcEntryExit1(f_level->frame_,ret)),f_level->frame_);
+    frags->PushBack(frag);
+  }
+
+  return NOP;
 }
 
 tr::Exp *VarDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
@@ -877,9 +927,7 @@ tr::Exp *TypeDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   }
 
 
-  return new tr::NxExp(
-    nullptr
-  );
+  return NOP;
 }
 
 type::Ty *NameTy::Translate(env::TEnvPtr tenv, err::ErrorMsg *errormsg) const {
