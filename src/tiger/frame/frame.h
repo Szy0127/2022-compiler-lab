@@ -87,9 +87,11 @@ public:
   frame::Access *StaticLink(){return formals_.front();}  
   [[nodiscard]] const std::list<frame::Access *> &GetFormalList() const { return formals_; }
   [[nodiscard]] const std::list<tree::Stm*> &GetVSList() const { return view_shift_stm; }
+
+  temp::Label *name_;//for output.cc
+  std::string GetLabel(){return name_->Name();}
 protected:
   unsigned long sp_off{0};//sp-fp
-  temp::Label *name_;
   //actually here Stm must be MoveStm
   std::list<tree::Stm*> view_shift_stm;
 
@@ -152,7 +154,7 @@ private:
 tree::Exp *externalCall(std::string s,tree::ExpList *args);
 // tree::Exp *staticLink(tr::Level *level_now,tr::Level *level_target);
 std::list<tree::Stm*> ProcEntryExit1(frame::Frame *frame, tree::Stm *func_body);
-
+assem::Proc *ProcEntryExit3(frame::Frame *frame,assem::InstrList *instr_list);
 } // namespace frame
 
 #endif
