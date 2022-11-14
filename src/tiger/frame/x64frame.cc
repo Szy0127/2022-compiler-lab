@@ -127,6 +127,9 @@ X64Frame::X64Frame(temp::Label *name,std::list<bool> *f):Frame(name,f){
 }
 
 std::list<tree::Stm*> ProcEntryExit1(frame::Frame *frame, tree::Stm *func_body){
+  // if(frame->GetLabel()=="main"){
+  //   return {func_body};
+  // }
 
   std::list<tree::Stm*> stm_list;
   auto callee_saved_regs = reg_manager->CalleeSaves()->GetList();
@@ -178,7 +181,9 @@ Access *X64Frame::AllocLocal(bool escape){
 
 
 assem::Proc *ProcEntryExit3(frame::Frame *frame,assem::InstrList *instr_list){
-  return nullptr;
+  std::string a("abc");
+  std::string b("efg");
+  return new assem::Proc(a, instr_list,b);
 }
 
 } // namespace frame
