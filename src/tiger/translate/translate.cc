@@ -77,7 +77,7 @@ public:
     //!=0 true  ==0 false
     auto stm = new tree::CjumpStm(tree::RelOp::NE_OP, exp_, new tree::ConstExp(0), nullptr, nullptr);
     PatchList trues{{&stm->true_label_}};
-    PatchList falses{{&stm->true_label_}};
+    PatchList falses{{&stm->false_label_}};
     return {trues,falses,stm};
   }
 };
@@ -562,6 +562,9 @@ tr::ExpAndTy *SeqExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
     }
   }
   auto exp_ty = (*exp_it)->Translate(venv,tenv,level,label,errormsg);
+  if(!stm){
+    return exp_ty;
+  }
   return new tr::ExpAndTy(
     new tr::ExExp(
       new tree::EseqExp(
@@ -673,22 +676,6 @@ tr::ExpAndTy *WhileExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   });
   return new tr::ExpAndTy(
     new tr::NxExp(
-      // new tree::SeqStm(
-      //   new tree::LabelStm(test),
-      //   new tree::SeqStm(
-      //     cx.stm_,
-      //     new tree::SeqStm(
-      //       new tree::LabelStm(body),
-      //       new tree::SeqStm(
-      //         body_exp_ty->exp_->UnNx(),
-      //         new tree::SeqStm(
-      //           new tree::JumpStm(new tree::NameExp(test),new std::vector<temp::Label*>{test}),
-      //           new tree::LabelStm(done)
-      //         )
-      //       )
-      //     )
-      //   )
-      // )
       seq
     ),
     type::VoidTy::Instance()
