@@ -70,6 +70,7 @@ public:
   }
   [[nodiscard]] tree::Stm *UnNx() override {
     /* TODO: Put your lab5 code here */
+    return new tree::ExpStm(exp_);
   }
   [[nodiscard]] Cx UnCx(err::ErrorMsg *errormsg) override {
     /* TODO: Put your lab5 code here */
@@ -170,7 +171,9 @@ void ProgTr::Translate() {
   /* TODO: Put your lab5 code here */
   FillBaseVEnv();
   FillBaseTEnv();
-  absyn_tree_->Translate(venv_.get(),tenv_.get(),main_level_.get(),nullptr,errormsg_.get());
+  auto main = absyn_tree_->Translate(venv_.get(),tenv_.get(),main_level_.get(),nullptr,errormsg_.get());
+  auto frag = new frame::ProcFrag(tr::list2tree(frame::ProcEntryExit1(main_level_->frame_,main->exp_->UnNx())),main_level_->frame_);
+  frags->PushBack(frag);
 }
 
 } // namespace tr
@@ -181,7 +184,7 @@ tr::ExpAndTy *AbsynTree::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                    tr::Level *level, temp::Label *label,
                                    err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
-  root_->Translate(venv,tenv,level,label,errormsg);
+  return root_->Translate(venv,tenv,level,label,errormsg);
 }
 
 tr::ExpAndTy *SimpleVar::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
