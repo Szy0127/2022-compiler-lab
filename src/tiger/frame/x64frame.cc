@@ -1,5 +1,5 @@
 #include "tiger/frame/x64frame.h"
-
+#include <sstream>
 extern frame::RegManager *reg_manager;
 
 namespace frame {
@@ -181,9 +181,14 @@ Access *X64Frame::AllocLocal(bool escape){
 
 
 assem::Proc *ProcEntryExit3(frame::Frame *frame,assem::InstrList *instr_list){
-  std::string a("abc");
-  std::string b("efg");
-  return new assem::Proc(a, instr_list,b);
+  std::stringstream prolog;
+  //_scan_lines in interpreter.py
+  prolog<<".set "<<frame->GetLabel()<<" "<<123<<std::endl;
+  prolog<<frame->GetLabel()<<":"<<std::endl;
+  
+  std::stringstream epilog;
+  epilog<<"retq"<<std::endl;
+  return new assem::Proc(prolog.str(), instr_list,epilog.str());
 }
 
 } // namespace frame
