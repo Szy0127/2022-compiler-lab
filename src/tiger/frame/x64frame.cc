@@ -6,8 +6,9 @@ namespace frame {
 /* TODO: Put your lab5 code here */
 X64RegManager::X64RegManager(){
   auto regs = std::vector<std::string>{
-    "rax","rbx","rcx","rdx","rsi","rdi","rbp","rsp",
-    "r8","r9","r10","r11","r12","r13","r14","r15"
+    //should add % because Format in assem.cc dont add
+    "%rax","%rbx","%rcx","%rdx","%rsi","%rdi","%rbp","%rsp",
+    "%r8","%r9","%r10","%r11","%r12","%r13","%r14","%r15"
   };
   for(const auto &reg:regs){
     auto temp = temp::TempFactory::NewTemp();
@@ -25,6 +26,7 @@ temp::TempList *X64RegManager::Registers() {
 }
 
 temp::TempList *X64RegManager::ArgRegs() {
+  //in order
   return new temp::TempList{
     regs_[5], regs_[4], regs_[3], regs_[2], regs_[8], regs_[9]
   };
@@ -43,7 +45,10 @@ temp::TempList *X64RegManager::CalleeSaves() {
 }
 
 temp::TempList *X64RegManager::ReturnSink() {
-  return new temp::TempList{};//??what is sink?
+  auto temp_list = CalleeSaves();
+  temp_list->Append(StackPointer());
+  temp_list->Append(ReturnValue());
+  return temp_list;
 }
 
 int X64RegManager::WordSize() {
@@ -186,11 +191,22 @@ assem::Proc *ProcEntryExit3(frame::Frame *frame,assem::InstrList *instr_list){
   std::stringstream prolog;
   //_scan_lines in interpreter.py
   prolog<<".set "<<frame->GetLabel()<<" "<<123<<std::endl;
-  prolog<<frame->GetLabel()<<":"<<std::endl;
+  // prolog<<frame->GetLabel()<<":"<<std::endl;
+  instr_list->Insert(instr_list->GetList().begin(),new assem::LabelInstr(frame->GetLabel(),frame->name_));
   
   std::stringstream epilog;
   epilog<<"retq"<<std::endl;
   return new assem::Proc(prolog.str(), instr_list,epilog.str());
+}
+
+assem::InstrList* ProcEntryExit2(assem::InstrList*body){
+  body->Append(
+    new assem::OperInstr(
+      "", 
+      new temp::TempList(),
+      reg_manager->ReturnSink(),
+      nullptr));
+  return body;
 }
 
 } // namespace frame

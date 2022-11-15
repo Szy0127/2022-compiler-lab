@@ -89,7 +89,7 @@ public:
   [[nodiscard]] const std::list<tree::Stm*> &GetVSList() const { return view_shift_stm; }
 
   temp::Label *name_;//for output.cc
-  std::string GetLabel(){return name_->Name();}
+  std::string GetLabel(){return temp::LabelFactory::LabelString(name_);}
 protected:
   unsigned long sp_off{0};//sp-fp
   //actually here Stm must be MoveStm
@@ -155,6 +155,8 @@ tree::Exp *externalCall(std::string s,tree::ExpList *args);
 // tree::Exp *staticLink(tr::Level *level_now,tr::Level *level_target);
 std::list<tree::Stm*> ProcEntryExit1(frame::Frame *frame, tree::Stm *func_body);
 assem::Proc *ProcEntryExit3(frame::Frame *frame,assem::InstrList *instr_list);
+
+assem::InstrList* ProcEntryExit2(assem::InstrList*body);
 } // namespace frame
 
 #endif
