@@ -32,13 +32,13 @@ X64Frame::X64Frame(temp::Label *name,std::list<bool> *f):Frame(name,f){
   for(const auto &escape:*f){
     formals_.push_back(AllocLocal(escape));
   }
-  auto i = 0;
   auto reg_list = reg_manager->ArgRegs()->GetList();
   auto max_index = reg_list.size();
   auto reg_it = reg_list.begin();
   auto frame_ptr = new tree::TempExp(reg_manager->FramePointer());
   auto word_size = reg_manager->WordSize();
   //here contains static link , in rdi
+  auto i = 0;
   for(const auto&formal:formals_){
     tree::MoveStm* move = nullptr;
     if(i < max_index){
@@ -64,6 +64,7 @@ X64Frame::X64Frame(temp::Label *name,std::list<bool> *f):Frame(name,f){
         )
       );
     }
+    i++;
     view_shift_stm.push_back(move);
   }
   
