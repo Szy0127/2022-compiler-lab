@@ -122,6 +122,7 @@ X64Frame::X64Frame(temp::Label *name,std::list<bool> *f):Frame(name,f){
       );
     }
     i++;
+    reg_it++;
     view_shift_stm.push_back(move);
   }
   
