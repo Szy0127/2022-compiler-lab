@@ -22,6 +22,9 @@ void CodeGen::Codegen() {
   auto instr_list = new assem::InstrList();
   for (auto stm : traces_->GetStmList()->GetList()) {
     stm->Munch(*instr_list, fs_);
+    // std::cout<<"stm begin"<<std::endl;
+    // stm->Print(stderr,2);
+    // std::cout<<"stm end"<<std::endl;
   }
   assem_instr_ = std::make_unique<AssemInstr>(frame::ProcEntryExit2(instr_list));
 }
@@ -38,7 +41,8 @@ namespace tree {
 
 void SeqStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
   /* TODO: Put your lab5 code here */
-  std::cout<<"seq"<<std::endl;
+  left_->Munch(instr_list,fs);
+  right_->Munch(instr_list,fs);
 }
 
 void LabelStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
@@ -48,16 +52,72 @@ void LabelStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
 
 void JumpStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
   /* TODO: Put your lab5 code here */
-  std::cout<<"JumpStm"<<std::endl;
+  instr_list.Append(
+    new assem::OperInstr(
+      "jmp `j0",
+      new temp::TempList(), new temp::TempList(),
+      new assem::Targets(jumps_)
+    )
+  );
 }
 
 void CjumpStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
   /* TODO: Put your lab5 code here */
-  std::cout<<"CjumpStm"<<std::endl;
+  auto left_temp =  left_->Munch(instr_list, fs);
+  auto right_temp = right_->Munch(instr_list, fs);
+  instr_list.Append(
+    new assem::OperInstr(
+      //s1 - s0
+      "cmpq `s0,`s1",
+      new temp::TempList(),
+      new temp::TempList{right_temp, left_temp},
+      nullptr
+    )
+  );
+  std::string op;
+  switch (op_) {
+    case EQ_OP:op = "je";break;
+    case NE_OP:op = "jne";break;
+    // left < right => left - right < 0
+    case LT_OP:op = "jl";break;
+    case GT_OP:op = "jg";break;
+    case LE_OP:op = "jle";break;
+    case GE_OP:op = "jge";break;
+  }
+  std::stringstream assem;
+  assem<<op<<" `j0";
+  instr_list.Append(
+    new assem::OperInstr(
+      assem.str(),
+      new temp::TempList(),
+      new temp::TempList(),
+      new assem::Targets(new std::vector<temp::Label *>{true_label_, false_label_})
+    )
+  );
 }
 
 void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
   /* TODO: Put your lab5 code here */
+  if (typeid(*dst_) == typeid(MemExp)) {
+    auto dst = static_cast<MemExp *>(dst_);
+    if (typeid(*dst->exp_) == typeid(BinopExp)) {
+      auto dst_mem = static_cast<BinopExp *>(dst->exp_);
+      if (dst_mem->op_ == PLUS_OP) {
+        auto left_temp = dst_mem->left_->Munch(instr_list, fs);
+        auto right_temp = dst_mem->right_->Munch(instr_list, fs);
+        auto src_temp = src_->Munch(instr_list,fs);
+        instr_list.Append(
+          new assem::MoveInstr(
+            "movq `s0,(`s1,`s2)",
+            new temp::TempList(),
+            new temp::TempList{src_temp,left_temp,right_temp,}
+          )
+        );
+        return;
+      }
+    }
+    std::cout<<"move"<<std::endl;
+  }
   if(typeid(*src_)==typeid(ConstExp)){
     auto src = static_cast<ConstExp *>(src_);
     auto dst = dst_->Munch(instr_list, fs);
@@ -70,7 +130,9 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
         new temp::TempList()//can be nullptr in Format,but cant in Print
       )
     );
+    return;
   }
+  //TODO
   auto src = src_->Munch(instr_list,fs);
   auto dst = dst_->Munch(instr_list,fs);
   instr_list.Append(
@@ -80,40 +142,6 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
       new temp::TempList(src)
     )
   );
-  // if (typeid(*dst_) == typeid(MemExp)) {
-  //   auto dst_mem = static_cast<MemExp*>(dst_);
-  //   if (typeid(*dst_mem->exp_) == typeid(BinopExp)) {
-  //     auto dst_binop = static_cast<BinopExp>(dst_mem->exp_);
-  //     if(dst_binop == PLUS_OP && 
-  //       typeid(*dst_binop->right_) == typeid(ConstExp)) {
-  //       auto e1 = dst_binop->left_; 
-  //       auto e2 = src_;
-  //       /*MOVE(MEM(e1+i), e2) */
-  //       e1->Munch(instr_list,fs);
-  //       e2->Munch(instr_list,fs);
-  //       // il.emit(“STORE”);
-  //       return;
-  //     }
-  //     if(dst_binop->op_== PLUS_OP &&
-  //       typeid(*dst_binop->left_) == typeid(ConstExp)) {
-  //       auto e1 = dst_binop->right_; 
-  //       auto e2 = src_;
-  //       /*MOVE(MEM(i+e1), e2) */
-  //       e1->Munch(instr_list,fs);
-  //       e2->Munch(instr_list,fs);	
-  //       // il.emit(“STORE”);
-  //       return;
-  //     }
-
-  //   }
-
-  
-  // if (typeid(*dst_) == typeid(TempExp)) {
-  //   auto e2=src_;
-  //   /*MOVE(TEMP~i, e2) */
-  //   auto temp = e2->Munch(instr_list,fs); 
-
-
 }
 
 void ExpStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
@@ -156,6 +184,58 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
        )
     );
     break;
+  case MUL_OP:{
+    //%rdx %rax <-- S x %rax
+      auto rax = reg_manager->GetRegister(0);
+      auto rdx = reg_manager->GetRegister(3);
+      instr_list.Append(
+        new assem::MoveInstr(
+          "movq `s0,%rax",//`d0?
+          new temp::TempList(rax),
+          new temp::TempList(left_temp)
+        )
+      );
+      instr_list.Append(
+        new assem::OperInstr(
+          "imulq `s0",
+          new temp::TempList{rax, rdx},
+          new temp::TempList{right_temp, rax},
+          nullptr
+        )
+      );
+      return rax;
+      break;
+  }
+  case DIV_OP:{
+      //%rax <-- %rdx %rax / S  %rdx = mod
+      auto rax = reg_manager->GetRegister(0);
+      auto rdx = reg_manager->GetRegister(3);
+      instr_list.Append(
+        new assem::MoveInstr(
+          "movq `s0,%rax",//`d0?
+          new temp::TempList(rax),
+          new temp::TempList(left_temp)
+        )
+      );
+      instr_list.Append(
+        new assem::OperInstr(
+          "cqto",
+          new temp::TempList(rdx),
+          new temp::TempList(),
+          nullptr
+        )
+      );
+      instr_list.Append(
+        new assem::OperInstr(
+          "idivq `s0",
+          new temp::TempList{rax, rdx},
+          new temp::TempList{right_temp, rax,rdx},
+          nullptr
+        )
+      );
+      return rax;
+      break;
+  }
   
   default:
     break;
@@ -166,7 +246,23 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
 
 temp::Temp *MemExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   /* TODO: Put your lab5 code here */
-  std::cout<<"MemExp"<<std::endl;
+  auto ret_temp = temp::TempFactory::NewTemp();
+  if (typeid(*exp_) == typeid(BinopExp)) {
+    auto exp = static_cast<BinopExp *>(exp_);
+    if (exp->op_ == PLUS_OP) {
+      auto left_temp = exp->left_->Munch(instr_list,fs);
+      auto right_temp = exp->right_->Munch(instr_list,fs);
+      instr_list.Append(
+        new assem::OperInstr(
+          "leaq (`s0,`s1),`d0",
+          new temp::TempList(ret_temp),
+          new temp::TempList{left_temp,right_temp},
+          nullptr
+        )
+      );
+    }
+  }
+  return ret_temp;
 }
 
 temp::Temp *TempExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
@@ -182,7 +278,25 @@ temp::Temp *EseqExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
 
 temp::Temp *NameExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   /* TODO: Put your lab5 code here */
-  std::cout<<"NameExp"<<std::endl;
+
+  /*
+  stable_table.py
+  if mem.startswith('L'):
+      # Relative mem_address
+      return self._string_address + int(mem[1:imm_index]) * 8
+  
+  */
+  auto str_addr_temp = temp::TempFactory::NewTemp();
+  std::stringstream assem;
+  assem << "leaq " << temp::LabelFactory::LabelString(name_) << "(%rip),`d0";
+  instr_list.Append(
+    new assem::MoveInstr(
+      assem.str(),
+      new temp::TempList(str_addr_temp),
+      new temp::TempList()
+    )
+  );
+  return str_addr_temp;
 }
 
 temp::Temp *ConstExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
@@ -248,6 +362,7 @@ temp::TempList *ExpList::MunchArgs(assem::InstrList &instr_list, std::string_vie
         )
       );
     }
+    //TODO
     // else{
     //     instr_list.Append(
     //     new assem::MoveInstr(
