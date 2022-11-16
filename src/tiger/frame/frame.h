@@ -90,6 +90,8 @@ public:
 
   temp::Label *name_;//for output.cc
   std::string GetLabel(){return temp::LabelFactory::LabelString(name_);}
+
+  unsigned long GetFrameSize(){return -sp_off;}
 protected:
   unsigned long sp_off{0};//sp-fp
   //actually here Stm must be MoveStm

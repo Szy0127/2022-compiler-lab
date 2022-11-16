@@ -189,12 +189,14 @@ Access *X64Frame::AllocLocal(bool escape){
 
 assem::Proc *ProcEntryExit3(frame::Frame *frame,assem::InstrList *instr_list){
   std::stringstream prolog;
+  auto frame_size = frame->GetFrameSize();
   //_scan_lines in interpreter.py
-  prolog<<".set "<<frame->GetLabel()<<" "<<123<<std::endl;
-  // prolog<<frame->GetLabel()<<":"<<std::endl;
-  instr_list->Insert(instr_list->GetList().begin(),new assem::LabelInstr(frame->GetLabel(),frame->name_));
-  
+  prolog<<".set "<<frame->GetLabel()<<"_framesize, "<<frame_size<<std::endl;
+  prolog<<frame->GetLabel()<<":"<<std::endl;
+  // instr_list->Insert(instr_list->GetList().begin(),new assem::LabelInstr(frame->GetLabel(),frame->name_));
+  prolog<<"subq $"<<frame_size<<",%rsp"<<std::endl;
   std::stringstream epilog;
+  epilog<<"addq $"<<frame_size<<",%rsp"<<std::endl;
   epilog<<"retq"<<std::endl;
   return new assem::Proc(prolog.str(), instr_list,epilog.str());
 }

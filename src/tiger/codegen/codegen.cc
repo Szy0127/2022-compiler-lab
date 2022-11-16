@@ -19,6 +19,7 @@ void CodeGen::Codegen() {
   /* TODO: Put your lab5 code here */
 
   //cant assem::InstrList instr_list and make_unique &instr_list; 
+  fs_ = frame_->GetLabel();
   auto instr_list = new assem::InstrList();
   for (auto stm : traces_->GetStmList()->GetList()) {
     stm->Munch(*instr_list, fs_);
@@ -103,20 +104,63 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
     if (typeid(*dst->exp_) == typeid(BinopExp)) {
       auto dst_mem = static_cast<BinopExp *>(dst->exp_);
       if (dst_mem->op_ == PLUS_OP) {
+        auto src_temp = src_->Munch(instr_list,fs);
+        std::stringstream assem;
+        assem<<"movq `s0,";
+
+
+        //same as memexp
+        // fp+const --> sp + const + framesize
+        auto exp = dst_mem;
+        if (typeid(*exp->left_) == typeid(ConstExp)) {
+          auto left = static_cast<ConstExp *>(exp->left_);
+          auto right_temp = exp->right_->Munch(instr_list, fs);
+          if (right_temp == reg_manager->FramePointer()) {
+            assem<<"("<<fs<<"_framesize"<<left->consti_<<")(`s1)";
+            right_temp = reg_manager->StackPointer();
+          } else {
+            assem<<left->consti_<<"(`s1)";
+          }
+          instr_list.Append(
+            new assem::MoveInstr(
+              assem.str(),
+              new temp::TempList(),
+              new temp::TempList{src_temp,right_temp}
+            )
+          );
+          return;
+        }
+        if (typeid(*exp->right_) == typeid(ConstExp)) {
+          auto right = static_cast<ConstExp *>(exp->right_);
+          auto left_temp = exp->left_->Munch(instr_list, fs);
+          if (left_temp == reg_manager->FramePointer()) {
+            assem<<"("<<fs<<"_framesize"<<right->consti_<<")(`s1)";
+            left_temp = reg_manager->StackPointer();
+          } else {
+            assem<<right->consti_<<"(`s1)";
+          }
+          instr_list.Append(
+            new assem::MoveInstr(
+              assem.str(),
+              new temp::TempList(),
+              new temp::TempList{src_temp,left_temp}
+            )
+          );
+          return;
+        }
+
         auto left_temp = dst_mem->left_->Munch(instr_list, fs);
         auto right_temp = dst_mem->right_->Munch(instr_list, fs);
-        auto src_temp = src_->Munch(instr_list,fs);
         instr_list.Append(
           new assem::MoveInstr(
             "movq `s0,(`s1,`s2)",
             new temp::TempList(),
-            new temp::TempList{src_temp,left_temp,right_temp,}
+            new temp::TempList{src_temp,left_temp,right_temp}
           )
         );
         return;
       }
     }
-    std::cout<<"move"<<std::endl;
   }
   if(typeid(*src_)==typeid(ConstExp)){
     auto src = static_cast<ConstExp *>(src_);
@@ -250,14 +294,53 @@ temp::Temp *MemExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   if (typeid(*exp_) == typeid(BinopExp)) {
     auto exp = static_cast<BinopExp *>(exp_);
     if (exp->op_ == PLUS_OP) {
+      // fp+const --> sp + const + framesize
+      if (typeid(*exp->left_) == typeid(ConstExp)) {
+        auto left = static_cast<ConstExp *>(exp->left_);
+        auto right_temp = exp->right_->Munch(instr_list, fs);
+        std::stringstream assem;
+        if (right_temp == reg_manager->FramePointer()) {
+          assem<<"movq ("<<fs<<"_framesize"<<left->consti_<<")(`s0),`d0";
+          right_temp = reg_manager->StackPointer();
+        } else {
+          assem<<"movq "<<left->consti_<<"(`s0),`d0";
+        }
+        instr_list.Append(
+          new assem::MoveInstr(
+            assem.str(),
+            new temp::TempList(ret_temp),
+            new temp::TempList(right_temp)
+          )
+        );
+        return ret_temp;
+      }
+      if (typeid(*exp->right_) == typeid(ConstExp)) {
+        auto right = static_cast<ConstExp *>(exp->right_);
+        auto left_temp = exp->left_->Munch(instr_list, fs);
+        std::stringstream assem;
+        if (left_temp == reg_manager->FramePointer()) {
+          assem<<"movq ("<<fs<<"_framesize"<<right->consti_<< ")(`s0),`d0";
+          left_temp = reg_manager->StackPointer();
+        } else {
+          assem<<"movq "<<right->consti_<<"(`s0),`d0";
+        }
+        instr_list.Append(
+          new assem::MoveInstr(
+            assem.str(),
+            new temp::TempList(ret_temp),
+            new temp::TempList(left_temp)
+          )
+        );
+        return ret_temp;
+      }
+
       auto left_temp = exp->left_->Munch(instr_list,fs);
       auto right_temp = exp->right_->Munch(instr_list,fs);
       instr_list.Append(
-        new assem::OperInstr(
-          "leaq (`s0,`s1),`d0",
+        new assem::MoveInstr(
+          "movq (`s0,`s1),`d0",
           new temp::TempList(ret_temp),
-          new temp::TempList{left_temp,right_temp},
-          nullptr
+          new temp::TempList{left_temp,right_temp}
         )
       );
     }
@@ -354,6 +437,19 @@ temp::TempList *ExpList::MunchArgs(assem::InstrList &instr_list, std::string_vie
     auto temp = exp->Munch(instr_list,fs);
     if(i < max_index){
       used_temps->Append(*arg_it);
+      if(i==0 && temp == reg_manager->FramePointer()){//static link may use rbp
+        std::stringstream assem;
+        assem << "leaq " << fs << "_framesize(%rsp),`d0";
+        instr_list.Append(
+          new assem::OperInstr(
+            assem.str(),
+            new temp::TempList(*arg_it),
+            new temp::TempList(),
+            nullptr
+          )
+        );
+        continue;
+      }
       instr_list.Append(
         new assem::MoveInstr(
           "movq `s0,`d0",
