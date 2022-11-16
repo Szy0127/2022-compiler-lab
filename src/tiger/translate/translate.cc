@@ -548,27 +548,20 @@ tr::ExpAndTy *SeqExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                 err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
   auto exp_list = seq_->GetList();
-  tree::Stm* stm = nullptr;
-  auto exp_it = exp_list.rbegin();
-  for(;std::next(exp_it)!=exp_list.rend();exp_it++){
+  auto exp_it = exp_list.begin();
+  std::list<tree::Stm*> stm_list;
+  for(;std::next(exp_it)!=exp_list.end();exp_it++){
     auto exp_ty = (*exp_it)->Translate(venv,tenv,level,label,errormsg);
-    if(stm){
-      stm = new tree::SeqStm(
-        exp_ty->exp_->UnNx(),
-        stm
-      );
-    }else{
-      stm = exp_ty->exp_->UnNx();
-    }
+    stm_list.push_back(exp_ty->exp_->UnNx());
   }
   auto exp_ty = (*exp_it)->Translate(venv,tenv,level,label,errormsg);
-  if(!stm){
+  if(stm_list.empty()){
     return exp_ty;
   }
   return new tr::ExpAndTy(
     new tr::ExExp(
       new tree::EseqExp(
-        stm,
+        tr::list2tree(stm_list),
         exp_ty->exp_->UnEx()
       )
     ),
