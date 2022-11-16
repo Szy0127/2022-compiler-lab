@@ -692,6 +692,7 @@ tr::ExpAndTy *ForExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   auto body = temp::LabelFactory::NewLabel();
   auto loop = temp::LabelFactory::NewLabel();
   auto done = temp::LabelFactory::NewLabel();
+  auto test = temp::LabelFactory::NewLabel();
   venv->Enter(var_,new env::VarEntry(access,low_exp_ty->ty_,true));
 
   auto body_exp_ty = body_->Translate(venv,tenv,level,done,errormsg);
@@ -699,9 +700,13 @@ tr::ExpAndTy *ForExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   venv->EndScope();
 
 
-  auto cj1 = new tree::CjumpStm(tree::GT_OP,i,limit,done,body);
-  auto cj2 = new tree::CjumpStm(tree::EQ_OP,i,limit,done,loop);
-  auto cj3 = new tree::CjumpStm(tree::LT_OP,i,limit,loop,done);
+  // if consider maxint  one of two body will be eliminated by canon???
+  
+  // auto cj1 = new tree::CjumpStm(tree::GT_OP,i,limit,done,body);
+  // auto cj2 = new tree::CjumpStm(tree::EQ_OP,i,limit,done,loop);
+  // auto cj3 = new tree::CjumpStm(tree::LT_OP,i,limit,loop,done);
+
+  auto cj = new tree::CjumpStm(tree::LE_OP,i,limit,body,done);
 
   auto body_stm = body_exp_ty->exp_->UnNx();
   auto seq = tr::list2tree({
@@ -711,17 +716,20 @@ tr::ExpAndTy *ForExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
     new tree::MoveStm(
       limit,high_exp_ty->exp_->UnEx()
     ),
-    cj1,
+    // cj1,
+    new tree::LabelStm(test),
+    cj,
     new tree::LabelStm(body),
     body_stm,
-    cj2,
-    new tree::LabelStm(loop),
+    // cj2,
+    // new tree::LabelStm(loop),
     new tree::MoveStm(
       i,
       new tree::BinopExp(tree::PLUS_OP,i,new tree::ConstExp(1))
     ),
-    body_stm,
-    cj3,
+    // body_stm,
+    // cj3,
+    new tree::JumpStm(new tree::NameExp(test),new std::vector<temp::Label*>{test}),
     new tree::LabelStm(done)
   });
   return new tr::ExpAndTy(
