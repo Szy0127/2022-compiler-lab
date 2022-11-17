@@ -401,11 +401,30 @@ void TypeDec::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
     if(tenv->Look(type->name_)){
       errormsg->Error(pos_, "two types have the same name");
     }
-    tenv->Enter(type->name_, type::VoidTy::Instance()); 
+    tenv->Enter(type->name_, new type::NameTy(type->name_,nullptr)); 
   }
   for(const auto &type:type_list){
+    
     auto ty = type->ty_->SemAnalyze(tenv, errormsg);
     tenv->Enter(type->name_, ty); 
+    if(typeid(*ty)==typeid(type::RecordTy)){
+      auto fields_list = static_cast<type::RecordTy*>(ty)->fields_->GetList();
+      for(auto&field:fields_list){
+        if(!field->ty_){
+          continue;
+        }
+        if(typeid(*field->ty_)==typeid(type::NameTy)){
+          auto ty_ = static_cast<type::NameTy*>(field->ty_);
+          if(!ty_->ty_){
+            if(ty_->sym_ == type->name_){//type list = { first: int, rest: list }
+              field->ty_ = ty;
+            }else{
+              errormsg->Error(pos_, "undefined type %s", ty_->sym_->Name().data());
+            }
+          }
+        }
+      }
+    }
   }
 
   auto len = type_list.size();
