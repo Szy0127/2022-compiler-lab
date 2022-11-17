@@ -503,7 +503,7 @@ tr::ExpAndTy *RecordExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
     alloc_record
   );
 
-  auto offset = record_len-1;
+  auto offset = (record_len-1)*wordsize;
   auto efield_list = fields_->GetList();
   auto efield_it = efield_list.rbegin();
 
