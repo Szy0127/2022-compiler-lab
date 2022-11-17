@@ -448,6 +448,7 @@ temp::TempList *ExpList::MunchArgs(assem::InstrList &instr_list, std::string_vie
             nullptr
           )
         );
+        arg_it++;
         continue;
       }
       instr_list.Append(
