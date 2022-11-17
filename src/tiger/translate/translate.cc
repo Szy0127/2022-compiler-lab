@@ -899,16 +899,28 @@ tr::Exp *VarDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
 tr::Exp *TypeDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                             tr::Level *level, temp::Label *label,
                             err::ErrorMsg *errormsg) const {
-  /* TODO: Put your lab5 code here */
+ /* TODO: Put your lab5 code here */
   auto type_list = types_->GetList();
   for(const auto &type:type_list){
-    tenv->Enter(type->name_, type::VoidTy::Instance()); 
+    tenv->Enter(type->name_, new type::NameTy(type->name_,nullptr)); 
   }
   for(const auto &type:type_list){
-    auto ty = type->ty_->Translate(tenv,errormsg);
+    
+    auto ty = type->ty_->Translate(tenv, errormsg);
     tenv->Enter(type->name_, ty); 
+    //type list = { first: int, rest: list }
+    if(typeid(*ty)==typeid(type::RecordTy)){
+      auto fields_list = static_cast<type::RecordTy*>(ty)->fields_->GetList();
+      for(auto&field:fields_list){
+          if(typeid(*field->ty_)==typeid(type::NameTy)){
+            auto ty_ = static_cast<type::NameTy*>(field->ty_);
+            if(ty_->sym_ == type->name_ && !ty_->ty_){
+              field->ty_ = ty;
+            }
+          }
+      }
+    }
   }
-
 
   return NOP;
 }
