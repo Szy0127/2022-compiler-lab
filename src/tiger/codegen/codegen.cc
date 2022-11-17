@@ -116,7 +116,7 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
           auto left = static_cast<ConstExp *>(exp->left_);
           auto right_temp = exp->right_->Munch(instr_list, fs);
           if (right_temp == reg_manager->FramePointer()) {
-            assem<<"("<<fs<<"_framesize"<<left->consti_<<")(`s1)";
+            assem<<"("<<fs<<"_framesize+"<<left->consti_<<")(`s1)";
             right_temp = reg_manager->StackPointer();
           } else {
             assem<<left->consti_<<"(`s1)";
@@ -134,7 +134,7 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
           auto right = static_cast<ConstExp *>(exp->right_);
           auto left_temp = exp->left_->Munch(instr_list, fs);
           if (left_temp == reg_manager->FramePointer()) {
-            assem<<"("<<fs<<"_framesize"<<right->consti_<<")(`s1)";
+            assem<<"("<<fs<<"_framesize+"<<right->consti_<<")(`s1)";
             left_temp = reg_manager->StackPointer();
           } else {
             assem<<right->consti_<<"(`s1)";
@@ -179,6 +179,13 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
   //TODO
   auto src = src_->Munch(instr_list,fs);
   auto dst = dst_->Munch(instr_list,fs);
+  if(!src || !dst){
+      std::cout<<"todo"<<std::endl;
+  src_->Print(stderr,2);
+  std::cout<<"dst"<<std::endl;
+  dst_->Print(stderr,2);
+  }
+
   instr_list.Append(
     new assem::MoveInstr(
       "movq `s0,`d0",
@@ -300,7 +307,7 @@ temp::Temp *MemExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
         auto right_temp = exp->right_->Munch(instr_list, fs);
         std::stringstream assem;
         if (right_temp == reg_manager->FramePointer()) {
-          assem<<"movq ("<<fs<<"_framesize"<<left->consti_<<")(`s0),`d0";
+          assem<<"movq ("<<fs<<"_framesize+"<<left->consti_<<")(`s0),`d0";
           right_temp = reg_manager->StackPointer();
         } else {
           assem<<"movq "<<left->consti_<<"(`s0),`d0";
@@ -319,7 +326,7 @@ temp::Temp *MemExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
         auto left_temp = exp->left_->Munch(instr_list, fs);
         std::stringstream assem;
         if (left_temp == reg_manager->FramePointer()) {
-          assem<<"movq ("<<fs<<"_framesize"<<right->consti_<< ")(`s0),`d0";
+          assem<<"movq ("<<fs<<"_framesize+"<<right->consti_<< ")(`s0),`d0";
           left_temp = reg_manager->StackPointer();
         } else {
           assem<<"movq "<<right->consti_<<"(`s0),`d0";
@@ -410,6 +417,23 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   //caller saved registers
 
 
+  // here to extend stack?
+  auto args_size = args_->GetList().size();
+  auto max_args_size = reg_manager->ArgRegs()->GetList().size();
+  auto add_stack = (args_size - 6) * reg_manager->WordSize();
+  if(args_size > max_args_size){
+    std::stringstream assem;
+    assem << "subq $" << add_stack << ",`d0";
+    instr_list.Append(
+      new assem::OperInstr(
+        assem.str(),
+        new temp::TempList(reg_manager->StackPointer()),
+        new temp::TempList(),
+        nullptr
+      )
+    );
+  }
+
   auto calldefs = reg_manager->CallerSaves();
   calldefs->Append(reg_manager->ReturnValue());
 
@@ -422,6 +446,20 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
       nullptr
     )
   );
+
+  if(args_size > max_args_size){
+    std::stringstream assem;
+    assem << "addq $" << add_stack << ",`d0";
+    instr_list.Append(
+      new assem::OperInstr(
+        assem.str(),
+        new temp::TempList(reg_manager->StackPointer()),
+        new temp::TempList(),
+        nullptr
+      )
+    );
+  }
+
   return reg_manager->ReturnValue();
 }
 
@@ -433,44 +471,53 @@ temp::TempList *ExpList::MunchArgs(assem::InstrList &instr_list, std::string_vie
   auto arg_it = arg_regs.begin();
   // match with frame::frame
   auto used_temps = new temp::TempList();
+  auto wordsize = reg_manager->WordSize();
+
+  auto arg_size = exp_list_.size();
   for(const auto&exp:exp_list_){
     auto temp = exp->Munch(instr_list,fs);
     if(i < max_index){
       used_temps->Append(*arg_it);
       if(i==0 && temp == reg_manager->FramePointer()){//static link may use rbp
         std::stringstream assem;
-        assem << "leaq " << fs << "_framesize(%rsp),`d0";
+        assem << "leaq " << fs << "_framesize(`s0),`d0";
         instr_list.Append(
           new assem::OperInstr(
             assem.str(),
             new temp::TempList(*arg_it),
-            new temp::TempList(),
+            new temp::TempList(reg_manager->StackPointer()),
             nullptr
           )
         );
-        arg_it++;
-        continue;
+      }else{
+        instr_list.Append(
+          new assem::MoveInstr(
+            "movq `s0,`d0",
+            new temp::TempList(*arg_it),
+            new temp::TempList(temp)
+          )
+        );
       }
+      arg_it++;
+    }else{
+      std::stringstream assem;
+      //rsp-->
+      //rsp-8   param -1th
+      //rsp-16 param -2th
+      //rsp-8*n param 7th
+      assem << "movq `s0," << (int)(-wordsize * (arg_size-i)) << "(`s1)";
       instr_list.Append(
         new assem::MoveInstr(
-          "movq `s0,`d0",
-          new temp::TempList(*arg_it),
-          new temp::TempList(temp)
+          assem.str(),
+          new temp::TempList(),
+          new temp::TempList{temp,reg_manager->StackPointer()}
         )
       );
-    }
-    //TODO
-    // else{
-    //     instr_list.Append(
-    //     new assem::MoveInstr(
-    //       "movq `s0,`d0",
-    //       new temp::TempList(*arg_it),
-    //       new temp::TempList(temp)
-    //     );
-    //   )
-    // }
+    } 
     i++;
-    arg_it++;
+  }
+  if(i > max_index){
+    used_temps->Append(reg_manager->StackPointer());
   }
   return used_temps;
 }
