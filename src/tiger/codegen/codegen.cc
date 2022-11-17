@@ -149,6 +149,7 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
           return;
         }
 
+
         auto left_temp = dst_mem->left_->Munch(instr_list, fs);
         auto right_temp = dst_mem->right_->Munch(instr_list, fs);
         instr_list.Append(
@@ -161,6 +162,17 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
         return;
       }
     }
+  
+    auto src_temp = src_->Munch(instr_list, fs);
+    auto dst_temp = dst->exp_->Munch(instr_list, fs);
+    instr_list.Append(
+      new assem::MoveInstr(
+        "movq `s0,(`d0)",
+        new temp::TempList(dst_temp),
+        new temp::TempList(src_temp)
+      )
+    );
+    return;
   }
   if(typeid(*src_)==typeid(ConstExp)){
     auto src = static_cast<ConstExp *>(src_);
@@ -414,9 +426,6 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   // x86-64 can directly call function name(label)
   // il.Append(new assem::OperInstr(“CALL `s0\n”, calldefs, args, nullptr));
 
-  //caller saved registers
-
-
   // here to extend stack?
   auto args_size = args_->GetList().size();
   auto max_args_size = reg_manager->ArgRegs()->GetList().size();
@@ -435,6 +444,21 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   }
 
   auto calldefs = reg_manager->CallerSaves();
+
+  // view_shift  move and use rdi rsi.... in other regs  no need to caller saved?
+  //caller saved registers
+  // std::list<temp::Temp*> saved;
+  // for(const auto&reg:calldefs->GetList()){
+  //   auto temp = temp::TempFactory::NewTemp();
+  //   saved.push_back(temp);
+  //   instr_list.Append(
+  //     new assem::MoveInstr(
+  //       "movq `s0,`d0",
+  //       new temp::TempList(temp),
+  //       new temp::TempList(reg)
+  //     )
+  //   );
+  // }
   calldefs->Append(reg_manager->ReturnValue());
 
   std::stringstream assem;
@@ -446,6 +470,17 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
       nullptr
     )
   );
+  // auto reg_it = calldefs->GetList().begin();
+  // for(const auto&temp:saved){
+  //   instr_list.Append(
+  //     new assem::MoveInstr(
+  //       "movq `s0,`d0",
+  //       new temp::TempList(*reg_it),
+  //       new temp::TempList(temp)
+  //     )
+  //   );
+  //   reg_it++;
+  // }
 
   if(args_size > max_args_size){
     std::stringstream assem;
