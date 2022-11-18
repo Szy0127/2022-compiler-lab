@@ -188,16 +188,74 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
     );
     return;
   }
-  //TODO
+
+
+  //fp -> sp
+  if(typeid(*src_)==typeid(BinopExp)){
+    auto dst_temp = dst_->Munch(instr_list,fs);
+    auto src = static_cast<BinopExp*>(src_);
+    if(src->op_==PLUS_OP){
+      std::stringstream assem;
+      assem<<"leaq ";
+      if (typeid(*src->left_) == typeid(ConstExp)) {
+          auto left = static_cast<ConstExp *>(src->left_);
+          auto right_temp = src->right_->Munch(instr_list, fs);
+          if (right_temp == reg_manager->FramePointer()) {
+            assem<<"("<<fs<<"_framesize+"<<left->consti_<<")(`s0)";
+            right_temp = reg_manager->StackPointer();
+          } else {
+            assem<<left->consti_<<"(`s0)";
+          }
+          assem<<",`d0";
+          instr_list.Append(
+            new assem::OperInstr(
+              assem.str(),
+              new temp::TempList(dst_temp),
+              new temp::TempList{right_temp},
+              nullptr
+            )
+          );
+          return;
+        }
+      if (typeid(*src->right_) == typeid(ConstExp)) {
+          auto right = static_cast<ConstExp *>(src->right_);
+          auto left_temp = src->left_->Munch(instr_list, fs);
+          if (left_temp == reg_manager->FramePointer()) {
+            assem<<"("<<fs<<"_framesize+"<<right->consti_<<")(`s0)";
+            left_temp = reg_manager->StackPointer();
+          } else {
+            assem<<right->consti_<<"(`s0)";
+          }
+          assem<<",`d0";
+          instr_list.Append(
+            new assem::OperInstr(
+              assem.str(),
+              new temp::TempList(dst_temp),
+              new temp::TempList{left_temp},
+              nullptr
+            )
+          );
+          return;
+        }
+
+      assem<<"(`s0,`s1),`d0";
+      auto left_temp = src->left_->Munch(instr_list,fs);
+      auto right_temp = src->right_->Munch(instr_list,fs);
+      instr_list.Append(
+        new assem::OperInstr(
+          assem.str(),
+          new temp::TempList(dst_temp),
+          new temp::TempList{left_temp,right_temp},
+          nullptr
+        )
+      );
+      return;
+    }
+
+  }
+  
   auto src = src_->Munch(instr_list,fs);
   auto dst = dst_->Munch(instr_list,fs);
-  if(!src || !dst){
-      std::cout<<"todo"<<std::endl;
-  src_->Print(stderr,2);
-  std::cout<<"dst"<<std::endl;
-  dst_->Print(stderr,2);
-  }
-
   instr_list.Append(
     new assem::MoveInstr(
       "movq `s0,`d0",
@@ -363,7 +421,15 @@ temp::Temp *MemExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
         )
       );
     }
+    return ret_temp;
   }
+  instr_list.Append(
+    new assem::MoveInstr(
+      "movq (`s0),`d0",
+      new temp::TempList(ret_temp),
+      new temp::TempList{exp_->Munch(instr_list,fs)}
+    )
+  );
   return ret_temp;
 }
 
