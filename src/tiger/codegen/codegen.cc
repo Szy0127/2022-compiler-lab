@@ -116,7 +116,11 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
           auto left = static_cast<ConstExp *>(exp->left_);
           auto right_temp = exp->right_->Munch(instr_list, fs);
           if (right_temp == reg_manager->FramePointer()) {
-            assem<<"("<<fs<<"_framesize+"<<left->consti_<<")(`s1)";
+            assem<<"("<<fs<<"_framesize";
+            if(left->consti_>=0){
+              assem<<"+";
+            }
+            assem<<left->consti_<<")(`s1)";
             right_temp = reg_manager->StackPointer();
           } else {
             assem<<left->consti_<<"(`s1)";
@@ -134,7 +138,11 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
           auto right = static_cast<ConstExp *>(exp->right_);
           auto left_temp = exp->left_->Munch(instr_list, fs);
           if (left_temp == reg_manager->FramePointer()) {
-            assem<<"("<<fs<<"_framesize+"<<right->consti_<<")(`s1)";
+            assem<<"("<<fs<<"_framesize";
+            if(right->consti_>=0){
+              assem<<"+";
+            }
+            assem<<right->consti_<<")(`s1)";
             left_temp = reg_manager->StackPointer();
           } else {
             assem<<right->consti_<<"(`s1)";
@@ -201,7 +209,11 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
           auto left = static_cast<ConstExp *>(src->left_);
           auto right_temp = src->right_->Munch(instr_list, fs);
           if (right_temp == reg_manager->FramePointer()) {
-            assem<<"("<<fs<<"_framesize+"<<left->consti_<<")(`s0)";
+            assem<<"("<<fs<<"_framesize";
+            if(left->consti_>=0){
+              assem<<"+";
+            }
+            assem<<left->consti_<<")(`s0)";
             right_temp = reg_manager->StackPointer();
           } else {
             assem<<left->consti_<<"(`s0)";
@@ -221,7 +233,11 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
           auto right = static_cast<ConstExp *>(src->right_);
           auto left_temp = src->left_->Munch(instr_list, fs);
           if (left_temp == reg_manager->FramePointer()) {
-            assem<<"("<<fs<<"_framesize+"<<right->consti_<<")(`s0)";
+            assem<<"("<<fs<<"_framesize";
+            if(right->consti_>=0){
+              assem<<"+";
+            }
+            assem<<right->consti_<<")(`s0)";
             left_temp = reg_manager->StackPointer();
           } else {
             assem<<right->consti_<<"(`s0)";
@@ -377,7 +393,11 @@ temp::Temp *MemExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
         auto right_temp = exp->right_->Munch(instr_list, fs);
         std::stringstream assem;
         if (right_temp == reg_manager->FramePointer()) {
-          assem<<"movq ("<<fs<<"_framesize+"<<left->consti_<<")(`s0),`d0";
+          assem<<"movq ("<<fs<<"_framesize";
+            if(left->consti_>=0){
+              assem<<"+";
+            }
+            assem<<left->consti_<<")(`s0),`d0";
           right_temp = reg_manager->StackPointer();
         } else {
           assem<<"movq "<<left->consti_<<"(`s0),`d0";
@@ -396,7 +416,11 @@ temp::Temp *MemExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
         auto left_temp = exp->left_->Munch(instr_list, fs);
         std::stringstream assem;
         if (left_temp == reg_manager->FramePointer()) {
-          assem<<"movq ("<<fs<<"_framesize+"<<right->consti_<< ")(`s0),`d0";
+          assem<<"movq ("<<fs<<"_framesize";
+          if(right->consti_>=0){
+            assem<<"+";
+          }
+          assem<<right->consti_<< ")(`s0),`d0";
           left_temp = reg_manager->StackPointer();
         } else {
           assem<<"movq "<<right->consti_<<"(`s0),`d0";
