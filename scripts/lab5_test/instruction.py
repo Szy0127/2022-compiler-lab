@@ -60,7 +60,7 @@ class AddInstruction(Instruction):
         else:
             mem_add = state_table.get_mem_address(self._arg1)
             arg1_val = state_table.load_mem(mem_add)
-            state_table.store_mem(mem_add, arg0_val+arg1_val)
+            state_table.store_mem(mem_add, arg0_val + arg1_val)
 
 
     def print_kind(self):
@@ -89,7 +89,7 @@ class SubInstruction(Instruction):
         else:
             mem_add = state_table.get_mem_address(self._arg1)
             arg1_val = state_table.load_mem(mem_add)
-            state_table.store_mem(mem_add, arg1_val-arg0_val)
+            state_table.store_mem(mem_add, arg1_val - arg0_val)
 
 
     def print_kind(self):

@@ -91,9 +91,9 @@ class Interpreter(object):
             args  = parts[2].split(',')
             if len(args) > num:
                 if args[-2][-1] == ')':
-                    args = [','.join(args[:-1]),args[-1]]
+                    args = [','.join(args[:-1]), args[-1]]
                 elif args[-1][-1] == ')':
-                    args = [args[0],','.join(args[1:])]
+                    args = [args[0], ','.join(args[1:])]
                 else:
                     assert len(args) == num, 'Wrong args number in instruction'
             args_res = []
