@@ -212,6 +212,7 @@ test_lab5() {
 
   if [[ $full_score == 0 ]]; then
     echo "${score_str}: ${score}"
+    exit 1
   else
     echo "[^_^]: Pass"
     echo "${score_str}: 100"
@@ -274,6 +275,7 @@ test_lab6() {
 
   if [[ $full_score == 0 ]]; then
     echo "${score_str}: ${score}"
+    exit 1
   else
     echo "[^_^]: Pass"
     echo "${score_str}: 100"
