@@ -28,6 +28,16 @@ public:
 
 class RegAllocator {
   /* TODO: Put your lab6 code here */
+public:
+  RegAllocator(frame::Frame *frame,std::unique_ptr<cg::AssemInstr> assem_instr):frame_(frame),assem_instr_(std::move(assem_instr)){}
+  ~RegAllocator();
+  void RegAlloc();
+  std::unique_ptr<Result> TransferResult() { return std::move(result_); }
+
+private:
+  frame::Frame *frame_;
+  std::unique_ptr<cg::AssemInstr> assem_instr_;
+  std::unique_ptr<Result> result_;
 };
 
 } // namespace ra
