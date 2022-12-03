@@ -107,8 +107,8 @@ void LiveGraphFactory::InterfGraph() {
         auto uses = fg::FlowGraphFactory::GetUse(node);
         for(const auto &out:TempList_Diff(live_out,uses)->GetList()){
           auto node_out = temp_node_map_->Look(out);
+          //add edge not symetric but adj will return both succ and pred
           live_graph_.interf_graph->AddEdge(node_def, node_out);
-          live_graph_.interf_graph->AddEdge(node_out, node_def);
         }
         // for register allocation
         // a->b == b->a
@@ -125,7 +125,6 @@ void LiveGraphFactory::InterfGraph() {
         for(const auto &out:live_out->GetList()){
           auto node_out = temp_node_map_->Look(out);
           live_graph_.interf_graph->AddEdge(node_def,node_out);
-          live_graph_.interf_graph->AddEdge(node_out,node_def);
         }
       }
     }

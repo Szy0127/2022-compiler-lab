@@ -8,6 +8,7 @@
 #include "tiger/liveness/liveness.h"
 #include "tiger/regalloc/color.h"
 #include "tiger/util/graph.h"
+#include <map>
 
 namespace ra {
 
@@ -37,12 +38,31 @@ public:
 
 private:
   void LivenessAnalysis();
+  void Build();
+  void MakeWorklist();
+  void Simplify();
+  void DecrementDegree(const live::INodePtr &m);
+  void AssignColors();
 
+  live::INodePtr GetAlias(live::INodePtr n)const;
 
 private:
   frame::Frame *frame_;
   std::unique_ptr<cg::AssemInstr> assem_instr_;
   std::unique_ptr<Result> result_;
+
+  live::IGraphPtr live_graph_;
+
+  live::INodeList simplifyWorklist;
+  // live::MoveList worklistMoves;
+
+  std::map<live::INodePtr,int> degree;
+
+
+  live::INodeList selectStack;
+  live::INodeList coloredNodes;
+  // live::INodeList precolored;
+  std::map<live::INodePtr, temp::Temp*> color;
 };
 
 } // namespace ra
