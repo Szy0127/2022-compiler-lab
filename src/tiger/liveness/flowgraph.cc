@@ -1,5 +1,4 @@
 #include "tiger/liveness/flowgraph.h"
-#include <map>
 #include <list>
 namespace fg {
 
@@ -21,7 +20,8 @@ void FlowGraphFactory::AssemFlowGraph() {
       auto jumps = static_cast<assem::OperInstr *>(instr)->jumps_;
       //current node should jumps to jumps
       if(jumps){
-        last_node = nullptr;
+        //jump / cjump
+        last_node = jumps->labels_->size()==1 ? nullptr : current_node;
         jumpsto.emplace_back(current_node,jumps);
         continue;
       }
