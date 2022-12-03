@@ -22,6 +22,9 @@ public:
   void AssemFlowGraph();
   FGraphPtr GetFlowGraph() { return flowgraph_; }
 
+  [[nodiscard]] static temp::TempList* GetUse(FNodePtr node);
+  [[nodiscard]] static temp::TempList* GetDef(FNodePtr node);
+  [[nodiscard]] static bool IsMove(FNodePtr node);
 private:
   assem::InstrList *instr_list_;
   FGraphPtr flowgraph_;

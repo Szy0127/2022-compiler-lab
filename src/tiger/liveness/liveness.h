@@ -66,6 +66,11 @@ private:
 
   void LiveMap();
   void InterfGraph();
+
+  [[nodiscard]] static bool TempList_Contain(temp::TempList *list,temp::Temp* target);
+  [[nodiscard]] static temp::TempList* TempList_Union(temp::TempList *l,temp::TempList *r);//l+r
+  [[nodiscard]] static temp::TempList* TempList_Diff(temp::TempList *l,temp::TempList *r);//l-r
+  [[nodiscard]] static bool TempList_Same(temp::TempList *l,temp::TempList *r);//l+r
 };
 
 } // namespace live
