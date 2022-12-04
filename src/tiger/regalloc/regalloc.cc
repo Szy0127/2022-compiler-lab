@@ -22,8 +22,19 @@ void RegAllocator::RegAlloc(){
     AssignColors();    
 
 
-    result_->il_ = assem_instr_->GetInstrList();
+    auto instr_list = assem_instr_->GetInstrList();
+    for(const auto&node:flow_graph_->Nodes()->GetList()){
+        if(fg::FlowGraphFactory::IsMove(node)){
+            auto move_instr = static_cast<assem::MoveInstr*>(node->NodeInfo());
+            auto src_node = temp2Inode->Look(move_instr->src_->GetList().front());
+            auto dst_node = temp2Inode->Look(move_instr->dst_->GetList().front());
+            if(color[src_node] == color[dst_node]){
+                instr_list->Remove(move_instr);
+            }
+        }
+    }
 
+    result_->il_ = instr_list;
     auto reg_map = temp::Map::Empty();
     for(const auto &node : live_graph_->Nodes()->GetList()){
         reg_map->Enter(node->NodeInfo(), reg_manager->temp_map_->Look(color[node]));
@@ -36,17 +47,18 @@ RegAllocator::~RegAllocator(){}
 void RegAllocator::LivenessAnalysis(){
     auto flow_graph_factory = fg::FlowGraphFactory(assem_instr_->GetInstrList());
     flow_graph_factory.AssemFlowGraph();
-    auto live_graph_factory = live::LiveGraphFactory(flow_graph_factory.GetFlowGraph());
+    flow_graph_ = flow_graph_factory.GetFlowGraph();
+    auto live_graph_factory = live::LiveGraphFactory(flow_graph_);
     live_graph_factory.Liveness();
     auto live_graph = live_graph_factory.GetLiveGraph();
     live_graph_ = live_graph.interf_graph;
 
 
     //precolor
-    auto temp2node = live_graph_factory.GetTempNodeMap();
+    temp2Inode = live_graph_factory.GetTempNodeMap();
 
     for(const auto &reg : reg_manager->Registers()->GetList()){
-        auto node = temp2node->Look(reg);
+        auto node = temp2Inode->Look(reg);
         coloredNodes.Append(node);
         color[node] = reg;
     }

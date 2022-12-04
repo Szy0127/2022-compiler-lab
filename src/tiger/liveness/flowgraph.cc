@@ -49,7 +49,11 @@ temp::TempList *FlowGraphFactory::GetDef(FNodePtr node){
   return node->NodeInfo()->Def();
 }
 bool FlowGraphFactory::IsMove(FNodePtr node){
-  return typeid(*node->NodeInfo())==typeid(assem::MoveInstr);
+  auto instr = node->NodeInfo();
+  if(typeid(*instr)!=typeid(assem::MoveInstr)){
+    return false;
+  }
+  return static_cast<assem::MoveInstr*>(instr)->assem_=="movq `s0,`d0";
 }
 } // namespace fg
 

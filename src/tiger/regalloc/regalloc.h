@@ -52,6 +52,8 @@ private:
   std::unique_ptr<Result> result_;
 
   live::IGraphPtr live_graph_;
+  fg::FGraphPtr flow_graph_;
+  tab::Table<temp::Temp, live::INode> *temp2Inode;
 
   live::INodeList simplifyWorklist;
   // live::MoveList worklistMoves;
