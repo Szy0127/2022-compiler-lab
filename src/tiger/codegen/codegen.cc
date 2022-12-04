@@ -104,9 +104,16 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
     if (typeid(*dst->exp_) == typeid(BinopExp)) {
       auto dst_mem = static_cast<BinopExp *>(dst->exp_);
       if (dst_mem->op_ == PLUS_OP) {
-        auto src_temp = src_->Munch(instr_list,fs);
         std::stringstream assem;
-        assem<<"movq `s0,";
+        temp::Temp * src_temp = nullptr;
+        int s_index = 0;
+        if(typeid(*src_)==typeid(ConstExp)){
+          assem<<"movq $"<<static_cast<ConstExp*>(src_)->consti_<<",";
+        }else{
+          src_temp = src_->Munch(instr_list,fs);
+          assem<<"movq `s0,";
+          s_index = 1;
+        }
 
 
         //same as memexp
@@ -120,16 +127,16 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
             if(left->consti_>=0){
               assem<<"+";
             }
-            assem<<left->consti_<<")(`s1)";
+            assem<<left->consti_<<")(`s"<<s_index<<")";
             right_temp = reg_manager->StackPointer();
           } else {
-            assem<<left->consti_<<"(`s1)";
+            assem<<left->consti_<<"(`s"<<s_index<<")";
           }
           instr_list.Append(
             new assem::MoveInstr(
               assem.str(),
               new temp::TempList(),
-              new temp::TempList{src_temp,right_temp}
+              src_temp ? new temp::TempList{src_temp,right_temp} : new temp::TempList(right_temp)
             )
           );
           return;
@@ -142,16 +149,16 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
             if(right->consti_>=0){
               assem<<"+";
             }
-            assem<<right->consti_<<")(`s1)";
+            assem<<right->consti_<<")(`s"<<s_index<<")";
             left_temp = reg_manager->StackPointer();
           } else {
-            assem<<right->consti_<<"(`s1)";
+            assem<<right->consti_<<"(`s"<<s_index<<")";
           }
           instr_list.Append(
             new assem::MoveInstr(
               assem.str(),
               new temp::TempList(),
-              new temp::TempList{src_temp,left_temp}
+              src_temp ? new temp::TempList{src_temp,left_temp}:new temp::TempList(left_temp)
             )
           );
           return;
@@ -160,11 +167,12 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
 
         auto left_temp = dst_mem->left_->Munch(instr_list, fs);
         auto right_temp = dst_mem->right_->Munch(instr_list, fs);
+        assem<<"(`s"<<s_index<<",`s"<<s_index+1<<")";
         instr_list.Append(
           new assem::MoveInstr(
-            "movq `s0,(`s1,`s2)",
+            assem.str(),
             new temp::TempList(),
-            new temp::TempList{src_temp,left_temp,right_temp}
+            src_temp ? new temp::TempList{src_temp,left_temp,right_temp}:new temp::TempList{left_temp,right_temp}
           )
         );
         return;
