@@ -148,7 +148,7 @@ std::list<tree::Stm*> ProcEntryExit1(frame::Frame *frame, tree::Stm *func_body){
   //save registers
   for(const auto&reg:callee_saved_regs){
     // auto temp = temp::TempFactory::NewTemp();
-    auto access = frame->AllocLocal(false);
+    auto access = frame->AllocLocal(true);//not escape,but must put in frame
     // saved.push_back(temp);
     saved.push_back(access);
     stm_list.push_back(
