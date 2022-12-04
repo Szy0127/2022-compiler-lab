@@ -182,6 +182,91 @@ void MoveStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
     );
     return;
   }
+  if (typeid(*src_) == typeid(MemExp)) {//restore callee saved registers cant use rax
+    auto src = static_cast<MemExp *>(src_);
+    if (typeid(*src->exp_) == typeid(BinopExp)) {
+      auto src_mem = static_cast<BinopExp *>(src->exp_);
+      if (src_mem->op_ == PLUS_OP) {
+        auto dst_temp = dst_->Munch(instr_list,fs);
+        std::stringstream assem;
+        assem<<"movq ";
+
+        //same as memexp
+        // fp+const --> sp + const + framesize
+        auto exp = src_mem;
+        if (typeid(*exp->left_) == typeid(ConstExp)) {
+          auto left = static_cast<ConstExp *>(exp->left_);
+          auto right_temp = exp->right_->Munch(instr_list, fs);
+          if (right_temp == reg_manager->FramePointer()) {
+            assem<<"("<<fs<<"_framesize";
+            if(left->consti_>=0){
+              assem<<"+";
+            }
+            assem<<left->consti_<<")(`s0)";
+            right_temp = reg_manager->StackPointer();
+          } else {
+            assem<<left->consti_<<"(`s0)";
+          }
+          assem<<",`d0";
+          instr_list.Append(
+            new assem::MoveInstr(
+              assem.str(),
+              new temp::TempList(dst_temp),
+              new temp::TempList{right_temp}
+            )
+          );
+          return;
+        }
+        if (typeid(*exp->right_) == typeid(ConstExp)) {
+          auto right = static_cast<ConstExp *>(exp->right_);
+          auto left_temp = exp->left_->Munch(instr_list, fs);
+          if (left_temp == reg_manager->FramePointer()) {
+            assem<<"("<<fs<<"_framesize";
+            if(right->consti_>=0){
+              assem<<"+";
+            }
+            assem<<right->consti_<<")(`s0)";
+            left_temp = reg_manager->StackPointer();
+          } else {
+            assem<<right->consti_<<"(`s0)";
+          }
+          assem<<",`d0";
+          instr_list.Append(
+            new assem::MoveInstr(
+              assem.str(),
+              new temp::TempList(dst_temp),
+              new temp::TempList{left_temp}
+            )
+          );
+          return;
+        }
+
+
+        auto left_temp = src_mem->left_->Munch(instr_list, fs);
+        auto right_temp = src_mem->right_->Munch(instr_list, fs);
+        instr_list.Append(
+          new assem::MoveInstr(
+            "movq (`s0,`s1),`d0",
+            new temp::TempList(dst_temp),
+            new temp::TempList{left_temp,right_temp}
+          )
+        );
+        return;
+      }
+    }
+  
+    auto dst_temp = dst_->Munch(instr_list, fs);
+    auto src_temp = src->exp_->Munch(instr_list, fs);
+    instr_list.Append(
+      new assem::MoveInstr(
+        "movq (`s0),`d0",
+        new temp::TempList(dst_temp),
+        new temp::TempList(src_temp)
+      )
+    );
+    return;
+  }
+
   if(typeid(*src_)==typeid(ConstExp)){
     auto src = static_cast<ConstExp *>(src_);
     auto dst = dst_->Munch(instr_list, fs);
