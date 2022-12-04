@@ -1,5 +1,6 @@
 #include "tiger/frame/x64frame.h"
 #include <sstream>
+#include <list>
 extern frame::RegManager *reg_manager;
 
 namespace frame {
@@ -140,15 +141,19 @@ std::list<tree::Stm*> ProcEntryExit1(frame::Frame *frame, tree::Stm *func_body){
 
   std::list<tree::Stm*> stm_list;
   auto callee_saved_regs = reg_manager->CalleeSaves()->GetList();
-  std::vector<temp::Temp*> saved;
+  // std::vector<temp::Temp*> saved;
+  std::list<Access*> saved;
 
+  auto framePtr = new tree::TempExp(reg_manager->FramePointer());
   //save registers
   for(const auto&reg:callee_saved_regs){
-    auto temp = temp::TempFactory::NewTemp();
-    saved.push_back(temp);
+    // auto temp = temp::TempFactory::NewTemp();
+    auto access = frame->AllocLocal(false);
+    // saved.push_back(temp);
+    saved.push_back(access);
     stm_list.push_back(
       new tree::MoveStm(
-        new tree::TempExp(temp),
+        access->ToExp(framePtr),
         new tree::TempExp(reg)
       )
     );
@@ -168,7 +173,7 @@ std::list<tree::Stm*> ProcEntryExit1(frame::Frame *frame, tree::Stm *func_body){
     stm_list.push_back(
       new tree::MoveStm(
         new tree::TempExp(reg),
-        new tree::TempExp(*saved_reg_it)
+        (*saved_reg_it)->ToExp(framePtr)
       )
     );
     saved_reg_it++;
