@@ -75,6 +75,28 @@ void LiveGraphFactory::LiveMap() {
       }
     }
   }
+
+  //show outs
+  // temp::Map *color = temp::Map::LayerMap(reg_manager->temp_map_, temp::Map::Name());
+  // for(const auto&temp:reg_manager->Registers()->GetList()){
+  //   fprintf(stderr,"%d" ,temp->Int());
+  // }
+  // fprintf(stderr,"\n");
+  // for (const auto &node:graph_node_list) {
+  //   auto live_out_list = out_->Look(node)->GetList();
+  //   auto instr = static_cast<assem::Instr*>(node->NodeInfo());
+  //   instr->Print(stderr,color);
+  //   fprintf(stderr,"defs:");
+  //   for(const auto&temp:fg::FlowGraphFactory::GetDef(node)->GetList()){
+  //     fprintf(stderr,"%d ",temp->Int());
+  //   }
+  //   fprintf(stderr,"\nlive-out:");
+  //   for(const auto&temp:live_out_list){
+  //     fprintf(stderr,"%d ",temp->Int());
+  //   }
+  //   fprintf(stderr,"\n");
+  // }
+
 }
 
 void LiveGraphFactory::InterfGraph() {
@@ -108,7 +130,9 @@ void LiveGraphFactory::InterfGraph() {
         for(const auto &out:TempList_Diff(live_out,uses)->GetList()){
           auto node_out = temp_node_map_->Look(out);
           //add edge not symetric but adj will return both succ and pred
-          live_graph_.interf_graph->AddEdge(node_def, node_out);
+          if(node_def!=node_out){
+            live_graph_.interf_graph->AddEdge(node_def, node_out);
+          }
         }
         // for register allocation
         // a->b == b->a
@@ -124,11 +148,14 @@ void LiveGraphFactory::InterfGraph() {
         auto node_def = temp_node_map_->Look(def);
         for(const auto &out:live_out->GetList()){
           auto node_out = temp_node_map_->Look(out);
-          live_graph_.interf_graph->AddEdge(node_def,node_out);
+          if(node_def!=node_out){
+            live_graph_.interf_graph->AddEdge(node_def,node_out);
+          }
         }
       }
     }
   }
+  // live_graph_.interf_graph->Show(stderr,live_graph_.interf_graph->Nodes(),[](temp::Temp*t){fprintf(stderr,"temp:%d",t->Int());});
 }
 
 void LiveGraphFactory::Liveness() {

@@ -40,14 +40,23 @@ void RegAllocator::LivenessAnalysis(){
     live_graph_factory.Liveness();
     auto live_graph = live_graph_factory.GetLiveGraph();
     live_graph_ = live_graph.interf_graph;
+
+
+    //precolor
+    auto temp2node = live_graph_factory.GetTempNodeMap();
+
+    for(const auto &reg : reg_manager->Registers()->GetList()){
+        auto node = temp2node->Look(reg);
+        coloredNodes.Append(node);
+        color[node] = reg;
+    }
     //live_graph.moves;
 
-    //hard to understand
-    // live_graph.interf_graph->Show(stderr,live_graph.interf_graph->Nodes(),nullptr);
 
 }
 
-void RegAllocator::Build(){
+void RegAllocator::Build(){ 
+
     auto live_nodes = live_graph_->Nodes()->GetList();
     for(const auto &node:live_nodes){
         degree.emplace(node,node->Degree());
@@ -81,11 +90,13 @@ void RegAllocator::AssignColors(){
         for(const auto &w:n->Adj()->GetList()){
             auto real_w = GetAlias(w);
             if(coloredNodes.Contain(real_w)){
+                // fprintf(stderr,"%d cant have same color with %d\n",n->NodeInfo()->Int(),w->NodeInfo()->Int());
                 okColors.remove(color[real_w]);
             }
         }
         coloredNodes.Append(n);
-        color[n] = okColors.front();   
+        // fprintf(stderr,"give %d color %d\n",n->NodeInfo()->Int(),okColors.front()->Int());
+        color.emplace(n,okColors.front());   
     }
 }
 
