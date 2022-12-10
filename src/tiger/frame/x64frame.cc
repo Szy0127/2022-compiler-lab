@@ -141,8 +141,8 @@ std::list<tree::Stm*> ProcEntryExit1(frame::Frame *frame, tree::Stm *func_body){
 
   std::list<tree::Stm*> stm_list;
   auto callee_saved_regs = reg_manager->CalleeSaves()->GetList();
-  // std::vector<temp::Temp*> saved;
-  std::list<Access*> saved;
+  // std::vector<temp::Temp*> saved;//move remove and spill in regalloc
+  std::list<Access*> saved;//just simplify is ok
 
   auto framePtr = new tree::TempExp(reg_manager->FramePointer());
   //save registers
@@ -153,6 +153,7 @@ std::list<tree::Stm*> ProcEntryExit1(frame::Frame *frame, tree::Stm *func_body){
     saved.push_back(access);
     stm_list.push_back(
       new tree::MoveStm(
+        // new tree::TempExp(temp),
         access->ToExp(framePtr),
         new tree::TempExp(reg)
       )
@@ -174,6 +175,7 @@ std::list<tree::Stm*> ProcEntryExit1(frame::Frame *frame, tree::Stm *func_body){
       new tree::MoveStm(
         new tree::TempExp(reg),
         (*saved_reg_it)->ToExp(framePtr)
+        // new tree::TempExp(*saved_reg_it)
       )
     );
     saved_reg_it++;

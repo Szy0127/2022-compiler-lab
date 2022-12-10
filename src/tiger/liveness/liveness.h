@@ -6,7 +6,7 @@
 #include "tiger/frame/temp.h"
 #include "tiger/liveness/flowgraph.h"
 #include "tiger/util/graph.h"
-
+#include<map>
 namespace live {
 
 using INode = graph::Node<temp::Temp>;
@@ -25,11 +25,13 @@ public:
     return move_list_;
   }
   void Append(INodePtr src, INodePtr dst) { move_list_.emplace_back(src, dst); }
+  bool Empty(){return move_list_.empty();}
   bool Contain(INodePtr src, INodePtr dst);
   void Delete(INodePtr src, INodePtr dst);
   void Prepend(INodePtr src, INodePtr dst) {
     move_list_.emplace_front(src, dst);
   }
+  std::pair<INodePtr, INodePtr> Pop(){auto ret = move_list_.front();move_list_.pop_front();return ret;}
   MoveList *Union(MoveList *list);
   MoveList *Intersect(MoveList *list);
 
@@ -39,16 +41,18 @@ private:
 
 struct LiveGraph {
   IGraphPtr interf_graph;
-  MoveList *moves;
+  MoveList *worklistMoves;
+  // tab::Table<INode,MoveList> *moveList;//Enter(Look().Append)  poor performance
+  std::map<INodePtr,MoveList*> *moveList;
 
-  LiveGraph(IGraphPtr interf_graph, MoveList *moves)
-      : interf_graph(interf_graph), moves(moves) {}
+  LiveGraph(IGraphPtr interf_graph, MoveList *worklistMoves,std::map<INodePtr,MoveList*> *moveList)
+      : interf_graph(interf_graph), worklistMoves(worklistMoves),moveList(moveList) {}
 };
 
 class LiveGraphFactory {
 public:
   explicit LiveGraphFactory(fg::FGraphPtr flowgraph)
-      : flowgraph_(flowgraph), live_graph_(new IGraph(), new MoveList()),
+      : flowgraph_(flowgraph), live_graph_(new IGraph(), new MoveList(),new std::map<INodePtr,MoveList*>()),
         in_(std::make_unique<graph::Table<assem::Instr, temp::TempList>>()),
         out_(std::make_unique<graph::Table<assem::Instr, temp::TempList>>()),
         temp_node_map_(new tab::Table<temp::Temp, INode>()) {}

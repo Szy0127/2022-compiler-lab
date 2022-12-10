@@ -1,5 +1,5 @@
 #include "tiger/liveness/liveness.h"
-
+#include<iostream>
 extern frame::RegManager *reg_manager;
 
 namespace live {
@@ -135,11 +135,29 @@ void LiveGraphFactory::InterfGraph() {
           }
         }
         // for register allocation
-        // a->b == b->a
-        for (const auto &use:uses->GetList()) {
+        // mov t_src,t_dst
+        // mov node_use,node_def
+        for(const auto &use:uses->GetList()){
           auto node_use = temp_node_map_->Look(use);
-          if (!live_graph_.moves->Contain(node_def,node_use) && !live_graph_.moves->Contain(node_use,node_def)) {
-            live_graph_.moves->Append(node_def,node_use);
+          //src dst
+          //|| !live_graph_.worklistMoves->Contain(node_def,node_use)
+          if(!live_graph_.worklistMoves->Contain(node_use,node_def) || !live_graph_.worklistMoves->Contain(node_def,node_use) ){
+            // live_graph_.worklistMoves->Append(node_use,node_def);
+            live_graph_.worklistMoves->Append(node_def,node_use);
+            if(live_graph_.moveList->count(node_use)){
+              live_graph_.moveList->at(node_use)->Append(node_use,node_def);
+            }else{
+              auto moves = new MoveList();
+              moves->Append(node_use,node_def);
+              live_graph_.moveList->emplace(node_use,moves);
+            }
+            if(live_graph_.moveList->count(node_def)){
+              live_graph_.moveList->at(node_def)->Append(node_use,node_def);
+            }else{
+              auto moves = new MoveList();
+              moves->Append(node_use,node_def);
+              live_graph_.moveList->emplace(node_def,moves);
+            }
           }
         }
       }
