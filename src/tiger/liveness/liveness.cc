@@ -124,41 +124,39 @@ void LiveGraphFactory::InterfGraph() {
     auto live_out = out_->Look(node);
     auto defs = fg::FlowGraphFactory::GetDef(node)->GetList();
     if(fg::FlowGraphFactory::IsMove(node)){
-      for(const auto &def:defs){
-        auto node_def = temp_node_map_->Look(def);
-        auto uses = fg::FlowGraphFactory::GetUse(node);
-        for(const auto &out:TempList_Diff(live_out,uses)->GetList()){
-          auto node_out = temp_node_map_->Look(out);
-          //add edge not symetric but adj will return both succ and pred
-          if(node_def!=node_out){
-            live_graph_.interf_graph->AddEdge(node_def, node_out);
-          }
+      auto def = defs.front();
+      auto node_def = temp_node_map_->Look(def);
+      auto uses = fg::FlowGraphFactory::GetUse(node);
+      for(const auto &out:TempList_Diff(live_out,uses)->GetList()){
+        auto node_out = temp_node_map_->Look(out);
+        //add edge not symetric but adj will return both succ and pred
+        if(node_def!=node_out){
+          live_graph_.interf_graph->AddEdge(node_def, node_out);
         }
-        // for register allocation
-        // mov t_src,t_dst
-        // mov node_use,node_def
-        for(const auto &use:uses->GetList()){
-          auto node_use = temp_node_map_->Look(use);
-          //src dst
-          //|| !live_graph_.worklistMoves->Contain(node_def,node_use)
-          if(!live_graph_.worklistMoves->Contain(node_use,node_def) || !live_graph_.worklistMoves->Contain(node_def,node_use) ){
-            // live_graph_.worklistMoves->Append(node_use,node_def);
-            live_graph_.worklistMoves->Append(node_def,node_use);
-            if(live_graph_.moveList->count(node_use)){
-              live_graph_.moveList->at(node_use)->Append(node_use,node_def);
-            }else{
-              auto moves = new MoveList();
-              moves->Append(node_use,node_def);
-              live_graph_.moveList->emplace(node_use,moves);
-            }
-            if(live_graph_.moveList->count(node_def)){
-              live_graph_.moveList->at(node_def)->Append(node_use,node_def);
-            }else{
-              auto moves = new MoveList();
-              moves->Append(node_use,node_def);
-              live_graph_.moveList->emplace(node_def,moves);
-            }
-          }
+      }
+      // for register allocation
+      // mov t_src,t_dst
+      // mov node_use,node_def
+      auto use = uses->GetList().front();
+      auto node_use = temp_node_map_->Look(use);
+      //src dst
+      //|| !live_graph_.worklistMoves->Contain(node_def,node_use)
+      if(!live_graph_.worklistMoves->Contain(node_use,node_def) || !live_graph_.worklistMoves->Contain(node_def,node_use) ){
+        live_graph_.worklistMoves->Append(node_use,node_def);
+        // live_graph_.worklistMoves->Append(node_def,node_use);
+        if(live_graph_.moveList->count(node_use)){
+          live_graph_.moveList->at(node_use)->Append(node_use,node_def);
+        }else{
+          auto moves = new MoveList();
+          moves->Append(node_use,node_def);
+          live_graph_.moveList->emplace(node_use,moves);
+        }
+        if(live_graph_.moveList->count(node_def)){
+          live_graph_.moveList->at(node_def)->Append(node_use,node_def);
+        }else{
+          auto moves = new MoveList();
+          moves->Append(node_use,node_def);
+          live_graph_.moveList->emplace(node_def,moves);
         }
       }
     }else{
@@ -173,6 +171,7 @@ void LiveGraphFactory::InterfGraph() {
       }
     }
   }
+  
   // live_graph_.interf_graph->Show(stderr,live_graph_.interf_graph->Nodes(),[](temp::Temp*t){fprintf(stderr,"temp:%d",t->Int());});
 }
 

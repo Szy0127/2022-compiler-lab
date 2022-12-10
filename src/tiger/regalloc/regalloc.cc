@@ -19,14 +19,14 @@ void RegAllocator::RegAlloc(){
             Simplify();
             continue;
         }
-        // if(!worklistMoves->Empty()){
-        //     Coalesce();
-        //     continue;
-        // }
-        // if(!freezeWorklist.Empty()){
-        //     Freeze();
-        //     continue;
-        // }
+        if(!worklistMoves->Empty()){
+            Coalesce();
+            continue;
+        }
+        if(!freezeWorklist.Empty()){
+            Freeze();
+            continue;
+        }
         if(!spillWorklist.Empty()){
             SelectSpill();
             continue;
@@ -103,13 +103,12 @@ void RegAllocator::MakeWorklist(){
         }
         if(degree[node] >= K){
             spillWorklist.Append(node);
-            std::cout<<"spill"<<std::endl;
             continue;
         }
-        // if(MoveRelated(node)){
-        //     freezeWorklist.Append(node);
-        //     continue;
-        // }
+        if(MoveRelated(node)){
+            freezeWorklist.Append(node);
+            continue;
+        }
         simplifyWorklist.Append(node);
     }
 }
@@ -129,25 +128,25 @@ void RegAllocator::Coalesce() {
     auto yy = GetAlias(y);
     live::INodePtr u, v;
     if(coloredNodes.Contain(yy)){
-        u = y; // u,v=y,x wrong
-        v = x;
+        u = yy; // u,v=y,x wrong
+        v = xx;
     }else{
-        u = x;
-        v = y;
+        u = xx;
+        v = yy;
     }
     if(u==v){
         coalescedMoves.Append(x,y);
         AddWorkList(u);
         return;
     }
-    // std::cout<<"Coalesce1"<<std::endl;
+
     if(coloredNodes.Contain(v) || u->Adj(v)){
         constrainedMoves.Append(x,y);
         AddWorkList(u);
         AddWorkList(v);
         return;
     }
-    // std::cout<<"Coalesce2"<<std::endl;
+
     bool george_flag = true;
     for(const auto&t:Adjacent(v)->GetList()){
         if(!OK(t,u)){
@@ -157,6 +156,7 @@ void RegAllocator::Coalesce() {
     }
     if((coloredNodes.Contain(u) && george_flag)|| (!coloredNodes.Contain(u) && Conservative(Adjacent(u)->Union(Adjacent(v))))){
         coalescedMoves.Append(x,y);
+        // std::cout<<"combine"<<u->NodeInfo()->Int()<<" "<<v->NodeInfo()->Int()<<std::endl;
         Combine(u,v);
         AddWorkList(u);
         return;
@@ -235,6 +235,7 @@ void RegAllocator::EnableMoves(live::INodeList *nodes){
 }
 
 void RegAllocator::AddEdge(live::INodePtr u,live::INodePtr v){
+    // std::cout<<"add edge"<<u->NodeInfo()->Int()<<" "<<v->NodeInfo()->Int()<<std::endl;
     if(!u->Adj(v)&& u != v) {
         live_graph_->AddEdge(u, v);
         live_graph_->AddEdge(v, u);
@@ -287,14 +288,20 @@ void RegAllocator::AssignColors(){
         }
         if(okColors.empty()){
             spillNodes.Append(n);
-            std::cout<<n->NodeInfo()->Int()<<std::endl;
+            // std::cout<<"spill:"<<n->NodeInfo()->Int()<<std::endl;
         }else{
             coloredNodes.Append(n);
             color.emplace(n,okColors.front());   
+            // std::cout<<n->NodeInfo()->Int()<<" "<<okColors.front()->Int()<<std::endl;
         }
     }
     for(const auto&n:coalescedNodes->GetList()){
-        color.emplace(n,color[GetAlias(n)]);
+        // std::cout<<n->NodeInfo()->Int()<<" "<<GetAlias(n)->NodeInfo()->Int()<<" "<<color[GetAlias(n)]->Int()<<std::endl;
+        if(color.count(n)){
+            color[n] = color[GetAlias(n)];
+        }else{
+            color.emplace(n,color[GetAlias(n)]);
+        }
     }
 }
 
@@ -306,7 +313,7 @@ live::INodePtr RegAllocator::GetAlias(live::INodePtr n){
 }
 
 live::MoveList *RegAllocator::NodeMoves(const live::INodePtr &n) const {
-    return new live::MoveList();
+    // return new live::MoveList();
     if(!moveList->count(n)){
         return new live::MoveList();
     }

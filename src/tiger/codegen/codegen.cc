@@ -399,7 +399,7 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
       new assem::OperInstr(
         "addq `s0,`d0",
         new temp::TempList(result_temp),
-        new temp::TempList(right_temp),
+        new temp::TempList{right_temp,result_temp},
         nullptr
       )
     );
@@ -409,7 +409,7 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
        new assem::OperInstr(
         "subq `s0,`d0",
         new temp::TempList(result_temp),
-        new temp::TempList(right_temp),
+        new temp::TempList{right_temp,result_temp},
         nullptr
        )
     );
