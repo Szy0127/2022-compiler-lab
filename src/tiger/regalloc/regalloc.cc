@@ -42,7 +42,7 @@ void RegAllocator::RegAlloc(){
         }
     }
     if(!spillNodes.Empty()){
-        std::cout<<"error?"<<std::endl;
+        std::cout<<"rewriting"<<std::endl;
     }  
 
 
@@ -53,7 +53,7 @@ void RegAllocator::RegAlloc(){
             auto src_node = temp2Inode->Look(move_instr->src_->GetList().front());
             auto dst_node = temp2Inode->Look(move_instr->dst_->GetList().front());
             if(color[src_node] == color[dst_node]){
-                // instr_list->Remove(move_instr);
+                instr_list->Remove(move_instr);
             }
         }
     }

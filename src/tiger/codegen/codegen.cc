@@ -382,9 +382,11 @@ void ExpStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
 
 temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   /* TODO: Put your lab5 code here */
-  auto left_temp = left_->Munch(instr_list,fs);
-  auto right_temp = right_->Munch(instr_list,fs);
+
   auto result_temp = temp::TempFactory::NewTemp();
+
+
+  auto left_temp = left_->Munch(instr_list,fs);
   instr_list.Append(
     new assem::MoveInstr(
       "movq `s0,`d0",
@@ -394,26 +396,51 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   );
   switch (op_)
   { 
-  case PLUS_OP:
-    instr_list.Append(
-      new assem::OperInstr(
-        "addq `s0,`d0",
-        new temp::TempList(result_temp),
-        new temp::TempList{right_temp,result_temp},
-        nullptr
-      )
-    );
+  case PLUS_OP:{
+    if(typeid(*right_)==typeid(ConstExp)){
+      instr_list.Append(
+        new assem::OperInstr(
+          "addq $"+std::to_string(static_cast<ConstExp*>(right_)->consti_)+",`d0",
+          new temp::TempList(result_temp),
+          new temp::TempList{result_temp},
+          nullptr
+        )
+      );
+    }else{
+      instr_list.Append(
+        new assem::OperInstr(
+            "addq `s0,`d0",
+            new temp::TempList(result_temp),
+            new temp::TempList{right_->Munch(instr_list,fs),result_temp},
+            nullptr
+          )
+        );
+      }
     break;
-  case MINUS_OP:
-    instr_list.Append(
-       new assem::OperInstr(
-        "subq `s0,`d0",
-        new temp::TempList(result_temp),
-        new temp::TempList{right_temp,result_temp},
-        nullptr
-       )
-    );
+    }
+  case MINUS_OP:{
+    if(typeid(*right_)==typeid(ConstExp)){
+      instr_list.Append(
+        new assem::OperInstr(
+          "subq $"+std::to_string(static_cast<ConstExp*>(right_)->consti_)+",`d0",
+          new temp::TempList(result_temp),
+          new temp::TempList{result_temp},
+          nullptr
+        )
+      );
+    }else{
+      instr_list.Append(
+        new assem::OperInstr(
+          "subq `s0,`d0",
+          new temp::TempList(result_temp),
+          new temp::TempList{right_->Munch(instr_list,fs),result_temp},
+          nullptr
+        )
+      );
+    }
     break;
+
+  }
   case MUL_OP:{
     //%rdx %rax <-- S x %rax
       auto rax = reg_manager->GetRegister(0);
@@ -429,7 +456,7 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
         new assem::OperInstr(
           "imulq `s0",
           new temp::TempList{rax, rdx},
-          new temp::TempList{right_temp, rax},
+          new temp::TempList{right_->Munch(instr_list,fs), rax},
           nullptr
         )
       );
@@ -459,7 +486,7 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
         new assem::OperInstr(
           "idivq `s0",
           new temp::TempList{rax, rdx},
-          new temp::TempList{right_temp, rax,rdx},
+          new temp::TempList{right_->Munch(instr_list,fs), rax,rdx},
           nullptr
         )
       );
