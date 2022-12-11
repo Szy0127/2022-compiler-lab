@@ -3,6 +3,7 @@
 #include "tiger/output/logger.h"
 #include "regalloc.h"
 #include<iostream>
+#include <sstream>
 
 extern frame::RegManager *reg_manager;
 
@@ -11,8 +12,10 @@ namespace ra {
 Result::~Result(){}
 
 void RegAllocator::RegAlloc(){
+    // std::cout<<"---frame reg begin---"<<std::endl;
     bool success = false;
     while(!success){
+        // std::cout<<"---reg begin---"<<std::endl;
         LivenessAnalysis();
         Build();
         MakeWorklist();
@@ -48,7 +51,6 @@ void RegAllocator::RegAlloc(){
         //     }
         // }
         if(!spillNodes.Empty()){
-            std::cout<<"rewriting"<<std::endl;
             RewriteProgram();
         }else{
             success = true;
@@ -100,16 +102,36 @@ void RegAllocator::Build(){
     coalescedNodes = new live::INodeList();
     activeMoves = new live::MoveList();
 
-    for(const auto &reg : reg_manager->Registers()->GetList()){
-        auto node = temp2Inode->Look(reg);
-        coloredNodes.Append(node);
-        color[node] = reg;
-    }
+    simplifyWorklist.Clear();
+    spillWorklist.Clear();
+    freezeWorklist.Clear();
+    frozenMoves.Clear();
+    coalescedMoves.Clear();
+    constrainedMoves.Clear();
+    degree.clear();
+    coloredNodes.Clear();
+    spillNodes.Clear();
+    color.clear();
+    alias.clear();
+
 
     auto live_nodes = live_graph_->Nodes()->GetList();
     for(const auto &node:live_nodes){
         degree.emplace(node,node->Degree());
     }
+
+    for(const auto &reg : reg_manager->Registers()->GetList()){
+        auto node = temp2Inode->Look(reg);
+        coloredNodes.Append(node);
+        color[node] = reg;
+        if(degree.count(node)){
+            degree[node] = INT64_MAX;
+        }else{
+            degree.emplace(node,INT64_MAX);
+        }
+    }
+
+
 
 
 }
@@ -137,6 +159,7 @@ void RegAllocator::Simplify(){
     simplifyWorklist.DeleteNode(n);
     // list / stack
     selectStack->Prepend(n);
+    // std::cout<<"stack push"<<n->NodeInfo()->Int()<<std::endl;
     for(const auto &adj:Adjacent(n)->GetList()) {
         DecrementDegree(adj);
     }
@@ -253,8 +276,8 @@ void RegAllocator::EnableMoves(live::INodeList *nodes){
 }
 
 void RegAllocator::AddEdge(live::INodePtr u,live::INodePtr v){
-    // std::cout<<"add edge"<<u->NodeInfo()->Int()<<" "<<v->NodeInfo()->Int()<<std::endl;
     if(!u->Adj(v)&& u != v) {
+        // std::cout<<"add edge"<<u->NodeInfo()->Int()<<" "<<v->NodeInfo()->Int()<<std::endl;
         live_graph_->AddEdge(u, v);
         live_graph_->AddEdge(v, u);
         if(!coloredNodes.Contain(u)){
@@ -275,6 +298,7 @@ bool RegAllocator::Conservative(live::INodeList *nodes) {
             k++;
         }
     }
+    // std::cout<<k<<std::endl;
     return k<K;
 }
 void RegAllocator::DecrementDegree(const live::INodePtr &m) { 
@@ -284,9 +308,6 @@ void RegAllocator::DecrementDegree(const live::INodePtr &m) {
         list->Append(m);
         EnableMoves(list);
         spillWorklist.DeleteNode(m);
-        if(coloredNodes.Contain(m)){
-            return;
-        }
         if(MoveRelated(m)){
             freezeWorklist.Append(m);
         }else{
@@ -295,10 +316,8 @@ void RegAllocator::DecrementDegree(const live::INodePtr &m) {
     }    
 }
 void RegAllocator::AssignColors(){
+    // std::cout<<"---assign---"<<std::endl;
     for(const auto &n:selectStack->GetList()){
-        if(color.count(n)){
-            continue;
-        }
         auto okColors = reg_manager->Registers()->GetList();
         okColors.remove(reg_manager->StackPointer());
         for(const auto &w:n->Adj()->GetList()){
@@ -309,15 +328,19 @@ void RegAllocator::AssignColors(){
         }
         if(okColors.empty()){
             spillNodes.Append(n);
-            // std::cout<<"spill:"<<n->NodeInfo()->Int()<<std::endl;
+            // std::cout<<"spill:"<<n->NodeInfo()->Int()<<"adj:"<<n->Adj()->GetList().size()<<std::endl;
         }else{
             coloredNodes.Append(n);
             color.emplace(n,okColors.front());   
-            // std::cout<<n->NodeInfo()->Int()<<" "<<okColors.front()->Int()<<std::endl;
+            // std::cout<<"draw:"<<n->NodeInfo()->Int()<<",color:"<<okColors.front()->Int()<<std::endl;
         }
     }
     for(const auto&n:coalescedNodes->GetList()){
-        // std::cout<<n->NodeInfo()->Int()<<" "<<GetAlias(n)->NodeInfo()->Int()<<" "<<color[GetAlias(n)]->Int()<<std::endl;
+        // std::cout<<"draw:"<<n->NodeInfo()->Int()<<" "<<GetAlias(n)->NodeInfo()->Int()<<std::endl;
+        if(!color.count(GetAlias(n))){
+            continue;
+        }
+        // std::cout<<color[GetAlias(n)]->Int()<<std::endl;
         if(color.count(n)){
             color[n] = color[GetAlias(n)];
         }else{
@@ -355,6 +378,64 @@ void RegAllocator::SelectSpill(){
     FreezeMoves(m);
 }
 void RegAllocator::RewriteProgram(){
+    // std::cout<<"before rewrite:"<<assem_instr_->GetInstrList()->GetList().size()<<std::endl;
+    auto rsp = reg_manager->StackPointer();
+    for(const auto&spill_node:spillNodes.GetList()){
+        auto spill_temp = spill_node->NodeInfo();
+        // std::cout<<"spilled:"<<spill_temp->Int()<<std::endl;
+        auto frame_access = static_cast<frame::InFrameAccess*>(frame_->AllocLocal(true));
+        auto instr_list_ = assem_instr_->GetInstrList();
+        auto end = instr_list_->GetList().end();
+        auto instr_it = instr_list_->GetList().begin();
+        for(;instr_it!=end;instr_it++){
+            temp::TempList* src_list = nullptr;
+            temp::TempList* dst_list = nullptr;
 
+            if(typeid(**instr_it) == typeid(assem::MoveInstr)){
+                auto ins = static_cast<assem::MoveInstr*>(*instr_it);
+                src_list = ins->src_;
+                dst_list = ins->dst_;
+            }
+            if(typeid(**instr_it) == typeid(assem::OperInstr)){
+                auto ins = static_cast<assem::OperInstr*>(*instr_it);
+                src_list = ins->src_;
+                dst_list = ins->dst_;
+            }
+            
+            //load
+            if(src_list && src_list->Contain(spill_temp)){
+                auto t = temp::TempFactory::NewTemp();
+                // std::cout<<"write src,new temp:"<<t->Int()<<std::endl;
+                src_list->Replace(spill_temp,t);
+                std::stringstream assem;
+                assem << "movq ("<< frame_->GetLabel() << "_framesize" << frame_access->offset << ")(`s0),`d0";
+                instr_list_->Insert(
+                    instr_it, new assem::OperInstr(
+                        assem.str(),
+                        new temp::TempList(t),
+                        new temp::TempList(rsp),
+                        nullptr
+                    )
+                );
+            }
+            //store
+            if(dst_list && dst_list->Contain(spill_temp)){
+                auto t = temp::TempFactory::NewTemp();
+                // std::cout<<"write dst,new temp:"<<t->Int()<<std::endl;
+                dst_list->Replace(spill_temp,t);
+                std::stringstream assem;
+                assem << "movq `s0,("<< frame_->GetLabel() << "_framesize" << frame_access->offset << ")(`d0)";
+                instr_list_->Insert(
+                    std::next(instr_it), new assem::OperInstr(
+                        assem.str(),
+                        new temp::TempList(rsp),
+                        new temp::TempList(t),
+                        nullptr
+                    )
+                );
+            }
+        }
+    }
+    // std::cout<<"after rewrite:"<<assem_instr_->GetInstrList()->GetList().size()<<std::endl;
 }
 } // namespace ra

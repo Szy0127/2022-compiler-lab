@@ -82,7 +82,7 @@ private:
   live::MoveList constrainedMoves;
   std::map<live::INodePtr,live::MoveList*> *moveList;
 
-  std::map<live::INodePtr,int> degree;
+  std::map<live::INodePtr,int64_t> degree;
 
 
   live::INodeList *selectStack;

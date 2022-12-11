@@ -31,6 +31,7 @@ public:
   void Prepend(INodePtr src, INodePtr dst) {
     move_list_.emplace_front(src, dst);
   }
+  void Clear(){move_list_.clear();}
   std::pair<INodePtr, INodePtr> Pop(){auto ret = move_list_.front();move_list_.pop_front();return ret;}
   MoveList *Union(MoveList *list);
   MoveList *Intersect(MoveList *list);
