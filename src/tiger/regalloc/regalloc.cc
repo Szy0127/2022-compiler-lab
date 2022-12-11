@@ -34,6 +34,13 @@ void RegAllocator::RegAlloc(){
         break;
     }
     AssignColors();  
+    for(const auto&n:live_graph_->Nodes()->GetList()){
+        for(const auto&m:n->Adj()->GetList()){
+            if(color[n] == color[m]){
+                std::cout<<"error,cant draw same color of"<<n->NodeInfo()->Int()<<"and"<<m->NodeInfo()->Int()<<std::endl;
+            }
+        }
+    }
     if(!spillNodes.Empty()){
         std::cout<<"error?"<<std::endl;
     }  
@@ -46,7 +53,7 @@ void RegAllocator::RegAlloc(){
             auto src_node = temp2Inode->Look(move_instr->src_->GetList().front());
             auto dst_node = temp2Inode->Look(move_instr->dst_->GetList().front());
             if(color[src_node] == color[dst_node]){
-                instr_list->Remove(move_instr);
+                // instr_list->Remove(move_instr);
             }
         }
     }
@@ -186,7 +193,6 @@ void RegAllocator::FreezeMoves(live::INodePtr u){
     }
 }
 void RegAllocator::AddWorkList(live::INodePtr n){
-    // std::cout<<"addworklist"<<std::endl;
     if(!coloredNodes.Contain(n) && !MoveRelated(n)&& degree[n] < K){
         freezeWorklist.DeleteNode(n);
         simplifyWorklist.Append(n);
@@ -266,6 +272,9 @@ void RegAllocator::DecrementDegree(const live::INodePtr &m) {
         list->Append(m);
         EnableMoves(list);
         spillWorklist.DeleteNode(m);
+        if(coloredNodes.Contain(m)){
+            return;
+        }
         if(MoveRelated(m)){
             freezeWorklist.Append(m);
         }else{
