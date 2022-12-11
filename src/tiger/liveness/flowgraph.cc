@@ -50,10 +50,11 @@ temp::TempList *FlowGraphFactory::GetDef(FNodePtr node){
 }
 bool FlowGraphFactory::IsMove(FNodePtr node){
   auto instr = node->NodeInfo();
-  if(typeid(*instr)!=typeid(assem::MoveInstr)){
-    return false;
-  }
-  return static_cast<assem::MoveInstr*>(instr)->assem_=="movq `s0,`d0";
+  return typeid(*instr)==typeid(assem::MoveInstr);
+  // if(typeid(*instr)!=typeid(assem::MoveInstr)){
+    // return false;
+  // }
+  // return static_cast<assem::MoveInstr*>(instr)->assem_=="movq `s0,`d0";
 }
 } // namespace fg
 

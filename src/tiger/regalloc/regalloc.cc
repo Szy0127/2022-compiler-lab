@@ -11,39 +11,49 @@ namespace ra {
 Result::~Result(){}
 
 void RegAllocator::RegAlloc(){
-    LivenessAnalysis();
-    Build();
-    MakeWorklist();
-    while(true){
-        if(!simplifyWorklist.Empty()){
-            Simplify();
-            continue;
-        }
-        if(!worklistMoves->Empty()){
-            Coalesce();
-            continue;
-        }
-        if(!freezeWorklist.Empty()){
-            Freeze();
-            continue;
-        }
-        if(!spillWorklist.Empty()){
-            SelectSpill();
-            continue;
-        }
-        break;
-    }
-    AssignColors();  
-    for(const auto&n:live_graph_->Nodes()->GetList()){
-        for(const auto&m:n->Adj()->GetList()){
-            if(color[n] == color[m]){
-                std::cout<<"error,cant draw same color of"<<n->NodeInfo()->Int()<<"and"<<m->NodeInfo()->Int()<<std::endl;
+    bool success = false;
+    while(!success){
+        LivenessAnalysis();
+        Build();
+        MakeWorklist();
+        while(true){
+            if(!simplifyWorklist.Empty()){
+                Simplify();
+                continue;
             }
+            if(!worklistMoves->Empty()){
+                Coalesce();
+                continue;
+            }
+            if(!freezeWorklist.Empty()){
+                Freeze();
+                continue;
+            }
+            if(!spillWorklist.Empty()){
+                SelectSpill();
+                continue;
+            }
+            break;
+        }
+        AssignColors();  
+        //exam
+        // for(const auto&n:live_graph_->Nodes()->GetList()){
+        //     if(spillNodes.Contain(n)){
+        //         continue;
+        //     }
+        //     for(const auto&m:n->Adj()->GetList()){
+        //         if(color[n] == color[m]){
+        //             std::cout<<"error,cant draw same color of"<<n->NodeInfo()->Int()<<"and"<<m->NodeInfo()->Int()<<std::endl;
+        //         }
+        //     }
+        // }
+        if(!spillNodes.Empty()){
+            std::cout<<"rewriting"<<std::endl;
+            RewriteProgram();
+        }else{
+            success = true;
         }
     }
-    if(!spillNodes.Empty()){
-        std::cout<<"rewriting"<<std::endl;
-    }  
 
 
     auto instr_list = assem_instr_->GetInstrList();
@@ -86,7 +96,9 @@ void RegAllocator::LivenessAnalysis(){
 }
 
 void RegAllocator::Build(){ 
-
+    selectStack = new live::INodeList();
+    coalescedNodes = new live::INodeList();
+    activeMoves = new live::MoveList();
 
     for(const auto &reg : reg_manager->Registers()->GetList()){
         auto node = temp2Inode->Look(reg);
@@ -341,5 +353,8 @@ void RegAllocator::SelectSpill(){
     spillWorklist.DeleteNode(m);
     simplifyWorklist.Append(m);
     FreezeMoves(m);
+}
+void RegAllocator::RewriteProgram(){
+
 }
 } // namespace ra

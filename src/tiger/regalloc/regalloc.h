@@ -31,8 +31,7 @@ class RegAllocator {
   /* TODO: Put your lab6 code here */
 public:
   RegAllocator(frame::Frame *frame,std::unique_ptr<cg::AssemInstr> assem_instr):
-  frame_(frame),assem_instr_(std::move(assem_instr)),result_(std::make_unique<Result>()),
-  selectStack(new live::INodeList()),coalescedNodes(new live::INodeList()),activeMoves(new live::MoveList()){}
+  frame_(frame),assem_instr_(std::move(assem_instr)),result_(std::make_unique<Result>()){}
   ~RegAllocator();
   void RegAlloc();
   std::unique_ptr<Result> TransferResult() { return std::move(result_); }
@@ -47,6 +46,8 @@ private:
   void SelectSpill();
   void DecrementDegree(const live::INodePtr &m);
   void AssignColors();
+
+  void RewriteProgram();
 
   live::INodePtr GetAlias(live::INodePtr n);
 
