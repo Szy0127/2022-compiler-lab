@@ -2,9 +2,10 @@
 
 #include "tiger/output/logger.h"
 #include "regalloc.h"
-#include<iostream>
+#include <iostream>
 #include <sstream>
-
+#include <queue>
+#include <vector> 
 extern frame::RegManager *reg_manager;
 
 namespace ra {
@@ -139,7 +140,7 @@ void RegAllocator::Build(){
 void RegAllocator::MakeWorklist(){
     auto initial = live_graph_->Nodes()->GetList();
     for(const auto &node:initial){
-        if(coloredNodes.Contain(node)){//precolored
+        if(coloredNodes.Contain(node)){//precolored degree=MAX
             continue;
         }
         if(degree[node] >= K){
@@ -374,16 +375,19 @@ live::INodeList* RegAllocator::Adjacent(const live::INodePtr &n){
 }
 
 void RegAllocator::SelectSpill(){
+    // don't choose temp that introduced by rewrite
+    // choose temp that has the most conflict edges
+
     auto spill_list = spillWorklist.GetList();
+    using item_t = std::pair<int64_t,live::INodePtr>;
+	auto cmp = [](const item_t&a,const item_t&b){return a.first < b.first;};
+	std::priority_queue<item_t,std::vector<item_t>,decltype(cmp)> q(cmp);
     for(const auto&m:spill_list){
         if(!spill_introduced_temps.Contain(m->NodeInfo())){
-            spillWorklist.DeleteNode(m);
-            simplifyWorklist.Append(m);
-            FreezeMoves(m);
-            return;
+            q.emplace(degree[m],m);
         }
     }
-    auto m = spill_list.front();
+    auto m = q.empty() ? spill_list.front(): q.top().second;
     spillWorklist.DeleteNode(m);
     simplifyWorklist.Append(m);
     FreezeMoves(m);
