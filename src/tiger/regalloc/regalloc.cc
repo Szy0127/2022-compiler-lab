@@ -418,7 +418,11 @@ void RegAllocator::RewriteProgram(){
                 spill_introduced_temps.Append(t);
                 src_list->Replace(spill_temp,t);
                 std::stringstream assem;
-                assem << "movq ("<< frame_->GetLabel() << "_framesize" << frame_access->offset << ")(`s0),`d0";
+                assem << "movq ("<< frame_->GetLabel() << "_framesize";
+                if(frame_access->offset > 0){
+                    assem<<"+";
+                }
+                assem << frame_access->offset << ")(`s0),`d0";
                 instr_list_->Insert(
                     instr_it, new assem::OperInstr(
                         assem.str(),
@@ -435,7 +439,11 @@ void RegAllocator::RewriteProgram(){
                 spill_introduced_temps.Append(t);
                 dst_list->Replace(spill_temp,t);
                 std::stringstream assem;
-                assem << "movq `s0,("<< frame_->GetLabel() << "_framesize" << frame_access->offset << ")(`d0)";
+                assem << "movq `s0,("<< frame_->GetLabel() << "_framesize";
+                if(frame_access->offset > 0){
+                    assem<<"+";
+                }
+                assem << frame_access->offset << ")(`d0)";
                 instr_list_->Insert(
                     std::next(instr_it), new assem::OperInstr(
                         assem.str(),
