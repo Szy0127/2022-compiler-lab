@@ -372,7 +372,16 @@ live::INodeList* RegAllocator::Adjacent(const live::INodePtr &n){
 }
 
 void RegAllocator::SelectSpill(){
-    auto m = spillWorklist.GetList().front();
+    auto spill_list = spillWorklist.GetList();
+    for(const auto&m:spill_list){
+        if(!spill_introduced_temps.Contain(m->NodeInfo())){
+            spillWorklist.DeleteNode(m);
+            simplifyWorklist.Append(m);
+            FreezeMoves(m);
+            return;
+        }
+    }
+    auto m = spill_list.front();
     spillWorklist.DeleteNode(m);
     simplifyWorklist.Append(m);
     FreezeMoves(m);
@@ -406,6 +415,7 @@ void RegAllocator::RewriteProgram(){
             if(src_list && src_list->Contain(spill_temp)){
                 auto t = temp::TempFactory::NewTemp();
                 // std::cout<<"write src,new temp:"<<t->Int()<<std::endl;
+                spill_introduced_temps.Append(t);
                 src_list->Replace(spill_temp,t);
                 std::stringstream assem;
                 assem << "movq ("<< frame_->GetLabel() << "_framesize" << frame_access->offset << ")(`s0),`d0";
@@ -422,6 +432,7 @@ void RegAllocator::RewriteProgram(){
             if(dst_list && dst_list->Contain(spill_temp)){
                 auto t = temp::TempFactory::NewTemp();
                 // std::cout<<"write dst,new temp:"<<t->Int()<<std::endl;
+                spill_introduced_temps.Append(t);
                 dst_list->Replace(spill_temp,t);
                 std::stringstream assem;
                 assem << "movq `s0,("<< frame_->GetLabel() << "_framesize" << frame_access->offset << ")(`d0)";

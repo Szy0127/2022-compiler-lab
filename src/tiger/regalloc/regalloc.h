@@ -93,6 +93,8 @@ private:
   std::map<live::INodePtr, temp::Temp*> color;
   std::map<live::INodePtr, live::INodePtr> alias;
 
+  temp::TempList spill_introduced_temps;
+
 
   static const unsigned int K=15;
 };
