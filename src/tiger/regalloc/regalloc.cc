@@ -279,7 +279,9 @@ void RegAllocator::AddEdge(live::INodePtr u,live::INodePtr v){
     if(!u->Adj(v)&& u != v) {
         // std::cout<<"add edge"<<u->NodeInfo()->Int()<<" "<<v->NodeInfo()->Int()<<std::endl;
         live_graph_->AddEdge(u, v);
-        live_graph_->AddEdge(v, u);
+        // live_graph_->AddEdge(v, u);
+
+        //coloredNodes = precolored notes  degree is MAX
         if(!coloredNodes.Contain(u)){
             degree[u]++;
         }

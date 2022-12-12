@@ -147,8 +147,8 @@ void LiveGraphFactory::InterfGraph() {
       }
       auto node_use = temp_node_map_->Look(use);
       //src dst
-      //|| !live_graph_.worklistMoves->Contain(node_def,node_use)
-      if(!live_graph_.worklistMoves->Contain(node_use,node_def) || !live_graph_.worklistMoves->Contain(node_def,node_use) ){
+      
+      if(!node_use->Adj(node_def)){
         live_graph_.worklistMoves->Append(node_use,node_def);
         // live_graph_.worklistMoves->Append(node_def,node_use);
         if(live_graph_.moveList->count(node_use)){
