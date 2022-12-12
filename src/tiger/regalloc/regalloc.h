@@ -79,7 +79,7 @@ private:
   live::MoveList *activeMoves;
   // live::MoveList frozenMoves;
   // live::MoveList coalescedMoves;
-  live::MoveList constrainedMoves;
+  // live::MoveList constrainedMoves;
   std::map<live::INodePtr,live::MoveList*> *moveList;
 
   std::map<live::INodePtr,int64_t> degree;

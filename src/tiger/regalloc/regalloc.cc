@@ -108,7 +108,7 @@ void RegAllocator::Build(){
     freezeWorklist.Clear();
     // frozenMoves.Clear();
     // coalescedMoves.Clear();
-    constrainedMoves.Clear();
+    // constrainedMoves.Clear();
     degree.clear();
     coloredNodes.Clear();
     spillNodes.Clear();
@@ -184,7 +184,7 @@ void RegAllocator::Coalesce() {
     }
 
     if(coloredNodes.Contain(v) || u->Adj(v)){
-        constrainedMoves.Append(x,y);
+        // constrainedMoves.Append(x,y);
         AddWorkList(u);
         AddWorkList(v);
         return;
