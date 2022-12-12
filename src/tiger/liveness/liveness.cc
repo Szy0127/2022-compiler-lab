@@ -104,6 +104,7 @@ void LiveGraphFactory::InterfGraph() {
   //only need out_
   //all temps in out,add each pair to graph
   
+  auto rsp = reg_manager->StackPointer();
   auto graph_node_list = flowgraph_->Nodes()->GetList();
   for(const auto &node:graph_node_list){
     auto out_temps = out_->Look(node)->GetList();
@@ -125,6 +126,9 @@ void LiveGraphFactory::InterfGraph() {
     auto defs = fg::FlowGraphFactory::GetDef(node)->GetList();
     if(fg::FlowGraphFactory::IsMove(node)){
       auto def = defs.front();
+      if(def==rsp){
+        continue;
+      }
       auto node_def = temp_node_map_->Look(def);
       auto uses = fg::FlowGraphFactory::GetUse(node);
       for(const auto &out:TempList_Diff(live_out,uses)->GetList()){
@@ -138,6 +142,9 @@ void LiveGraphFactory::InterfGraph() {
       // mov t_src,t_dst
       // mov node_use,node_def
       auto use = uses->GetList().front();
+      if(use==rsp){
+        continue;
+      }
       auto node_use = temp_node_map_->Look(use);
       //src dst
       //|| !live_graph_.worklistMoves->Contain(node_def,node_use)
@@ -161,8 +168,14 @@ void LiveGraphFactory::InterfGraph() {
       }
     }else{
       for(const auto &def:defs){
+        if(def==rsp){
+          continue;
+        }
         auto node_def = temp_node_map_->Look(def);
         for(const auto &out:live_out->GetList()){
+          if(out==rsp){
+            continue;
+          }
           auto node_out = temp_node_map_->Look(out);
           if(node_def!=node_out){
             live_graph_.interf_graph->AddEdge(node_def,node_out);
