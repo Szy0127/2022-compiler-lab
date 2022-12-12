@@ -77,8 +77,8 @@ private:
   live::INodeList freezeWorklist;
   live::MoveList *worklistMoves;
   live::MoveList *activeMoves;
-  live::MoveList frozenMoves;
-  live::MoveList coalescedMoves;
+  // live::MoveList frozenMoves;
+  // live::MoveList coalescedMoves;
   live::MoveList constrainedMoves;
   std::map<live::INodePtr,live::MoveList*> *moveList;
 

@@ -106,8 +106,8 @@ void RegAllocator::Build(){
     simplifyWorklist.Clear();
     spillWorklist.Clear();
     freezeWorklist.Clear();
-    frozenMoves.Clear();
-    coalescedMoves.Clear();
+    // frozenMoves.Clear();
+    // coalescedMoves.Clear();
     constrainedMoves.Clear();
     degree.clear();
     coloredNodes.Clear();
@@ -178,7 +178,7 @@ void RegAllocator::Coalesce() {
         v = yy;
     }
     if(u==v){
-        coalescedMoves.Append(x,y);
+        // coalescedMoves.Append(x,y);
         AddWorkList(u);
         return;
     }
@@ -198,7 +198,7 @@ void RegAllocator::Coalesce() {
         }
     }
     if((coloredNodes.Contain(u) && george_flag)|| (!coloredNodes.Contain(u) && Conservative(Adjacent(u)->Union(Adjacent(v))))){
-        coalescedMoves.Append(x,y);
+        // coalescedMoves.Append(x,y);
         // std::cout<<"combine"<<u->NodeInfo()->Int()<<" "<<v->NodeInfo()->Int()<<std::endl;
         Combine(u,v);
         AddWorkList(u);
@@ -221,7 +221,7 @@ void RegAllocator::FreezeMoves(live::INodePtr u){
             v = GetAlias(y);
         }
         activeMoves->Delete(x,y);
-        frozenMoves.Append(x,y);
+        // frozenMoves.Append(x,y);
         if(NodeMoves(v)->Empty()&&degree[v]<K){
             freezeWorklist.DeleteNode(v);
             simplifyWorklist.Append(v);
