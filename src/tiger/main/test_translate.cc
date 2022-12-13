@@ -51,6 +51,11 @@ int main(int argc, char **argv) {
 
     if (errormsg->AnyErrors())
       return 1; // Don't continue if error occurrs
+    // for(const auto&frag:frags->GetList()){
+    //   if(typeid(*frag)==typeid(frame::ProcFrag)){
+    //     static_cast<frame::ProcFrag*>(frag)->body_->Print(stderr,0);
+    //   }
+    // }
   }
 
   return 0;
