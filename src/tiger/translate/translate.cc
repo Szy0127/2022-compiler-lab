@@ -495,7 +495,15 @@ tr::ExpAndTy *RecordExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   auto field_list = ty->fields_->GetList();
   auto wordsize = reg_manager->WordSize();
   auto record_len = field_list.size();
-  auto alloc_record = frame::externalCall("alloc_record",new tree::ExpList({new tree::ConstExp(record_len*wordsize)}));
+
+  auto pointer_info = std::string(record_len,'0');
+  auto str_label = temp::LabelFactory::NewLabel();
+  frags->PushBack(new frame::StringFrag(str_label,pointer_info));
+
+  
+  // auto alloc_record = frame::externalCall("alloc_record",new tree::ExpList({new tree::ConstExp(record_len*wordsize)}));
+  auto alloc_record = frame::externalCall("alloc_record",new tree::ExpList({new tree::NameExp(str_label)}));
+
 
   auto r = temp::TempFactory::NewTemp();
   auto move_addr_to_r = new tree::MoveStm(

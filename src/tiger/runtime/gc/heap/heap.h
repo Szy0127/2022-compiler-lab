@@ -6,8 +6,25 @@
 // Used to locate the start of ptrmap, simply get the address by &GLOBAL_GC_ROOTS
 extern uint64_t GLOBAL_GC_ROOTS;
 
-#define GET_RBP(rbp) do { __asm__("movq %%rbp, %0" : "=r"(rbp)); } while(0)
 
+/*
+  tiger->alloc_record->GC
+
+  tiger frame
+  retaddr of tiger
+  saved rbp(tiger rbp)  <-- rbp1       
+                      alloc_record frame
+  retaddr of alloc_record 
+  saved rbp1         <-- rbp2 = old rsp
+                    GC frame
+
+
+  *rbp2 = rbp1
+  rbp1 + 8  = stack addr of retaddr of tiger
+
+*/
+
+#define GET_RBP(rbp) do { __asm__("movq %%rbp, %0" : "=r"(rbp)); } while(0)
 // Used to get the first tiger stack, define a sp like uint64_t *sp; and invoke GET_TIGER_STACK(sp) will work
 #define GET_TIGER_STACK(sp) do {\
   unsigned long rbp; \
@@ -21,6 +38,9 @@ constexpr long END_MARK = 0;
 
 class TigerHeap {
 public:
+
+  TigerHeap()=default;
+
   /**
    * Allocate a contiguous space from heap.
    * If your heap has enough space, just allocate and return.

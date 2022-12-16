@@ -225,7 +225,9 @@ test_lab6() {
   local ref_dir=${WORKDIR}/testdata/lab5or6/refs
   local mergecase_dir=$testcase_dir/merge
   local mergeref_dir=$ref_dir/merge
-  local runtime_path=${WORKDIR}/src/tiger/runtime/runtime.c
+  # local runtime_path=${WORKDIR}/src/tiger/runtime/runtime.c
+  local runtime_path=${WORKDIR}/src/tiger/runtime/runtime.cc
+  local heap_path=${WORKDIR}/src/tiger/runtime/gc/heap/derived_heap.cc
   local score=0
   local full_score=1
   local testcase_name
@@ -238,7 +240,8 @@ test_lab6() {
     local assem=$testcase.s
 
     ./tiger-compiler "$testcase" &>/dev/null
-    gcc -Wl,--wrap,getchar -m64 "$assem" "$runtime_path" -o test.out &>/dev/null
+    # gcc -Wl,--wrap,getchar -m64 "$assem" "$runtime_path" -o test.out &>/dev/null
+    g++ -Wl,--wrap,getchar -m64 "$assem" "$runtime_path" "$heap_path" -o test.out &>/dev/null
     if [ ! -s test.out ]; then
       echo "Error: Link error [$testcase_name]"
       full_score=0

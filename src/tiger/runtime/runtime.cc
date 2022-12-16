@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// Note: change to header file of your implemnted heap!
+#include "../runtime/gc/heap/derived_heap.h"
 #include "../runtime/gc/heap/heap.h"
-
+#include <iostream>
 #ifndef EXTERNC
 #define EXTERNC extern "C" 
 #endif
@@ -11,7 +11,7 @@
 #define TIGER_HEAP_SIZE ( 1 << 20 )
 
 EXTERNC int tigermain(int);
-gc::TigerHeap *tiger_heap = nullptr;
+gc::DerivedHeap *tiger_heap = nullptr;
 
 #define CHECK_HEAP \
     do { \
@@ -43,11 +43,11 @@ EXTERNC uint64_t MaxFree() {
 
 EXTERNC long *init_array(int size, long init) {
   int i;
-  uint64_t allocate_size = size * sizeof(long);
-  long *a = (long *)tiger_heap->Allocate(allocate_size);
+  // uint64_t allocate_size = size * sizeof(long);
+  long *a = (long *)tiger_heap->Allocate(size,false);
   if(!a) {
     tiger_heap->GC();
-    a = (long*)tiger_heap->Allocate(allocate_size);
+    a = (long*)tiger_heap->Allocate(size,false);
   }
   for (i = 0; i < size; i++) a[i] = init;
   return a;
@@ -58,15 +58,19 @@ struct string {
   unsigned char chars[1];
 };
 
-EXTERNC int *alloc_record(int size) {
+EXTERNC int *alloc_record(struct string *s) {
   int i;
   int *p, *a;
-  p = a = (int *)tiger_heap->Allocate(size);
+
+  std::string info;
+  info.assign(s->chars,s->chars+s->length);
+
+  p = a = (int *)tiger_heap->Allocate(info);
   if(!p) {
     tiger_heap->GC();
-    p = a = (int *)tiger_heap->Allocate(size);
+    p = a = (int *)tiger_heap->Allocate(info);
   }
-  for (i = 0; i < size; i += sizeof(int)) *p++ = 0;
+  for (i = 0; i < s->length*gc::DerivedHeap::WORD_SIZE; i += sizeof(int)) *p++ = 0;
   return a;
 }
 
@@ -99,7 +103,7 @@ int main() {
     consts[i].chars[0] = i;
   }
   // Change it to your own implementation after implement heap and delete the comment!
-  // tiger_heap = new gc::TigerHeap();
+  tiger_heap = new gc::DerivedHeap();
   tiger_heap->Initialize(TIGER_HEAP_SIZE);
   return tigermain(0 /* static link */);
 }
