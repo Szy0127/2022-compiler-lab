@@ -248,8 +248,9 @@ class CallExp : public Exp {
 public:
   Exp *fun_;
   ExpList *args_;
+  temp::Label *pointer_map_;
 
-  CallExp(Exp *fun, ExpList *args) : fun_(fun), args_(args) {}
+  CallExp(Exp *fun, ExpList *args,temp::Label* pointer_map) : fun_(fun), args_(args), pointer_map_(pointer_map) {}
   ~CallExp() override;
 
   void Print(FILE *out, int d) const override;

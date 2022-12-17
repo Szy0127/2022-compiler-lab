@@ -653,47 +653,62 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   // here to extend stack?
   auto args_size = args_->GetList().size();
   auto max_args_size = reg_manager->ArgRegs()->GetList().size();
-  auto add_stack = (args_size - 6) * reg_manager->WordSize();
+  auto add_stack = reg_manager->WordSize();// pointer_map_label
   if(args_size > max_args_size){
-    std::stringstream assem;
-    assem << "subq $" << add_stack << ",`d0";
-    instr_list.Append(
-      new assem::OperInstr(
-        assem.str(),
-        new temp::TempList(reg_manager->StackPointer()),
-        new temp::TempList(),
-        nullptr
-      )
-    );
+    add_stack +=  (args_size - max_args_size) * reg_manager->WordSize();
   }
+
+  instr_list.Append(
+    new assem::OperInstr(
+      "subq $" + std::to_string( add_stack) + ",`d0",
+      new temp::TempList(reg_manager->StackPointer()),
+      new temp::TempList(),
+      nullptr
+    )
+  );
+  
+  auto pointer_map_temp = temp::TempFactory::NewTemp();
+
+  instr_list.Append(
+    new assem::OperInstr(
+      "leaq " + temp::LabelFactory::LabelString(pointer_map_) + "(%rip),`d0",
+      new temp::TempList(pointer_map_temp),
+      new temp::TempList(),
+      nullptr
+    )
+  );
+  instr_list.Append(
+    new assem::OperInstr(
+      "movq `s0,(`s1)",
+      new temp::TempList(),
+      new temp::TempList{pointer_map_temp,reg_manager->StackPointer()},
+      nullptr
+    )
+  );
+
 
   auto calldefs = reg_manager->CallerSaves();
 
   calldefs->Append(reg_manager->ReturnValue());
 
-  std::stringstream assem;
-  assem << "callq " << temp::LabelFactory::LabelString(static_cast<NameExp *>(fun_)->name_);
   instr_list.Append(
     new assem::OperInstr(
-      assem.str(),
+      "callq " + temp::LabelFactory::LabelString(static_cast<NameExp *>(fun_)->name_),
       calldefs, args,
       nullptr
     )
   );
 
 
-  if(args_size > max_args_size){
-    std::stringstream assem;
-    assem << "addq $" << add_stack << ",`d0";
-    instr_list.Append(
-      new assem::OperInstr(
-        assem.str(),
-        new temp::TempList(reg_manager->StackPointer()),
-        new temp::TempList(),
-        nullptr
-      )
-    );
-  }
+  instr_list.Append(
+    new assem::OperInstr(
+      "addq $" +std::to_string(add_stack)+",`d0",
+      new temp::TempList(reg_manager->StackPointer()),
+      new temp::TempList(),
+      nullptr
+    )
+  );
+  
 
   return reg_manager->ReturnValue();
 }

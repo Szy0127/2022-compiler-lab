@@ -69,9 +69,11 @@ temp::Temp *X64RegManager::ReturnValue() {
 }
 
 //if put in .h  multiple definition
-tree::Exp *externalCall(std::string s,tree::ExpList *args){
+tree::Exp *externalCall(std::string s,tree::ExpList *args,temp::Label *pointer_map_label){
   return new tree::CallExp(
-    new tree::NameExp(temp::LabelFactory::NamedLabel(s)),args);
+    new tree::NameExp(temp::LabelFactory::NamedLabel(s)),
+    args,
+    pointer_map_label);
 }
 // tree::Exp *staticLink(tr::Level *level_now,tr::Level *level_target){
 //   auto framePtr = new tree::TempExp(reg_manager->FramePointer());
@@ -112,6 +114,7 @@ X64Frame::X64Frame(temp::Label *name,std::list<bool> *f):Frame(name,f){
     }else{
       /*
           param 7th
+          pointer_map (for gc)
           ret addr
                   <-- frame ptr       
           local var 
@@ -122,7 +125,7 @@ X64Frame::X64Frame(temp::Label *name,std::list<bool> *f):Frame(name,f){
           new tree::BinopExp(
             tree::PLUS_OP,
             frame_ptr,
-            new tree::ConstExp(word_size*(i-5))
+            new tree::ConstExp(word_size*(i-4))
           )
         )
       );

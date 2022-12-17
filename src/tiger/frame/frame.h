@@ -153,7 +153,7 @@ private:
 };
 
 /* TODO: Put your lab5 code here */
-tree::Exp *externalCall(std::string s,tree::ExpList *args);
+tree::Exp *externalCall(std::string s,tree::ExpList *args,temp::Label *pointer_map);
 // tree::Exp *staticLink(tr::Level *level_now,tr::Level *level_target);
 std::list<tree::Stm*> ProcEntryExit1(frame::Frame *frame, tree::Stm *func_body);
 assem::Proc *ProcEntryExit3(frame::Frame *frame,assem::InstrList *instr_list);

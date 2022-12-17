@@ -54,6 +54,10 @@ gc是调用alloc时触发的，alloc作为一个函数调用，需要满足calle
 
 每个call对应一个map  每个map除了存偏移外再存一个framesize 根据栈大小可以一直往上找
 
+这里的逻辑和staticlink不同，因为staticlink是直接存的地址，而这里的framesize需要加上大于6个的参数在栈上占用的大小。如果修改栈调整的逻辑比较麻烦，因此这里只能手动加。真实的情况是结合`push rbp,movq rsp,rbp` `push` `leave`
+
+的操作来实现的，但是我们并不支持这样实现。
+
 找到栈的最后一个位置，拿到值，去gc的map拿到对应的pointer map
 
 gc是进入调用了c函数的alloc进入的
