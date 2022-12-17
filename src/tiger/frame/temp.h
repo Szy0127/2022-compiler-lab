@@ -67,6 +67,7 @@ public:
   TempList(std::initializer_list<Temp *> list) : temp_list_(list) {}
   TempList() = default;
   void Append(Temp *t) { temp_list_.push_back(t); }
+  bool Empty()const{return temp_list_.empty();}
   bool Contain(Temp *target){
     for (auto t : temp_list_) {
       if (t == target)

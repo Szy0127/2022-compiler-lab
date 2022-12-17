@@ -37,6 +37,10 @@ gc是调用alloc时触发的，alloc作为一个函数调用，需要满足calle
 1. alloc后活跃，那么发生冲突，要么不染caller saved registers的颜色，要么发生spill，此时可在栈上获取
 2. alloc后不活跃，那么此时p已经变成垃圾，回收是正确的。
 
+但是之后不活跃，却可能已经被作为参数传给这个函数了，也不能回收
+
+并且每个call的时候寄存器状态可能不一样，如何静态分析？
+
 所以只需要看以下两个
 
 - stack：偏移
@@ -45,6 +49,19 @@ gc是调用alloc时触发的，alloc作为一个函数调用，需要满足calle
 <img src="C:\Users\Shen\AppData\Roaming\Typora\typora-user-images\image-20221215222340742.png" alt="image-20221215222340742" style="zoom:50%;" />
 
 regalloc最后再进行一遍活跃分析，把call函数的live-in的寄存器取出，如果着色为callee saved 则放入栈上
+
+| stack             | info in pointer_map |
+| ----------------- | ------------------- |
+| escape local var1 | 8                   |
+| escape local var2 | 16                  |
+| arg8              |                     |
+| arg7              |                     |
+| rbx               |                     |
+| rdi               |                     |
+| pointer_map_label |                     |
+| retaddr           | rsp                 |
+
+最后记录一个数值表示需要检查的寄存器个数，例如2 就找 rsp+16 rsp+32
 
 ### 存pointer map
 

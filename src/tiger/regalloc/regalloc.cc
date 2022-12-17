@@ -62,7 +62,10 @@ void RegAllocator::RegAlloc(){
     // LivenessAnalysis();
 
     auto callee_saved = reg_manager->CalleeSaves();
-    //remove useless move
+    //remove useless move and push registers for pointer map
+
+    std::map<assem::Instr*,temp::TempList*> call2pointer_map;
+
     auto instr_list = assem_instr_->GetInstrList();
     for(const auto&node:flow_graph_->Nodes()->GetList()){
         if(fg::FlowGraphFactory::IsMove(node)){
@@ -76,7 +79,7 @@ void RegAllocator::RegAlloc(){
         }
         if(fg::FlowGraphFactory::IsCall(node)){
             auto live_templist = in_->Look(node);
-            temp::TempList callee_saved_temps_to_push;
+            auto callee_saved_temps_to_push = new temp::TempList();
             for(const auto &t:live_templist->GetList()){
                 if(!t->IsPointer()){
                     continue;
@@ -84,18 +87,65 @@ void RegAllocator::RegAlloc(){
                 auto precolor = color[temp2Inode->Look(t)];
                 if(callee_saved->Contain(precolor)){
                     //need push to stack and record in pointer map
-                    callee_saved_temps_to_push.Append(precolor);
+                    callee_saved_temps_to_push->Append(precolor);
                 }
             }
+
             auto pointer_map_frag = fg::FlowGraphFactory::GetFrag(node);
-            std::stringstream pointer_map_str;
-            pointer_map_str << pointer_map_frag->str_;
-            for(const auto &t:callee_saved_temps_to_push.GetList()){
-                pointer_map_str << t->Int()<<" ";
+            pointer_map_frag->str_ = pointer_map_frag->str_ + std::to_string(callee_saved_temps_to_push->GetList().size());
+            if(!callee_saved_temps_to_push->Empty()){
+                call2pointer_map.emplace(node->NodeInfo(),callee_saved_temps_to_push);
             }
-            pointer_map_frag->str_ = pointer_map_str.str();
         }
     }
+
+    //push callee saved registers which stores pointer to stack,gc can get these values from info of pointer map
+    auto rsp = reg_manager->StackPointer();
+    auto wordsize = reg_manager->WordSize();
+    auto end = instr_list->GetList().end();
+    auto instr_it = instr_list->GetList().begin();
+    for(;instr_it!=end;instr_it++){
+        if(call2pointer_map.count(*instr_it)){
+            auto temps = call2pointer_map[*instr_it]->GetList();
+            auto extend_size = temps.size() * wordsize;
+            instr_list->Insert(
+                instr_it,
+                new assem::OperInstr(
+                    "subq $"+std::to_string(extend_size)+",`d0",
+                    new temp::TempList(rsp),
+                    new temp::TempList(rsp),
+                    nullptr
+                )
+            );
+
+            auto offset = 0;
+            for(const auto &t:temps){
+                instr_list->Insert(
+                    instr_it,
+                    new assem::OperInstr(
+                        "movq `s0,"+std::to_string(offset)+"(`d0)",
+                        new temp::TempList(rsp),
+                        new temp::TempList{t,rsp},
+                        nullptr
+                    )
+                );
+                offset += wordsize;
+            }
+
+            instr_list->Insert(
+                std::next(instr_it),
+                new assem::OperInstr(
+                    "addq $"+std::to_string(extend_size)+",`d0",
+                    new temp::TempList(rsp),
+                    new temp::TempList(rsp),
+                    nullptr
+                )
+            );
+
+
+        }
+    }
+
 
     result_->il_ = instr_list;
     auto reg_map = temp::Map::Empty();

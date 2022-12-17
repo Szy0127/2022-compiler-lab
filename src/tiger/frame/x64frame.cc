@@ -190,7 +190,10 @@ std::list<tree::Stm*> ProcEntryExit1(frame::Frame *frame, tree::Stm *func_body){
 Access *X64Frame::AllocLocal(bool escape,bool is_pointer){
   if(escape){
     sp_off -= reg_manager->WordSize();
-    return new InFrameAccess(sp_off,is_pointer);
+    if(is_pointer){
+      pointer_off.push_back(-sp_off);
+    }
+    return new InFrameAccess(sp_off);
   }
   return new InRegAccess(temp::TempFactory::NewTemp(is_pointer));
 }

@@ -7,7 +7,7 @@
 #include "tiger/frame/x64frame.h"
 #include "tiger/frame/temp.h"
 #include "tiger/frame/frame.h"
-#include<iostream>
+#include <sstream>
 
 
 #define NOP (new tr::ExExp(new tree::ConstExp(0)))
@@ -20,6 +20,20 @@ Access *Access::AllocLocal(Level *level, bool escape,bool is_pointer) {
   /* TODO: Put your lab5 code here */
   return new Access(level,level->frame_->AllocLocal(escape,is_pointer));
 }
+
+frame::StringFrag* GetPointerMap(frame::Frame* frame){
+  auto pointer_map_label = temp::LabelFactory::NewLabel();
+  std::stringstream pointer_map_data;
+  auto pointer_info = frame->GetPointerInfo();
+  for(const auto &off:pointer_info){
+    pointer_map_data<<off<<" ";
+  }
+  auto string_frag = new frame::StringFrag(pointer_map_label,pointer_map_data.str());
+  frags->PushBack(string_frag);
+  return string_frag;
+}
+
+
 Level::Level(Level *parent,temp::Label *name, std::list<bool> *formals):parent_(parent){
 
   //main level don't need static link
@@ -347,10 +361,7 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   auto func_entry = static_cast<env::FunEntry*>(venv->Look(func_));
   auto func_label = func_entry->label_;
 
-  auto pointer_map_label = temp::LabelFactory::NewLabel();
-  std::string pointer_map_data = "pointer_map";
-  auto string_frag = new frame::StringFrag(pointer_map_label,pointer_map_data);
-  frags->PushBack(string_frag);
+  auto string_frag = tr::GetPointerMap(level->frame_);
   tree::Exp *call_exp;
   if(func_label){
     //func->entry->level is the level of func itself, parent is the level defines func
@@ -437,13 +448,9 @@ tr::ExpAndTy *OpExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
       tree::CjumpStm* cj = nullptr;
       if(left_exp_ty->ty_->IsSameType(type::StringTy::Instance())){
 
-          auto pointer_map_label = temp::LabelFactory::NewLabel();
-          std::string pointer_map_data = "pointer_map";
-          auto string_frag = new frame::StringFrag(pointer_map_label,pointer_map_data);
-          frags->PushBack(string_frag);
         auto str_cmp = frame::externalCall("string_equal",
         new tree::ExpList({left_exp_ty->exp_->UnEx(),right_exp_ty->exp_->UnEx()}),
-        string_frag
+        tr::GetPointerMap(level->frame_)
         );
         //1 eq  0 neq  order does not matter
         cj = new tree::CjumpStm(op,str_cmp,new tree::ConstExp(1),nullptr,nullptr);
@@ -518,13 +525,9 @@ tr::ExpAndTy *RecordExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   
   // auto alloc_record = frame::externalCall("alloc_record",new tree::ExpList({new tree::ConstExp(record_len*wordsize)}));
 
-  auto pointer_map_label = temp::LabelFactory::NewLabel();
-  std::string pointer_map_data = "pointer_map";
-  auto string_frag = new frame::StringFrag(pointer_map_label,pointer_map_data);
-  frags->PushBack(string_frag);
   auto alloc_record = frame::externalCall("alloc_record",
   new tree::ExpList({new tree::NameExp(str_label)}),
-  string_frag);
+  tr::GetPointerMap(level->frame_));
 
 
   auto r = temp::TempFactory::NewTemp();
@@ -833,13 +836,9 @@ tr::ExpAndTy *ArrayExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   auto size_exp_ty = size_->Translate(venv,tenv,level,label,errormsg);
   auto init_exp_ty = init_->Translate(venv,tenv,level,label,errormsg);
 
-  auto pointer_map_label = temp::LabelFactory::NewLabel();
-  std::string pointer_map_data = "pointer_map";
-  auto string_frag = new frame::StringFrag(pointer_map_label,pointer_map_data);
-  frags->PushBack(string_frag);
   auto init_array = frame::externalCall("init_array",
   new tree::ExpList({size_exp_ty->exp_->UnEx(),init_exp_ty->exp_->UnEx()}),
-  string_frag);
+  tr::GetPointerMap(level->frame_));
 
   //externalcall already mov init value
   return new tr::ExpAndTy(

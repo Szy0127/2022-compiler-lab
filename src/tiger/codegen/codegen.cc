@@ -651,6 +651,8 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   // il.Append(new assem::OperInstr(“CALL `s0\n”, calldefs, args, nullptr));
 
   // here to extend stack?
+
+  auto rsp = reg_manager->StackPointer();
   auto args_size = args_->GetList().size();
   auto max_args_size = reg_manager->ArgRegs()->GetList().size();
   auto add_stack = reg_manager->WordSize();// pointer_map_label
@@ -661,8 +663,8 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   instr_list.Append(
     new assem::OperInstr(
       "subq $" + std::to_string( add_stack) + ",`d0",
-      new temp::TempList(reg_manager->StackPointer()),
-      new temp::TempList(),
+      new temp::TempList(rsp),
+      new temp::TempList(rsp),
       nullptr
     )
   );
@@ -701,8 +703,8 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   instr_list.Append(
     new assem::OperInstr(
       "addq $" +std::to_string(add_stack)+",`d0",
-      new temp::TempList(reg_manager->StackPointer()),
-      new temp::TempList(),
+      new temp::TempList(rsp),
+      new temp::TempList(rsp),
       nullptr
     )
   );

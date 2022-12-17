@@ -84,14 +84,18 @@ public:
   virtual Access *AllocLocal(bool escape,bool is_pointer=false) = 0;
   virtual ~Frame()=default;
 
+
   frame::Access *StaticLink(){return formals_.front();}  
   [[nodiscard]] const std::list<frame::Access *> &GetFormalList() const { return formals_; }
   [[nodiscard]] const std::list<tree::Stm*> &GetVSList() const { return view_shift_stm; }
+  [[nodiscard]] const std::vector<unsigned int> &GetPointerInfo()const{return pointer_off;}
 
   temp::Label *name_;//for output.cc
   std::string GetLabel(){return temp::LabelFactory::LabelString(name_);}
 
   unsigned long GetFrameSize(){return -sp_off;}
+
+
 protected:
   unsigned long sp_off{0};//sp-fp
   //actually here Stm must be MoveStm
@@ -99,6 +103,8 @@ protected:
 
   //use list<bool> to allocate list<access>
   std::list<frame::Access *> formals_;
+
+  std::vector<unsigned int> pointer_off;//bp-addr (>0)
 };
 
 /**

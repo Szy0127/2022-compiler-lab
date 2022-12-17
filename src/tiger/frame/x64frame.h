@@ -38,6 +38,7 @@ class X64Frame : public Frame {
 public:
   X64Frame(temp::Label *name,std::list<bool> *f);
   Access *AllocLocal(bool escape,bool is_pointer=false)override;
+
 };
 
 
@@ -45,9 +46,8 @@ public:
 class InFrameAccess : public Access {
 public:
   int offset;
-  bool is_pointer;
 
-  explicit InFrameAccess(int offset,bool is_pointer) : offset(offset),is_pointer(is_pointer) {}
+  explicit InFrameAccess(int offset) : offset(offset) {}
   /* TODO: Put your lab5 code here */
   tree::Exp *ToExp(tree::Exp *framePtr) const override {
     return new tree::MemExp(
