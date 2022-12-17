@@ -5,9 +5,7 @@
 namespace gc {
 // TODO(lab7): You need to implement those interfaces inherited from TigerHeap correctly according to your design.
 
-unsigned int RecordDescriptor::GetSize()const{
-    return _is_pointer.size()*DerivedHeap::WORD_SIZE;
-}
+
 char *DerivedHeap::Allocate(uint64_t size){
     auto ret = _from_space + from_offset;
     // fprintf(stdout,"record addr:%#llx,size:%d\n",ret,size);
@@ -40,6 +38,8 @@ char *DerivedHeap::Allocate(uint64_t slot_number,bool is_pointer){
     if(!ret){
         return ret;
     }
+    auto desc = new ArrayDescriptor(slot_number,is_pointer);
+    addr2desc.emplace((uint64_t)ret,desc);
     return ret;
 }
 

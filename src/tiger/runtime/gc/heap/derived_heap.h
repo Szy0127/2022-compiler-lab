@@ -16,9 +16,19 @@ class Descriptor{
 class RecordDescriptor:public Descriptor{
   public:
   RecordDescriptor(std::vector<bool> is_pointer):_is_pointer(std::move(is_pointer)){}
-  unsigned int GetSize()const override;
-  public:
+  unsigned int GetSize()const override{return _is_pointer.size()*TigerHeap::WORD_SIZE;}
+  [[nodiscard]]  const std::vector<bool> &GetInfo()const{return _is_pointer;}
+  private:
   std::vector<bool> _is_pointer;
+};
+class ArrayDescriptor:public Descriptor{
+  public:
+  ArrayDescriptor(unsigned int slot_num,bool is_pointer):_slot_num(slot_num),_is_pointer(is_pointer){}
+  unsigned int GetSize()const override{return _slot_num*TigerHeap::WORD_SIZE;}
+  [[nodiscard]] bool IsPointer()const{return _is_pointer;}
+  private:
+  unsigned int _slot_num;
+  bool _is_pointer;
 };
 class DerivedHeap : public TigerHeap {
   // TODO(lab7): You need to implement those interfaces inherited from TigerHeap correctly according to your design.
