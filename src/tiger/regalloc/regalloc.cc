@@ -59,6 +59,10 @@ void RegAllocator::RegAlloc(){
     }
 
 
+    // LivenessAnalysis();
+
+    auto callee_saved = reg_manager->CalleeSaves();
+    //remove useless move
     auto instr_list = assem_instr_->GetInstrList();
     for(const auto&node:flow_graph_->Nodes()->GetList()){
         if(fg::FlowGraphFactory::IsMove(node)){
@@ -68,6 +72,28 @@ void RegAllocator::RegAlloc(){
             if(color[src_node] == color[dst_node]){
                 instr_list->Remove(move_instr);
             }
+            continue;
+        }
+        if(fg::FlowGraphFactory::IsCall(node)){
+            auto live_templist = in_->Look(node);
+            temp::TempList callee_saved_temps_to_push;
+            for(const auto &t:live_templist->GetList()){
+                if(!t->IsPointer()){
+                    continue;
+                }
+                auto precolor = color[temp2Inode->Look(t)];
+                if(callee_saved->Contain(precolor)){
+                    //need push to stack and record in pointer map
+                    callee_saved_temps_to_push.Append(precolor);
+                }
+            }
+            auto pointer_map_frag = fg::FlowGraphFactory::GetFrag(node);
+            std::stringstream pointer_map_str;
+            pointer_map_str << pointer_map_frag->str_;
+            for(const auto &t:callee_saved_temps_to_push.GetList()){
+                pointer_map_str << t->Int()<<" ";
+            }
+            pointer_map_frag->str_ = pointer_map_str.str();
         }
     }
 
@@ -91,6 +117,8 @@ void RegAllocator::LivenessAnalysis(){
     live_graph_ = live_graph.interf_graph;
     worklistMoves = live_graph.worklistMoves;
     moveList = live_graph.moveList;
+
+    in_ = live_graph_factory.GetLiveIn();
 
     //precolor
     temp2Inode = live_graph_factory.GetTempNodeMap();
@@ -398,7 +426,7 @@ void RegAllocator::RewriteProgram(){
     for(const auto&spill_node:spillNodes.GetList()){
         auto spill_temp = spill_node->NodeInfo();
         // std::cout<<"spilled:"<<spill_temp->Int()<<std::endl;
-        auto frame_access = static_cast<frame::InFrameAccess*>(frame_->AllocLocal(true));
+        auto frame_access = static_cast<frame::InFrameAccess*>(frame_->AllocLocal(true,spill_temp->IsPointer()));
         auto instr_list_ = assem_instr_->GetInstrList();
         auto end = instr_list_->GetList().end();
         auto instr_it = instr_list_->GetList().begin();

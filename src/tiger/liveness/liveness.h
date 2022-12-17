@@ -54,18 +54,19 @@ class LiveGraphFactory {
 public:
   explicit LiveGraphFactory(fg::FGraphPtr flowgraph)
       : flowgraph_(flowgraph), live_graph_(new IGraph(), new MoveList(),new std::map<INodePtr,MoveList*>()),
-        in_(std::make_unique<graph::Table<assem::Instr, temp::TempList>>()),
+        in_(std::make_shared<graph::Table<assem::Instr, temp::TempList>>()),
         out_(std::make_unique<graph::Table<assem::Instr, temp::TempList>>()),
         temp_node_map_(new tab::Table<temp::Temp, INode>()) {}
   void Liveness();
   LiveGraph GetLiveGraph() { return live_graph_; }
   tab::Table<temp::Temp, INode> *GetTempNodeMap() { return temp_node_map_; }
+  [[nodiscard]] std::shared_ptr<graph::Table<assem::Instr, temp::TempList>> GetLiveIn()const{return in_;}
 
 private:
   fg::FGraphPtr flowgraph_;
   LiveGraph live_graph_;
 
-  std::unique_ptr<graph::Table<assem::Instr, temp::TempList>> in_;
+  std::shared_ptr<graph::Table<assem::Instr, temp::TempList>> in_;
   std::unique_ptr<graph::Table<assem::Instr, temp::TempList>> out_;
   tab::Table<temp::Temp, INode> *temp_node_map_;
 

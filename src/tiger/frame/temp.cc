@@ -26,8 +26,8 @@ Label *LabelFactory::NamedLabel(std::string_view s) {
 
 std::string LabelFactory::LabelString(Label *s) { return s->Name(); }
 
-Temp *TempFactory::NewTemp() {
-  Temp *p = new Temp(temp_factory.temp_id_++);
+Temp *TempFactory::NewTemp(bool is_pointer) {
+  Temp *p = new Temp(temp_factory.temp_id_++,is_pointer);
   std::stringstream stream;
   stream << 't';
   stream << p->num_;
@@ -37,7 +37,7 @@ Temp *TempFactory::NewTemp() {
 }
 
 int Temp::Int() const { return num_; }
-
+bool Temp::IsPointer() const { return is_pointer_; }
 Map *Map::Empty() { return new Map(); }
 
 Map *Map::Name() {

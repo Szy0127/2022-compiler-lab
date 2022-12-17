@@ -22,6 +22,14 @@ Desc分为DescRecord与DescArray，存储size及bitmap
 - stack slot 标记是否是指针
 - 寄存器分配也可以有信息传递
 
+为了传递信息，需要给tree和assem的call都增加frag的地址信息
+
+translate层，生成stringfrag，加入所有stack的信息
+
+regalloc的rewrite 可能再加入stack
+
+regalloc成功最后，遍历instr 所有call之前把指针的temp入栈，并修改stringfrag的string
+
 ### 保存指针的位置
 
 gc是调用alloc时触发的，alloc作为一个函数调用，需要满足caller saved registers已被保存。如果alloc前有一个指针变量p存在caller saved register中，那么
@@ -35,6 +43,8 @@ gc是调用alloc时触发的，alloc作为一个函数调用，需要满足calle
 - callee-saved register：如果存的是指针，push到栈上，然后存偏移
 
 <img src="C:\Users\Shen\AppData\Roaming\Typora\typora-user-images\image-20221215222340742.png" alt="image-20221215222340742" style="zoom:50%;" />
+
+regalloc最后再进行一遍活跃分析，把call函数的live-in的寄存器取出，如果着色为callee saved 则放入栈上
 
 ### 存pointer map
 

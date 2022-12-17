@@ -25,6 +25,8 @@ public:
   [[nodiscard]] static temp::TempList* GetUse(FNodePtr node);
   [[nodiscard]] static temp::TempList* GetDef(FNodePtr node);
   [[nodiscard]] static bool IsMove(FNodePtr node);
+  [[nodiscard]] static bool IsCall(FNodePtr node);
+  [[nodiscard]] static frame::StringFrag* GetFrag(FNodePtr node);
 private:
   assem::InstrList *instr_list_;
   FGraphPtr flowgraph_;

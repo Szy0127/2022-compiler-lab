@@ -7,6 +7,10 @@
 
 #include "tiger/frame/temp.h"
 
+
+namespace frame{
+class StringFrag;
+}
 namespace assem {
 
 class Targets {
@@ -30,10 +34,11 @@ public:
   std::string assem_;
   temp::TempList *dst_, *src_;
   Targets *jumps_;
+  frame::StringFrag *pointer_map_;//for call
 
   OperInstr(std::string assem, temp::TempList *dst, temp::TempList *src,
-            Targets *jumps)
-      : assem_(std::move(assem)), dst_(dst), src_(src), jumps_(jumps) {}
+            Targets *jumps,frame::StringFrag *pointer_map=nullptr)
+      : assem_(std::move(assem)), dst_(dst), src_(src), jumps_(jumps),pointer_map_(pointer_map) {}
 
   void Print(FILE *out, temp::Map *m) const override;
   [[nodiscard]] temp::TempList *Def() const override;

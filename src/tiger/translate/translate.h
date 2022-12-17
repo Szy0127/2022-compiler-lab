@@ -48,7 +48,7 @@ public:
 
   Access(Level *level, frame::Access *access)
       : level_(level), access_(access) {}
-  static Access *AllocLocal(Level *level, bool escape);
+  static Access *AllocLocal(Level *level, bool escape,bool is_pointer=false);
 };
 
 class Level {

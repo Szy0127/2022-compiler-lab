@@ -81,7 +81,7 @@ class Frame {
   /* TODO: Put your lab5 code here */
 public:
   Frame(temp::Label *name,std::list<bool> *f):name_(name){}
-  virtual Access *AllocLocal(bool escape) = 0;
+  virtual Access *AllocLocal(bool escape,bool is_pointer=false) = 0;
   virtual ~Frame()=default;
 
   frame::Access *StaticLink(){return formals_.front();}  
@@ -153,7 +153,7 @@ private:
 };
 
 /* TODO: Put your lab5 code here */
-tree::Exp *externalCall(std::string s,tree::ExpList *args,temp::Label *pointer_map);
+tree::Exp *externalCall(std::string s,tree::ExpList *args,StringFrag *pointer_map);
 // tree::Exp *staticLink(tr::Level *level_now,tr::Level *level_target);
 std::list<tree::Stm*> ProcEntryExit1(frame::Frame *frame, tree::Stm *func_body);
 assem::Proc *ProcEntryExit3(frame::Frame *frame,assem::InstrList *instr_list);

@@ -21,6 +21,7 @@ class InstrList;
 
 namespace frame {
 class RegManager;
+class StringFrag;
 } // namespace frame
 
 namespace tree {
@@ -248,9 +249,10 @@ class CallExp : public Exp {
 public:
   Exp *fun_;
   ExpList *args_;
-  temp::Label *pointer_map_;
+  // temp::Label *pointer_map_;
+  frame::StringFrag *pointer_map_;
 
-  CallExp(Exp *fun, ExpList *args,temp::Label* pointer_map) : fun_(fun), args_(args), pointer_map_(pointer_map) {}
+  CallExp(Exp *fun, ExpList *args,frame::StringFrag* pointer_map) : fun_(fun), args_(args), pointer_map_(pointer_map) {}
   ~CallExp() override;
 
   void Print(FILE *out, int d) const override;

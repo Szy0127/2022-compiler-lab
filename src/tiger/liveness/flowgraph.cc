@@ -56,6 +56,19 @@ bool FlowGraphFactory::IsMove(FNodePtr node){
   // }
   // return static_cast<assem::MoveInstr*>(instr)->assem_=="movq `s0,`d0";
 }
+
+bool fg::FlowGraphFactory::IsCall(FNodePtr node) { 
+  auto instr = node->NodeInfo();
+  if(typeid(*instr)!=typeid(assem::OperInstr)){
+    return false;
+  }
+  return !!static_cast<assem::OperInstr*>(instr)->pointer_map_; 
+}
+frame::StringFrag* fg::FlowGraphFactory::GetFrag(FNodePtr node) { 
+  //should pass IsCall
+  return static_cast<assem::OperInstr*>(node->NodeInfo())->pointer_map_; 
+}
+
 } // namespace fg
 
 namespace assem {

@@ -7,6 +7,7 @@
 #include "tiger/frame/x64frame.h"
 #include "tiger/frame/temp.h"
 #include "tiger/frame/frame.h"
+#include<iostream>
 
 
 #define NOP (new tr::ExExp(new tree::ConstExp(0)))
@@ -15,9 +16,9 @@ extern frame::RegManager *reg_manager;
 
 namespace tr {
 
-Access *Access::AllocLocal(Level *level, bool escape) {
+Access *Access::AllocLocal(Level *level, bool escape,bool is_pointer) {
   /* TODO: Put your lab5 code here */
-  return new Access(level,level->frame_->AllocLocal(escape));
+  return new Access(level,level->frame_->AllocLocal(escape,is_pointer));
 }
 Level::Level(Level *parent,temp::Label *name, std::list<bool> *formals):parent_(parent){
 
@@ -348,16 +349,16 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
 
   auto pointer_map_label = temp::LabelFactory::NewLabel();
   std::string pointer_map_data = "pointer_map";
-  frags->PushBack(new frame::StringFrag(pointer_map_label,pointer_map_data));
-
+  auto string_frag = new frame::StringFrag(pointer_map_label,pointer_map_data);
+  frags->PushBack(string_frag);
   tree::Exp *call_exp;
   if(func_label){
     //func->entry->level is the level of func itself, parent is the level defines func
     arg_list->Insert(staticLink(level,func_entry->level_->parent_));
-    call_exp = new tree::CallExp(new tree::NameExp(func_label),arg_list,pointer_map_label);
+    call_exp = new tree::CallExp(new tree::NameExp(func_label),arg_list,string_frag);
   }else{//env.cc externalcall label=nullptr
     //new NamedLabel
-    call_exp = frame::externalCall(func_->Name(),arg_list,pointer_map_label);
+    call_exp = frame::externalCall(func_->Name(),arg_list,string_frag);
   }
 
   auto res_ty = func_entry->result_;
@@ -438,11 +439,11 @@ tr::ExpAndTy *OpExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
 
           auto pointer_map_label = temp::LabelFactory::NewLabel();
           std::string pointer_map_data = "pointer_map";
-          frags->PushBack(new frame::StringFrag(pointer_map_label,pointer_map_data));
-
+          auto string_frag = new frame::StringFrag(pointer_map_label,pointer_map_data);
+          frags->PushBack(string_frag);
         auto str_cmp = frame::externalCall("string_equal",
         new tree::ExpList({left_exp_ty->exp_->UnEx(),right_exp_ty->exp_->UnEx()}),
-        pointer_map_label
+        string_frag
         );
         //1 eq  0 neq  order does not matter
         cj = new tree::CjumpStm(op,str_cmp,new tree::ConstExp(1),nullptr,nullptr);
@@ -519,11 +520,11 @@ tr::ExpAndTy *RecordExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
 
   auto pointer_map_label = temp::LabelFactory::NewLabel();
   std::string pointer_map_data = "pointer_map";
-  frags->PushBack(new frame::StringFrag(pointer_map_label,pointer_map_data));
-
+  auto string_frag = new frame::StringFrag(pointer_map_label,pointer_map_data);
+  frags->PushBack(string_frag);
   auto alloc_record = frame::externalCall("alloc_record",
   new tree::ExpList({new tree::NameExp(str_label)}),
-  pointer_map_label);
+  string_frag);
 
 
   auto r = temp::TempFactory::NewTemp();
@@ -834,11 +835,11 @@ tr::ExpAndTy *ArrayExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
 
   auto pointer_map_label = temp::LabelFactory::NewLabel();
   std::string pointer_map_data = "pointer_map";
-  frags->PushBack(new frame::StringFrag(pointer_map_label,pointer_map_data));
-
+  auto string_frag = new frame::StringFrag(pointer_map_label,pointer_map_data);
+  frags->PushBack(string_frag);
   auto init_array = frame::externalCall("init_array",
   new tree::ExpList({size_exp_ty->exp_->UnEx(),init_exp_ty->exp_->UnEx()}),
-  pointer_map_label);
+  string_frag);
 
   //externalcall already mov init value
   return new tr::ExpAndTy(
@@ -925,8 +926,10 @@ tr::Exp *VarDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                            err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
   auto init_exp_ty = init_->Translate(venv,tenv,level,label,errormsg);
-  auto access = tr::Access::AllocLocal(level,escape_);
-  venv->Enter(var_,new env::VarEntry(access,init_exp_ty->ty_));
+  auto ty = init_exp_ty->ty_;
+  bool is_pointer = typeid(*ty) == typeid(type::ArrayTy) || typeid(*ty) == typeid(type::RecordTy) || typeid(*ty) == typeid(type::NilTy);
+  auto access = tr::Access::AllocLocal(level,escape_,is_pointer);
+  venv->Enter(var_,new env::VarEntry(access,ty));
 
   return new tr::NxExp(
     new tree::MoveStm(

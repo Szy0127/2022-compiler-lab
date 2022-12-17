@@ -69,6 +69,8 @@ private:
   std::unique_ptr<Result> result_;
 
   live::IGraphPtr live_graph_;
+  std::shared_ptr<graph::Table<assem::Instr, temp::TempList>> in_;//for pointer_map before call
+
   fg::FGraphPtr flow_graph_;
   tab::Table<temp::Temp, live::INode> *temp2Inode;
 

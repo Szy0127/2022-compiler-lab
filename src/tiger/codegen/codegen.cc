@@ -668,10 +668,9 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   );
   
   auto pointer_map_temp = temp::TempFactory::NewTemp();
-
   instr_list.Append(
     new assem::OperInstr(
-      "leaq " + temp::LabelFactory::LabelString(pointer_map_) + "(%rip),`d0",
+      "leaq " + temp::LabelFactory::LabelString(pointer_map_->label_) + "(%rip),`d0",
       new temp::TempList(pointer_map_temp),
       new temp::TempList(),
       nullptr
@@ -690,12 +689,11 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   auto calldefs = reg_manager->CallerSaves();
 
   calldefs->Append(reg_manager->ReturnValue());
-
   instr_list.Append(
     new assem::OperInstr(
       "callq " + temp::LabelFactory::LabelString(static_cast<NameExp *>(fun_)->name_),
       calldefs, args,
-      nullptr
+      nullptr,pointer_map_
     )
   );
 

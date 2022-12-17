@@ -25,15 +25,17 @@ class Temp {//virtual registers
 
 public:
   [[nodiscard]] int Int() const;
+  [[nodiscard]] bool IsPointer()const;
 
 private:
   int num_;
-  explicit Temp(int num) : num_(num) {}
+  bool is_pointer_;
+  explicit Temp(int num,bool is_pointer) : num_(num),is_pointer_(is_pointer) {}
 };
 
 class TempFactory {
 public:
-  static Temp *NewTemp();
+  static Temp *NewTemp(bool is_pointer=false);
 
 private:
   int temp_id_ = 100;
