@@ -24,6 +24,7 @@ Access *Access::AllocLocal(Level *level, bool escape,bool is_pointer) {
 frame::StringFrag* GetPointerMap(frame::Frame* frame){
   auto pointer_map_label = temp::LabelFactory::NewLabel();
   std::stringstream pointer_map_data;
+  pointer_map_data<<frame->GetFrameSize()<<" ";
   auto pointer_info = frame->GetPointerInfo();
   for(const auto &off:pointer_info){
     pointer_map_data<<off<<" ";

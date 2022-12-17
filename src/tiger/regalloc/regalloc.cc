@@ -65,7 +65,7 @@ void RegAllocator::RegAlloc(){
     //remove useless move and push registers for pointer map
 
     std::map<assem::Instr*,temp::TempList*> call2pointer_map;
-
+    auto wordsize = reg_manager->WordSize();
     auto instr_list = assem_instr_->GetInstrList();
     for(const auto&node:flow_graph_->Nodes()->GetList()){
         if(fg::FlowGraphFactory::IsMove(node)){
@@ -92,22 +92,33 @@ void RegAllocator::RegAlloc(){
             }
 
             auto pointer_map_frag = fg::FlowGraphFactory::GetFrag(node);
-            pointer_map_frag->str_ = pointer_map_frag->str_ + std::to_string(callee_saved_temps_to_push->GetList().size());
-            if(!callee_saved_temps_to_push->Empty()){
+            auto size = callee_saved_temps_to_push->GetList().size();
+            std::string updated_str;
+            if(size>0){
                 call2pointer_map.emplace(node->NodeInfo(),callee_saved_temps_to_push);
+                std::stringstream ss(pointer_map_frag->str_);
+                int fs;
+                ss>>fs;
+                fs += size * wordsize;
+                std::string left;
+                std::getline(ss,left);
+                updated_str = std::to_string(fs)+left;
+            }else{
+                updated_str = pointer_map_frag->str_;
             }
+            pointer_map_frag->str_ = updated_str + std::to_string(size);
         }
     }
 
     //push callee saved registers which stores pointer to stack,gc can get these values from info of pointer map
     auto rsp = reg_manager->StackPointer();
-    auto wordsize = reg_manager->WordSize();
     auto end = instr_list->GetList().end();
     auto instr_it = instr_list->GetList().begin();
     for(;instr_it!=end;instr_it++){
         if(call2pointer_map.count(*instr_it)){
             auto temps = call2pointer_map[*instr_it]->GetList();
             auto extend_size = temps.size() * wordsize;
+
             instr_list->Insert(
                 instr_it,
                 new assem::OperInstr(

@@ -660,6 +660,14 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
     add_stack +=  (args_size - max_args_size) * reg_manager->WordSize();
   }
 
+  std::stringstream ss(pointer_map_->str_);
+  int framesize;
+  ss>>framesize;
+  framesize += add_stack;
+  std::string left;
+  std::getline(ss,left);
+  pointer_map_->str_ = std::to_string(framesize)+left;
+
   instr_list.Append(
     new assem::OperInstr(
       "subq $" + std::to_string( add_stack) + ",`d0",

@@ -63,6 +63,10 @@ regalloc最后再进行一遍活跃分析，把call函数的live-in的寄存器�
 
 最后记录一个数值表示需要检查的寄存器个数，例如2 就找 rsp+16 rsp+32
 
+frame_size + off1+off2+...+n(reg)
+
+off = 8m
+
 ### 存pointer map
 
 每次call之前都要生成一个
