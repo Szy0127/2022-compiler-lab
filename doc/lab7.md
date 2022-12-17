@@ -46,7 +46,9 @@ gc是调用alloc时触发的，alloc作为一个函数调用，需要满足calle
 
 <img src="C:\Users\Shen\AppData\Roaming\Typora\typora-user-images\image-20221215230042051.png" alt="image-20221215230042051" style="zoom:50%;" />
 
-看不懂，可行的解决方案：每次call之前，汇编push一个递增的值到栈中，c语言的gc维护一个`map<int,pointer_map>`的数据结构
+看不懂，可行的解决方案：每次call之前，生成一个string label，push这个string label到栈上，后面紧接着是call的retaddr
+
+这样做可以直接找到这个string label 拿到相应的map，但是限制了所有runtime的c函数不能超过6个参数，可以后续考虑其他的解决方案
 
 ### scan
 
