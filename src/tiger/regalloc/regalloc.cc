@@ -119,8 +119,9 @@ void RegAllocator::RegAlloc(){
             auto temps = call2pointer_map[*instr_it]->GetList();
             auto extend_size = temps.size() * wordsize;
 
+            auto leaq = std::prev(std::prev(instr_it));
             instr_list->Insert(
-                instr_it,
+                leaq,
                 new assem::OperInstr(
                     "subq $"+std::to_string(extend_size)+",`d0",
                     new temp::TempList(rsp),
@@ -132,7 +133,7 @@ void RegAllocator::RegAlloc(){
             auto offset = 0;
             for(const auto &t:temps){
                 instr_list->Insert(
-                    instr_it,
+                    leaq,
                     new assem::OperInstr(
                         "movq `s0,"+std::to_string(offset)+"(`d0)",
                         new temp::TempList(rsp),

@@ -5,6 +5,10 @@
 namespace gc {
 // TODO(lab7): You need to implement those interfaces inherited from TigerHeap correctly according to your design.
 
+struct string {
+  int length;
+  unsigned char chars[1];
+};
 
 char *DerivedHeap::Allocate(uint64_t size){
     auto ret = _from_space + from_offset;
@@ -31,6 +35,12 @@ char *DerivedHeap::Allocate(std::string pointer_info){
     }
     auto desc = new RecordDescriptor(v);
     addr2desc.emplace((uint64_t)ret,desc);
+
+    uint64_t* rsp;
+    GET_TIGER_STACK(rsp);
+    auto pointer_map = (struct string*)*(uint64_t*)((uint64_t)rsp+WORD_SIZE);
+    // fprintf(stdout,"%d,%s\n",pointer_map->length,pointer_map->chars);
+
     return ret;
 }
 char *DerivedHeap::Allocate(uint64_t slot_number,bool is_pointer){
