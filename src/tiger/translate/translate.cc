@@ -21,19 +21,15 @@ Access *Access::AllocLocal(Level *level, bool escape,bool is_pointer) {
   return new Access(level,level->frame_->AllocLocal(escape,is_pointer));
 }
 
-frame::StringFrag* GetPointerMap(frame::Frame* frame){
+frame::StringFrag* GetPointerMap(frame::Frame* frame,tr::Level *level){
   auto pointer_map_label = temp::LabelFactory::NewLabel();
   // in regalloc/rewrite we may do the same thing again
   // therefore, we can just delay it to regalloc
 
-
-  // std::stringstream pointer_map_data;
-  // pointer_map_data<<frame->GetFrameSize()<<" ";
-  // auto pointer_info = frame->GetPointerInfo();
-  // for(const auto &off:pointer_info){
-  //   pointer_map_data<<off<<" ";
-  // }
-  auto string_frag = new frame::StringFrag(pointer_map_label,"");
+  //if reach main level, we dont need to keep finding upside
+  // next:codegen callexp
+  auto s = level->parent_ ? "" : "1";
+  auto string_frag = new frame::StringFrag(pointer_map_label,s);
   frags->PushBack(string_frag);
   return string_frag;
 }
@@ -366,7 +362,7 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   auto func_entry = static_cast<env::FunEntry*>(venv->Look(func_));
   auto func_label = func_entry->label_;
 
-  auto string_frag = tr::GetPointerMap(level->frame_);
+  auto string_frag = tr::GetPointerMap(level->frame_,level);
   tree::Exp *call_exp;
   if(func_label){
     //func->entry->level is the level of func itself, parent is the level defines func
@@ -455,7 +451,7 @@ tr::ExpAndTy *OpExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
 
         auto str_cmp = frame::externalCall("string_equal",
         new tree::ExpList({left_exp_ty->exp_->UnEx(),right_exp_ty->exp_->UnEx()}),
-        tr::GetPointerMap(level->frame_)
+        tr::GetPointerMap(level->frame_,level)
         );
         //1 eq  0 neq  order does not matter
         cj = new tree::CjumpStm(op,str_cmp,new tree::ConstExp(1),nullptr,nullptr);
@@ -532,7 +528,7 @@ tr::ExpAndTy *RecordExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
 
   auto alloc_record = frame::externalCall("alloc_record",
   new tree::ExpList({new tree::NameExp(str_label)}),
-  tr::GetPointerMap(level->frame_));
+  tr::GetPointerMap(level->frame_,level));
 
 
   auto r = temp::TempFactory::NewTemp();
@@ -843,7 +839,7 @@ tr::ExpAndTy *ArrayExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
 
   auto init_array = frame::externalCall("init_array",
   new tree::ExpList({size_exp_ty->exp_->UnEx(),init_exp_ty->exp_->UnEx()}),
-  tr::GetPointerMap(level->frame_));
+  tr::GetPointerMap(level->frame_,level));
 
   //externalcall already mov init value
   return new tr::ExpAndTy(

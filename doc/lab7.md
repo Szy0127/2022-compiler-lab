@@ -87,6 +87,8 @@ off = 8m
 
 translate和regalloc过程都有一个frame的 拿framesize很容易 需要在codegen手动加上参数导致的栈增长的部分
 
+为了便于判断是否达到tiger的栈底，把main层的大小加上符号
+
 ### 存pointer map
 
 每次call之前都要生成一个

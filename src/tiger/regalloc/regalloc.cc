@@ -94,10 +94,11 @@ void RegAllocator::RegAlloc(){
             auto pointer_map_frag = fg::FlowGraphFactory::GetFrag(node);
             auto pointer_info = frame_->GetPointerInfo();
             auto temp_size = callee_saved_temps_to_push->GetList().size();
-            auto frame_size = frame_->GetFrameSize() + temp_size*wordsize + std::stoi(pointer_map_frag->str_);
+            int origin = std::stoi(pointer_map_frag->str_);
+            int frame_size = frame_->GetFrameSize() + temp_size*wordsize + (origin > 0 ? origin:-origin);
 
             std::stringstream pointer_map_data;
-            pointer_map_data<<frame_size<<" ";
+            pointer_map_data<<(origin > 0 ? frame_size : -frame_size)<<" ";
             for(const auto &off:pointer_info){
               pointer_map_data<<off<<" ";
             }
