@@ -20,13 +20,13 @@ public:
 
   void FindRoots();
 
-  [[nodiscard]] const std::list<uint64_t>  &GetRoots()const{return _pointers;}
+  [[nodiscard]] const std::list<uint64_t*>  &GetRoots()const{return _pointers;}
 
 private:
   void _findRoots(struct string* pointer_map,bool &last,int &framesize);
 private:
   uint64_t* _rsp;
-  std::list<uint64_t> _pointers;//value of pointer actually uint*
+  std::list<uint64_t*> _pointers;//addr of pointer actually uint*  stores uint*
 };
 
 void Roots::_findRoots(struct string* pointer_map,bool &last,int &framesize){
@@ -55,16 +55,18 @@ void Roots::_findRoots(struct string* pointer_map,bool &last,int &framesize){
 
   //find reg values;
   for(auto i = 0; i < reg_size;i++){
-    auto reg_value = *(uint64_t*)((uint64_t)_rsp+(i+2)*WORD_SIZE);
+    // auto reg_value = *(uint64_t*)((uint64_t)_rsp+(i+2)*WORD_SIZE);
+    auto reg_addr = (uint64_t)_rsp+(i+2)*WORD_SIZE;
     // fprintf(stdout,"reg value:%#llx\n",reg_value);
-    _pointers.push_back(reg_value);
+    _pointers.push_back((uint64_t*)reg_addr);
   }
 
   //find stack slot values
   for(const auto&off:offset){
-    auto stack_value = *(uint64_t*)((uint64_t)_rsp+WORD_SIZE+frame_size-off);
+    // auto stack_value = *(uint64_t*)((uint64_t)_rsp+WORD_SIZE+frame_size-off);
+    auto stack_addr = (uint64_t)_rsp+WORD_SIZE+frame_size-off;
     // fprintf(stdout,"stack value:%#llx\n",stack_value);
-    _pointers.push_back(stack_value);
+    _pointers.push_back((uint64_t*)stack_addr);
   }
 }
 void Roots::FindRoots(){

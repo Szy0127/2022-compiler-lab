@@ -51,13 +51,20 @@ public:
   void GC() override;
 
 private:
+  uint64_t Forward(uint64_t p);
+
+private:
   char* _heap;
-  char* _heap_end;
-  char* _from_space;
-  char* _to_space;
+  uint64_t _heap_end;
+  uint64_t _from_space;
+  uint64_t _to_space;
   uint64_t from_offset;
 
+  uint64_t scan;
+  uint64_t next;
+
   std::map<uint64_t,Descriptor*> addr2desc;
+  std::map<uint64_t,uint64_t> to_addr;
 };
 
 } // namespace gc

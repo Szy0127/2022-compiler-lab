@@ -161,14 +161,15 @@ void RegAllocator::RegAlloc(){
                 instr_list->Insert(
                     leaq,
                     new assem::OperInstr(
-                        "movq `s0,"+std::to_string(offset)+"(`d0)",
-                        new temp::TempList(rsp),
+                        "movq `s0,"+std::to_string(offset)+"(`s1)",
+                        new temp::TempList(),
                         new temp::TempList{t,rsp},
                         nullptr
                     )
                 );
                 offset += wordsize;
             }
+
 
             instr_list->Insert(
                 std::next(instr_it),
@@ -179,6 +180,23 @@ void RegAllocator::RegAlloc(){
                     nullptr
                 )
             );
+
+            //get updated value for registers
+            offset = wordsize;
+
+            for(const auto &t:temps){
+                instr_list->Insert(
+                    std::next(instr_it),
+                    new assem::OperInstr(
+                        "movq "+std::to_string(offset)+"(`s0),`d0",
+                        new temp::TempList(t),
+                        new temp::TempList{rsp},
+                        nullptr
+                    )
+                );
+                offset += wordsize;
+            }
+
 
 
         }
