@@ -2,13 +2,11 @@
 #include <stdio.h>
 #include <stack>
 #include <cstring>
+#include "../roots/roots.h"
+
 namespace gc {
 // TODO(lab7): You need to implement those interfaces inherited from TigerHeap correctly according to your design.
 
-struct string {
-  int length;
-  unsigned char chars[1];
-};
 
 char *DerivedHeap::Allocate(uint64_t size){
     auto ret = _from_space + from_offset;
@@ -38,9 +36,8 @@ char *DerivedHeap::Allocate(std::string pointer_info){
 
     uint64_t* rsp;
     GET_TIGER_STACK(rsp);
-    auto pointer_map = (struct string*)*(uint64_t*)((uint64_t)rsp+WORD_SIZE);
-    // fprintf(stdout,"%d,%s\n",pointer_map->length,pointer_map->chars);
-
+    auto roots_finder = Roots(rsp);
+    roots_finder.FindRoots();
     return ret;
 }
 char *DerivedHeap::Allocate(uint64_t slot_number,bool is_pointer){
@@ -73,9 +70,12 @@ void DerivedHeap::Initialize(uint64_t size){
 }
 
 void DerivedHeap::GC(){
-    uint64_t *sp;
-    GET_TIGER_STACK(sp);
-    std::cout<<"sp:"<<sp<<std::endl;
+    // uint64_t *sp;
+    // GET_TIGER_STACK(sp);
+    // std::cout<<"sp:"<<sp<<std::endl;
+
+    //tigerfunc -> alloc --> GC
+    //cant use other functions to find roots
 }
 } // namespace gc
 

@@ -3,9 +3,6 @@
 #include <stdint.h>
 #include <iostream>
 
-// Used to locate the start of ptrmap, simply get the address by &GLOBAL_GC_ROOTS
-extern uint64_t GLOBAL_GC_ROOTS;
-
 
 /*
   tiger->alloc_record->GC

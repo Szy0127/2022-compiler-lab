@@ -131,7 +131,7 @@ void RegAllocator::RegAlloc(){
                 )
             );
 
-            auto offset = 0;
+            auto offset = wordsize;//leave pointer map slot
             for(const auto &t:temps){
                 instr_list->Insert(
                     leaq,
