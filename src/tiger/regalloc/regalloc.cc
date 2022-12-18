@@ -92,21 +92,21 @@ void RegAllocator::RegAlloc(){
             }
 
             auto pointer_map_frag = fg::FlowGraphFactory::GetFrag(node);
-            auto size = callee_saved_temps_to_push->GetList().size();
-            std::string updated_str;
-            if(size>0){
-                call2pointer_map.emplace(node->NodeInfo(),callee_saved_temps_to_push);
-                std::stringstream ss(pointer_map_frag->str_);
-                int fs;
-                ss>>fs;
-                fs += size * wordsize;
-                std::string left;
-                std::getline(ss,left);
-                updated_str = std::to_string(fs)+left;
-            }else{
-                updated_str = pointer_map_frag->str_;
+            auto pointer_info = frame_->GetPointerInfo();
+            auto temp_size = callee_saved_temps_to_push->GetList().size();
+            auto frame_size = frame_->GetFrameSize() + temp_size*wordsize + std::stoi(pointer_map_frag->str_);
+
+            std::stringstream pointer_map_data;
+            pointer_map_data<<frame_size<<" ";
+            for(const auto &off:pointer_info){
+              pointer_map_data<<off<<" ";
             }
-            pointer_map_frag->str_ = updated_str + std::to_string(size);
+            pointer_map_data<<temp_size;
+            pointer_map_frag->str_ = pointer_map_data.str();
+            std::string updated_str;
+            if(temp_size>0){
+                call2pointer_map.emplace(node->NodeInfo(),callee_saved_temps_to_push);
+            }
         }
     }
 

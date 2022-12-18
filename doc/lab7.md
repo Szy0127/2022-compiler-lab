@@ -37,9 +37,17 @@ gc是调用alloc时触发的，alloc作为一个函数调用，需要满足calle
 1. alloc后活跃，那么发生冲突，要么不染caller saved registers的颜色，要么发生spill，此时可在栈上获取
 2. alloc后不活跃，那么此时p已经变成垃圾，回收是正确的。
 
-但是之后不活跃，却可能已经被作为参数传给这个函数了，也不能回收
+```c++
+void f(){
+	int *a;
+    gen_pointer_map();
+    g(a);
+}
+```
 
-并且每个call的时候寄存器状态可能不一样，如何静态分析？
+这种情况下，由于a在调用g之后不活跃，所以a可以染caller saved register，此时并不会出现在f call g的pointer map中，之后a是否作为root由g管理。
+
+对于g，如果在某一alloc后需要用a这个变量，那么a(rdi)与caller saved registers冲突，要么存在栈上，要么存在callee saved register中，无论哪种都会出现在g的pointer map中。如果任意alloc后不用这个变量，那对于g来说a也不活跃，可以回收。
 
 所以只需要看以下两个
 
@@ -47,6 +55,16 @@ gc是调用alloc时触发的，alloc作为一个函数调用，需要满足calle
 - callee-saved register：如果存的是指针，push到栈上，然后存偏移
 
 <img src="C:\Users\Shen\AppData\Roaming\Typora\typora-user-images\image-20221215222340742.png" alt="image-20221215222340742" style="zoom:50%;" />
+
+如何在每个call时知道此时的callee saved registers存的是不是指针？
+
+1. 每个call可能由不同的地方jmp过来，call之前寄存器状态不确定
+2. 寄存器分配只知道txxx转为了哪个机器寄存器，而很难知道机器寄存器是由哪里转来的
+
+使用call语句的live-in可同时解决上面两个问题
+
+1. 每个call的live-in确定，不需要看所有的callee saved registers，有些值可能不活跃了但仍在callee saved registers里还没被覆盖，此时不作为root是复合语义的
+2. live-in拿到的是txxx 可同时有txxx和机器寄存器的信息
 
 regalloc最后再进行一遍活跃分析，把call函数的live-in的寄存器取出，如果着色为callee saved 则放入栈上
 
@@ -66,6 +84,8 @@ regalloc最后再进行一遍活跃分析，把call函数的live-in的寄存器�
 frame_size + off1+off2+...+n(reg)
 
 off = 8m
+
+translate和regalloc过程都有一个frame的 拿framesize很容易 需要在codegen手动加上参数导致的栈增长的部分
 
 ### 存pointer map
 
