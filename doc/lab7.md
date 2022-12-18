@@ -68,6 +68,8 @@ void f(){
 
 regalloc最后再进行一遍活跃分析，把call函数的live-in的寄存器取出，如果着色为callee saved 则放入栈上
 
+#### pointermap 结构设计
+
 | stack             | info in pointer_map |
 | ----------------- | ------------------- |
 | escape local var1 | 8                   |
@@ -88,6 +90,18 @@ off = 8m
 translate和regalloc过程都有一个frame的 拿framesize很容易 需要在codegen手动加上参数导致的栈增长的部分
 
 为了便于判断是否达到tiger的栈底，把main层的大小加上符号
+
+#### 问题
+
+alloc的逻辑是frame->AllocLocal  call alloc_record  set values
+
+而alloc本身需要知道指针信息，这时候frame已经认为提前为alloc返回值准备好的参数是存指针的，但是此时指针值还未被mov进来
+
+需要在完成每次alloc之后再修改相应的pointer_map，而不能在每次一开始就改
+
+每个frame中stack slot的pointer信息 对于这个frame中每个call是不同的
+
+太麻烦了，没想到好的解决方法，只能在每个frame开始先把所有的stack是pointer的位置赋0值，且只能在rewrite之后做
 
 ### 存pointer map
 

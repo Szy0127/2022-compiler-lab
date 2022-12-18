@@ -61,12 +61,39 @@ void RegAllocator::RegAlloc(){
 
     // LivenessAnalysis();
 
+
+
+    
+
     auto callee_saved = reg_manager->CalleeSaves();
     //remove useless move and push registers for pointer map
 
     std::map<assem::Instr*,temp::TempList*> call2pointer_map;
     auto wordsize = reg_manager->WordSize();
     auto instr_list = assem_instr_->GetInstrList();
+
+    auto rsp = reg_manager->StackPointer();
+    auto frame_size_o = frame_->GetFrameSize();
+    // subq in frame.cc
+    auto begin = instr_list->GetList().begin();//label
+    begin++;
+    auto pointer_info = frame_->GetPointerInfo();
+    
+    
+    //0 for nil,otherwise gc will get a known value for pointer root
+    for(const auto&off:pointer_info){
+        instr_list->Insert(
+            begin,
+            new assem::OperInstr(
+                "movq $0,"+std::to_string(frame_size_o-off)+"(`s0)",
+                new temp::TempList(),
+                new temp::TempList(rsp),
+                nullptr
+            )
+        );
+    }
+
+
     for(const auto&node:flow_graph_->Nodes()->GetList()){
         if(fg::FlowGraphFactory::IsMove(node)){
             auto move_instr = static_cast<assem::MoveInstr*>(node->NodeInfo());
@@ -92,10 +119,9 @@ void RegAllocator::RegAlloc(){
             }
 
             auto pointer_map_frag = fg::FlowGraphFactory::GetFrag(node);
-            auto pointer_info = frame_->GetPointerInfo();
             auto temp_size = callee_saved_temps_to_push->GetList().size();
             int origin = std::stoi(pointer_map_frag->str_);
-            int frame_size = frame_->GetFrameSize() + temp_size*wordsize + (origin > 0 ? origin:-origin);
+            int frame_size = frame_size_o + temp_size*wordsize + (origin > 0 ? origin:-origin);
 
             std::stringstream pointer_map_data;
             pointer_map_data<<(origin > 0 ? frame_size : -frame_size)<<" ";
@@ -112,7 +138,6 @@ void RegAllocator::RegAlloc(){
     }
 
     //push callee saved registers which stores pointer to stack,gc can get these values from info of pointer map
-    auto rsp = reg_manager->StackPointer();
     auto end = instr_list->GetList().end();
     auto instr_it = instr_list->GetList().begin();
     for(;instr_it!=end;instr_it++){
