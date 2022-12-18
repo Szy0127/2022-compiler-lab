@@ -101,7 +101,11 @@ alloc的逻辑是frame->AllocLocal  call alloc_record  set values
 
 每个frame中stack slot的pointer信息 对于这个frame中每个call是不同的
 
-太麻烦了，没想到好的解决方法，只能在每个frame开始先把所有的stack是pointer的位置赋0值，且只能在rewrite之后做
+太麻烦了，没想到好的解决方法，只能在每个frame开始先把所有的stack是pointer的位置赋0值，且只能在rewrite之后做。
+
+register是否会出现同样的问题？live-in = use + (out-def)
+
+call后`movq %rax,txxx` 由于txxx每次都是新的变量，因此只在这句首次出现且是def，因此txxx向上的所有部分都不会活跃
 
 ### 存pointer map
 

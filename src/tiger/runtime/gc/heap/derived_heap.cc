@@ -38,6 +38,10 @@ char *DerivedHeap::Allocate(std::string pointer_info){
     GET_TIGER_STACK(rsp);
     auto roots_finder = Roots(rsp);
     roots_finder.FindRoots();
+    auto roots = roots_finder.GetRoots();
+    for(const auto&p:roots){
+        // fprintf(stdout,"%#llx ",p);
+    }
     return ret;
 }
 char *DerivedHeap::Allocate(uint64_t slot_number,bool is_pointer){
