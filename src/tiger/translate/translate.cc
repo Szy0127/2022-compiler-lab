@@ -926,7 +926,12 @@ tr::Exp *VarDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                            err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
   auto init_exp_ty = init_->Translate(venv,tenv,level,label,errormsg);
-  auto ty = init_exp_ty->ty_;
+  decltype(init_exp_ty->ty_) ty;
+  if(typ_){
+    ty = tenv->Look(typ_);
+  }else{
+    ty = init_exp_ty->ty_;
+  }
   bool is_pointer = typeid(*ty) == typeid(type::ArrayTy) || typeid(*ty) == typeid(type::RecordTy) || typeid(*ty) == typeid(type::NilTy);
   auto access = tr::Access::AllocLocal(level,escape_,is_pointer);
   venv->Enter(var_,new env::VarEntry(access,ty));
