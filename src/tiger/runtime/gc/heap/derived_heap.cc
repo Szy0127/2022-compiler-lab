@@ -33,71 +33,7 @@ char *DerivedHeap::Allocate(std::string pointer_info){
     }
     auto desc = new RecordDescriptor(v);
     addr2desc.emplace((uint64_t)ret,desc);
-    return ret;
-
-    uint64_t* rsp;
-    GET_TIGER_STACK(rsp);
-    fprintf(stdout,"init root finder\n");
-    auto roots_finder = Roots(rsp);
-    roots_finder.FindRoots();
-    auto roots = roots_finder.GetRoots();
     
-    scan = _to_space;
-    next = _to_space;
-    for(auto&addr_of_p:roots){
-        // fprintf(stdout,"%#llx,%d\n",*addr_of_p,*addr_of_p!=0 ? addr2desc[*addr_of_p]->GetSize():0);
-        if(*addr_of_p==0){
-            continue;
-        }
-        fprintf(stdout,"before:%#llx\n",*addr_of_p);
-        *addr_of_p = Forward(*addr_of_p);
-        fprintf(stdout,"after:%#llx\n",*addr_of_p);
-    }
-    fprintf(stdout,"while\n");
-    while(scan < next){
-        fprintf(stdout,"scan:%#llx\n",scan);
-        auto des = addr2desc[scan];
-        fprintf(stdout,"size:%d\n",des->GetSize());
-        if(!des){
-            fprintf(stdout,"%#llx\n",scan);
-        }
-        if(typeid(*des) == typeid(RecordDescriptor)){
-            uint64_t i = 0;
-            for(const auto &f:static_cast<RecordDescriptor*>(des)->GetInfo()){
-                if(f){
-                    auto p = (uint64_t*)(scan+i);
-                    if(*p==0){
-                        continue;
-                    }
-                    *p = Forward(*p);
-                }
-                i+=WORD_SIZE;
-            }
-        }else{
-            if(static_cast<ArrayDescriptor*>(des)->IsPointer()){
-                for(uint64_t i = 0 ;i < des->GetSize();i+=WORD_SIZE){
-                    auto p = (uint64_t*)(scan+i);
-                    if(*p==0){
-                        continue;
-                    }
-                    *p = Forward(*p);
-                }
-            }
-        }
-        scan += des->GetSize();
-    }
-    fprintf(stdout,"finish\n");
-    decltype(addr2desc) updated_map;
-    for(const auto&[from,to]:to_addr){
-        updated_map.emplace(to,addr2desc[to]);
-    }
-    to_addr.clear();
-    addr2desc = updated_map;
-
-    auto temp = _from_space;
-    _from_space = _to_space;
-    _to_space = temp;
-    fprintf(stdout,"swap,from:%#llx,to:%#llx\n",_from_space,_to_space);
     return ret;
 }
 char *DerivedHeap::Allocate(uint64_t slot_number,bool is_pointer){
@@ -131,12 +67,69 @@ void DerivedHeap::Initialize(uint64_t size){
 }
 
 void DerivedHeap::GC(){
-    // uint64_t *sp;
-    // GET_TIGER_STACK(sp);
-    // std::cout<<"sp:"<<sp<<std::endl;
-
     //tigerfunc -> alloc --> GC
     //cant use other functions to find roots
+    
+    uint64_t* rsp;
+    GET_TIGER_STACK(rsp);
+    // fprintf(stdout,"init root finder\n");
+    auto roots_finder = Roots(rsp);
+    roots_finder.FindRoots();
+    auto roots = roots_finder.GetRoots();
+    
+    scan = _to_space;
+    next = _to_space;
+    for(auto&addr_of_p:roots){
+        // fprintf(stdout,"%#llx,%d\n",*addr_of_p,*addr_of_p!=0 ? addr2desc[*addr_of_p]->GetSize():0);
+        if(*addr_of_p==0){
+            continue;
+        }
+        // fprintf(stdout,"before:*%#llx = %#llx\n",(uint64_t)addr_of_p,*addr_of_p);
+        *addr_of_p = Forward(*addr_of_p);
+        // fprintf(stdout,"after:%#llx\n",*addr_of_p);
+    }
+    while(scan < next){
+        auto des = addr2desc[scan];
+        if(!des){
+            fprintf(stdout,"%#llx\n",scan);
+        }
+        if(typeid(*des) == typeid(RecordDescriptor)){
+            uint64_t i = 0;
+            for(const auto &f:static_cast<RecordDescriptor*>(des)->GetInfo()){
+                if(f){
+                    auto p = (uint64_t*)(scan+i);
+                    if(*p==0){
+                        continue;
+                    }
+                    *p = Forward(*p);
+                }
+                i+=WORD_SIZE;
+            }
+        }else{
+            if(static_cast<ArrayDescriptor*>(des)->IsPointer()){
+                for(uint64_t i = 0 ;i < des->GetSize();i+=WORD_SIZE){
+                    auto p = (uint64_t*)(scan+i);
+                    if(*p==0){
+                        continue;
+                    }
+                    *p = Forward(*p);
+                }
+            }
+        }
+        scan += des->GetSize();
+    }
+    decltype(addr2desc) updated_map;
+    for(const auto&[from,to]:to_addr){
+        updated_map.emplace(to,addr2desc[to]);
+    }
+    to_addr.clear();
+    addr2desc = updated_map;
+
+    from_offset = next - _to_space;
+    auto temp = _from_space;
+    _from_space = _to_space;
+    _to_space = temp;
+
 }
 
 uint64_t DerivedHeap::Forward(uint64_t p){
@@ -145,18 +138,15 @@ uint64_t DerivedHeap::Forward(uint64_t p){
         if(to_addr.count(p)){
             return to_addr[p];
         }
-        fprintf(stdout,"finding:%#llx\n",p);
         auto size = addr2desc[p]->GetSize();
         for(auto i = 0; i < size ;i += WORD_SIZE){
             *(uint64_t*)(next+i) = *(uint64_t*)(p+i);
         }
         to_addr.emplace(p,next);
         addr2desc.emplace(next,addr2desc[p]);
-        fprintf(stdout,"add addr:%#llx,size:%d\n",next,size);
         next += size;
         return to_addr[p];
     }else{
-        fprintf(stdout,"heer\n");
         return p;
     }
 }
