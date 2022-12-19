@@ -23,13 +23,14 @@ public:
   [[nodiscard]] const std::list<uint64_t*>  &GetRoots()const{return _pointers;}
 
 private:
-  void _findRoots(struct string* pointer_map,bool &last,int &framesize);
+  void _findRoots(uint64_t* pointer_map_addr,bool &last,int &framesize);
 private:
   uint64_t* _rsp;
   std::list<uint64_t*> _pointers;//addr of pointer actually uint*  stores uint*
 };
 
-void Roots::_findRoots(struct string* pointer_map,bool &last,int &framesize){
+void Roots::_findRoots(uint64_t* pointer_map_addr,bool &last,int &framesize){
+  auto pointer_map = (struct string*)*pointer_map_addr;
   std::string pointer_map_data;
   pointer_map_data.assign(pointer_map->chars,pointer_map->chars+pointer_map->length);
 
@@ -53,18 +54,19 @@ void Roots::_findRoots(struct string* pointer_map,bool &last,int &framesize){
 
   // fprintf(stdout,":%d,%d\n",reg_size,offset.size());
 
+  auto sp = (uint64_t)pointer_map_addr;
   //find reg values;
-  for(auto i = 0; i < reg_size;i++){
-    // auto reg_value = *(uint64_t*)((uint64_t)_rsp+(i+2)*WORD_SIZE);
-    auto reg_addr = (uint64_t)_rsp+(i+2)*WORD_SIZE;
+  for(auto i = 1; i <= reg_size;i++){
+    // auto reg_value = *(uint64_t*)(sp+i*WORD_SIZE);
+    auto reg_addr = sp+i*WORD_SIZE;
     // fprintf(stdout,"reg value:%#llx\n",reg_value);
     _pointers.push_back((uint64_t*)reg_addr);
   }
 
   //find stack slot values
   for(const auto&off:offset){
-    // auto stack_value = *(uint64_t*)((uint64_t)_rsp+WORD_SIZE+frame_size-off);
-    auto stack_addr = (uint64_t)_rsp+WORD_SIZE+frame_size-off;
+    // auto stack_value = *(uint64_t*)(sp+frame_size-off);
+    auto stack_addr = sp+frame_size-off;
     // fprintf(stdout,"stack value:%#llx\n",stack_value);
     _pointers.push_back((uint64_t*)stack_addr);
   }
@@ -80,8 +82,8 @@ void Roots::FindRoots(){
         pointer map
         retaddr <--rsp
     */
-    auto pointer_map = (struct string*)*(uint64_t*)(sp+WORD_SIZE);
-    // fprintf(stdout,"%s\n",pointer_map->chars);
+    auto pointer_map = (uint64_t*)(sp+WORD_SIZE);
+    // fprintf(stdout,"pointermap addr:%#llx,%s\n",pointer_map,((struct string*)*pointer_map)->chars);
     _findRoots(pointer_map,last,frame_size);
     sp += frame_size+WORD_SIZE;//this wordsize is for retaddr,which dont belong to any counting in previous code
   }

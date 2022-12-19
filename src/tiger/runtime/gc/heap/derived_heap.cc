@@ -10,8 +10,8 @@ namespace gc {
 
 char *DerivedHeap::Allocate(uint64_t size){
     auto ret = _from_space + from_offset;
-    // fprintf(stdout,"record addr:%#llx,size:%d\n",ret,size);
-    if(((uint64_t)_heap == _from_space && ret+size >= _to_space) ||  ret+size >= (uint64_t)_heap_end){
+    // fprintf(stdout,"alloc record addr:%#llx,size:%d\n",ret,size);
+    if(((uint64_t)_heap == _from_space && ret+size > _to_space) ||  ret+size > (uint64_t)_heap_end){
         return nullptr;
     }
     from_offset += size;
@@ -72,7 +72,7 @@ void DerivedHeap::GC(){
     
     uint64_t* rsp;
     GET_TIGER_STACK(rsp);
-    // fprintf(stdout,"init root finder\n");
+    // fprintf(stdout,"do gc\n");
     auto roots_finder = Roots(rsp);
     roots_finder.FindRoots();
     auto roots = roots_finder.GetRoots();
@@ -138,7 +138,9 @@ uint64_t DerivedHeap::Forward(uint64_t p){
         if(to_addr.count(p)){
             return to_addr[p];
         }
+        // fprintf(stdout,"forward %#llx\n",p);
         auto size = addr2desc[p]->GetSize();
+        // fprintf(stdout,"forward %#llx\n",p);
         for(auto i = 0; i < size ;i += WORD_SIZE){
             *(uint64_t*)(next+i) = *(uint64_t*)(p+i);
         }

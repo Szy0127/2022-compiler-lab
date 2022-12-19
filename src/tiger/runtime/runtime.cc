@@ -70,6 +70,8 @@ EXTERNC int *alloc_record(struct string *s) {
     tiger_heap->GC();
     p = a = (int *)tiger_heap->Allocate(info);
   }
+  if(!p)
+  fprintf(stdout,"run out of memory\n");
   for (i = 0; i < s->length*gc::DerivedHeap::WORD_SIZE; i += sizeof(int)) *p++ = 0;
   return a;
 }
