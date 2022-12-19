@@ -889,8 +889,15 @@ tr::Exp *VarDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                            err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
   auto init_exp_ty = init_->Translate(venv,tenv,level,label,errormsg);
+  decltype(init_exp_ty->ty_) ty;
+  if(typ_){
+    ty = tenv->Look(typ_);
+  }else{
+    ty = init_exp_ty->ty_;
+  }
+
   auto access = tr::Access::AllocLocal(level,escape_);
-  venv->Enter(var_,new env::VarEntry(access,init_exp_ty->ty_));
+  venv->Enter(var_,new env::VarEntry(access,ty));
 
   return new tr::NxExp(
     new tree::MoveStm(
