@@ -143,6 +143,8 @@ gc是进入调用了c函数的alloc进入的
 
 我们记录的framesize是localvariable+大于6的参数+是指针的寄存器，并没有加上每次call被push的retaddr，因此在scan时需要每次手动加一个wordsize
 
+[C语言进阶——内联汇编_Li-Yongjun的博客-CSDN博客_c语言内联汇编](https://blog.csdn.net/lyndon_li/article/details/118471845)
+
 ## 回收
 
 需要更改程序变量存储的指针值，因此不能只拿指针值，而是要拿指针变量自己的地址
