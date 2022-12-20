@@ -88,7 +88,7 @@ public:
   frame::Access *StaticLink(){return formals_.front();}  
   [[nodiscard]] const std::list<frame::Access *> &GetFormalList() const { return formals_; }
   [[nodiscard]] const std::list<tree::Stm*> &GetVSList() const { return view_shift_stm; }
-  [[nodiscard]] const std::vector<unsigned int> &GetPointerInfo()const{return pointer_off;}
+  [[nodiscard]] const std::vector<int> &GetPointerInfo()const{return pointer_off;}
 
   temp::Label *name_;//for output.cc
   std::string GetLabel(){return temp::LabelFactory::LabelString(name_);}
@@ -104,7 +104,7 @@ protected:
   //use list<bool> to allocate list<access>
   std::list<frame::Access *> formals_;
 
-  std::vector<unsigned int> pointer_off;//bp-addr (>0)
+  std::vector<int> pointer_off;//bp-addr (>0)
 };
 
 /**
@@ -159,7 +159,7 @@ private:
 };
 
 /* TODO: Put your lab5 code here */
-tree::Exp *externalCall(std::string s,tree::ExpList *args,StringFrag *pointer_map);
+tree::Exp *externalCall(std::string s,tree::ExpList *args,StringFrag *pointer_map,int arg_in_stack=0);
 // tree::Exp *staticLink(tr::Level *level_now,tr::Level *level_target);
 std::list<tree::Stm*> ProcEntryExit1(frame::Frame *frame, tree::Stm *func_body);
 assem::Proc *ProcEntryExit3(frame::Frame *frame,assem::InstrList *instr_list);

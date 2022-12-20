@@ -251,8 +251,10 @@ public:
   ExpList *args_;
   // temp::Label *pointer_map_;
   frame::StringFrag *pointer_map_;
+  int arg_in_stack_;
 
-  CallExp(Exp *fun, ExpList *args,frame::StringFrag* pointer_map) : fun_(fun), args_(args), pointer_map_(pointer_map) {}
+  CallExp(Exp *fun, ExpList *args,frame::StringFrag* pointer_map,int arg_in_stack=0) 
+  : fun_(fun), args_(args), pointer_map_(pointer_map),arg_in_stack_(arg_in_stack >=0?arg_in_stack:0) {}
   ~CallExp() override;
 
   void Print(FILE *out, int d) const override;

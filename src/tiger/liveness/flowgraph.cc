@@ -1,5 +1,6 @@
 #include "tiger/liveness/flowgraph.h"
 #include <list>
+#include "flowgraph.h"
 namespace fg {
 
 void FlowGraphFactory::AssemFlowGraph() {
@@ -69,6 +70,9 @@ frame::StringFrag* fg::FlowGraphFactory::GetFrag(FNodePtr node) {
   return static_cast<assem::OperInstr*>(node->NodeInfo())->pointer_map_; 
 }
 
+int FlowGraphFactory::GetArgInStack(FNodePtr node) { 
+  return static_cast<assem::OperInstr*>(node->NodeInfo())->arg_in_stack; 
+ }
 } // namespace fg
 
 namespace assem {

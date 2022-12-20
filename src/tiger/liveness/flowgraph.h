@@ -27,6 +27,7 @@ public:
   [[nodiscard]] static bool IsMove(FNodePtr node);
   [[nodiscard]] static bool IsCall(FNodePtr node);
   [[nodiscard]] static frame::StringFrag* GetFrag(FNodePtr node);
+  [[nodiscard]] static int  GetArgInStack(FNodePtr node);
 private:
   assem::InstrList *instr_list_;
   FGraphPtr flowgraph_;

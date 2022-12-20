@@ -44,32 +44,44 @@ void Roots::_findRoots(uint64_t* pointer_map_addr,bool &last,int &framesize){
   framesize = frame_size;
   // fprintf(stdout,"%d\n",frame_size);
 
-  std::list<uint32_t> offset;
+  // std::list<uint32_t> offset;
+  auto sp = (uint64_t)pointer_map_addr;
   int off;
   while(ss>>off){
-    offset.push_back(off);
-  }
-  int reg_size = offset.back();
-  offset.pop_back();
+    // offset.push_back(off);
 
-  // fprintf(stdout,":%d,%d\n",reg_size,offset.size());
-
-  auto sp = (uint64_t)pointer_map_addr;
-  //find reg values;
-  for(auto i = 1; i <= reg_size;i++){
-    // auto reg_value = *(uint64_t*)(sp+i*WORD_SIZE);
-    auto reg_addr = sp+i*WORD_SIZE;
-    // fprintf(stdout,"reg value:%#llx\n",reg_value);
-    _pointers.push_back((uint64_t*)reg_addr);
+    if(off < 0){// stack
+      auto stack_value = *(uint64_t*)(sp+frame_size+off);
+      auto stack_addr = sp+frame_size-off;
+      // fprintf(stdout,"stack value:%#llx\n",stack_value);
+      _pointers.push_back((uint64_t*)stack_addr);
+    }else{//reg
+      auto reg_value = *(uint64_t*)(sp+off);
+      auto reg_addr = sp+off;
+      // fprintf(stdout,"reg addr:%#llx,reg value:%#llx\n",sp+off,reg_value);
+      _pointers.push_back((uint64_t*)reg_addr);
+    }
   }
+  // int reg_size = offset.back();
+  // offset.pop_back();
 
-  //find stack slot values
-  for(const auto&off:offset){
-    // auto stack_value = *(uint64_t*)(sp+frame_size-off);
-    auto stack_addr = sp+frame_size-off;
-    // fprintf(stdout,"stack value:%#llx\n",stack_value);
-    _pointers.push_back((uint64_t*)stack_addr);
-  }
+  // // fprintf(stdout,":%d,%d\n",reg_size,offset.size());
+
+  // //find reg values;
+  // for(auto i = 1; i <= reg_size;i++){
+  //   // auto reg_value = *(uint64_t*)(sp+i*WORD_SIZE);
+  //   auto reg_addr = sp+i*WORD_SIZE;
+  //   // fprintf(stdout,"reg value:%#llx\n",reg_value);
+  //   _pointers.push_back((uint64_t*)reg_addr);
+  // }
+
+  // //find stack slot values
+  // for(const auto&off:offset){
+  //   // auto stack_value = *(uint64_t*)(sp+frame_size-off);
+  //   auto stack_addr = sp+frame_size-off;
+  //   // fprintf(stdout,"stack value:%#llx\n",stack_value);
+  //   _pointers.push_back((uint64_t*)stack_addr);
+  // }
 }
 void Roots::FindRoots(){
   auto sp = (uint64_t)_rsp;

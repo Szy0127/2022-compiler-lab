@@ -34,10 +34,11 @@ public:
   std::string assem_;
   temp::TempList *dst_, *src_;
   Targets *jumps_;
-  frame::StringFrag *pointer_map_;//for call
+  frame::StringFrag *pointer_map_;//for call(gc)
+  int arg_in_stack;//for call(gc)
 
   OperInstr(std::string assem, temp::TempList *dst, temp::TempList *src,
-            Targets *jumps,frame::StringFrag *pointer_map=nullptr)
+            Targets *jumps,frame::StringFrag *pointer_map=nullptr,int arg_in_stack=0)
       : assem_(std::move(assem)), dst_(dst), src_(src), jumps_(jumps),pointer_map_(pointer_map) {}
 
   void Print(FILE *out, temp::Map *m) const override;

@@ -69,11 +69,12 @@ temp::Temp *X64RegManager::ReturnValue() {
 }
 
 //if put in .h  multiple definition
-tree::Exp *externalCall(std::string s,tree::ExpList *args,StringFrag *string_frag){
+tree::Exp *externalCall(std::string s,tree::ExpList *args,StringFrag *string_frag,int arg_in_stack){
   return new tree::CallExp(
     new tree::NameExp(temp::LabelFactory::NamedLabel(s)),
     args,
-    string_frag);
+    string_frag,
+    arg_in_stack);
 }
 // tree::Exp *staticLink(tr::Level *level_now,tr::Level *level_target){
 //   auto framePtr = new tree::TempExp(reg_manager->FramePointer());
@@ -191,7 +192,7 @@ Access *X64Frame::AllocLocal(bool escape,bool is_pointer){
   if(escape){
     sp_off -= reg_manager->WordSize();
     if(is_pointer){
-      pointer_off.push_back(-sp_off);
+      pointer_off.push_back(sp_off);
     }
     return new InFrameAccess(sp_off);
   }

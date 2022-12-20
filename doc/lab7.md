@@ -16,19 +16,19 @@ Desc分为DescRecord与DescArray，存储size及bitmap
 
 ## 找root
 
-### 识别指针
+### 识别指针变量
 
 - 修改Temp类型，加入是否存指针的信息
 - stack slot 标记是否是指针
 - 寄存器分配也可以有信息传递
 
-为了传递信息，需要给tree和assem的call都增加frag的地址信息
+为了传递信息，需要给tree和assem的call都增加frag的地址信息（由于不想增加一个CallInstr破坏原先大部分的逻辑代码，给OperInstr加两个变量保存）
 
 translate层，生成stringfrag，加入所有stack的信息
 
 regalloc的rewrite 可能再加入stack
 
-regalloc成功最后，遍历instr 所有call之前把指针的temp入栈，并修改stringfrag的string
+regalloc成功最后，是汇编生成的终点，这时候可以随意调整汇编代码，需要的信息想办法从translate、codegen传下来即可
 
 ### 保存指针的位置
 
@@ -68,30 +68,35 @@ void f(){
 
 regalloc最后再进行一遍活跃分析，把call函数的live-in的寄存器取出，如果着色为callee saved 则放入栈上
 
-#### pointermap 结构设计
+### pointermap 结构设计
+
+栈布置如下
 
 | stack             | info in pointer_map |
 | ----------------- | ------------------- |
-| escape local var1 | 8                   |
-| escape local var2 | 16                  |
+| escape local var1 | -8                  |
+| escape local var2 | -16                 |
+| rbx               | 32                  |
+| rdi               | 24                  |
 | arg8              |                     |
 | arg7              |                     |
-| rbx               |                     |
-| rdi               |                     |
 | pointer_map_label |                     |
-| retaddr           | rsp                 |
+| retaddr           | <--rsp              |
 
-最后记录一个数值表示需要检查的寄存器个数，例如2 就找 rsp+16 rsp+32
+pointermap = frame_size + off1+off2+...+offn，offi = +/-8*m
 
-frame_size + off1+off2+...+n(reg)
+translate和regalloc过程都有一个frame的 拿framesize很容易
 
-off = 8m
+为了便于判断是否达到tiger的栈底，把main层的大小加上负号
 
-translate和regalloc过程都有一个frame的 拿framesize很容易 需要在codegen手动加上参数导致的栈增长的部分
+大于6个参数放在栈上很难处理，因为f call g的参数信息是存在f里的而不是g里，所以只能记入f的framesize，而拿到f call g的pointermap，需要跳过这些参数，然后再拿reg pointer value
 
-为了便于判断是否达到tiger的栈底，把main层的大小加上符号
+以下两个方案
 
-#### 问题
+1. 参数紧跟着pointermap，callee每次固定从rsp+16开始拿数据，但需要把reg pointer插入到参数之前并记录reg pointer 在栈上的偏移，需要在translate的callexp一路向下传递每个call对应的参数个数，然后regalloc找到合适的插入位置。
+2. reg pointer value紧跟着pointermap，这样只需要记录pointermap上有几个值即可，scan时找起来也方便。但callee每次取值需要变化，可以在codegen时assem作特殊标记，regalloc最后根据实际情况修改取参数的位置。
+
+### 问题
 
 alloc的逻辑是frame->AllocLocal  call alloc_record  set values
 
@@ -101,11 +106,10 @@ alloc的逻辑是frame->AllocLocal  call alloc_record  set values
 
 每个frame中stack slot的pointer信息 对于这个frame中每个call是不同的
 
-太麻烦了，没想到好的解决方法，只能在每个frame开始先把所有的stack是pointer的位置赋0值，且只能在rewrite之后做。
+太麻烦了，目前想到的解决方案如下
 
-register是否会出现同样的问题？live-in = use + (out-def)
-
-call后`movq %rax,txxx` 由于txxx每次都是新的变量，因此只在这句首次出现且是def，因此txxx向上的所有部分都不会活跃
+- stack：在每个frame开始先把所有的stack是pointer的位置赋0值，且只能在rewrite之后做。
+- register：live-in = use + (out-def)，call后`movq %rax,txxx` 由于txxx每次都是新的变量，因此只在这句首次出现且是def，因此txxx向上的所有部分都不会活跃，因此不存在此问题
 
 ### 存pointer map
 
@@ -136,6 +140,8 @@ gc是进入调用了c函数的alloc进入的
 `push rbp;mov rsp,rbp;sub rsp`
 
 此时rbp指向retaddr,rbp+8指向调用者的栈帧，由于alloc没有超过6个参数，所以栈上就是最后放着的是指针的寄存器或者没有
+
+我们记录的framesize是localvariable+大于6的参数+是指针的寄存器，并没有加上每次call被push的retaddr，因此在scan时需要每次手动加一个wordsize
 
 ## 回收
 

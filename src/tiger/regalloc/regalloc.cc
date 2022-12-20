@@ -119,6 +119,7 @@ void RegAllocator::RegAlloc(){
             }
 
             auto pointer_map_frag = fg::FlowGraphFactory::GetFrag(node);
+            auto arg_in_stack = fg::FlowGraphFactory::GetArgInStack(node);
             auto temp_size = callee_saved_temps_to_push->GetList().size();
             int origin = std::stoi(pointer_map_frag->str_);
             int frame_size = frame_size_o + temp_size*wordsize + (origin > 0 ? origin:-origin);
@@ -126,9 +127,14 @@ void RegAllocator::RegAlloc(){
             std::stringstream pointer_map_data;
             pointer_map_data<<(origin > 0 ? frame_size : -frame_size)<<" ";
             for(const auto &off:pointer_info){
-              pointer_map_data<<off<<" ";
+                pointer_map_data<<off<<" ";
             }
-            pointer_map_data<<temp_size;
+            // pointer_map_data<<temp_size;
+            int off = (arg_in_stack+1)*wordsize;
+            for(auto i = 0 ; i < temp_size ;i++){
+                pointer_map_data<<off<<" ";
+                off += wordsize;
+            }
             pointer_map_frag->str_ = pointer_map_data.str();
             std::string updated_str;
             if(temp_size>0){
@@ -145,9 +151,15 @@ void RegAllocator::RegAlloc(){
             auto temps = call2pointer_map[*instr_it]->GetList();
             auto extend_size = temps.size() * wordsize;
 
-            auto leaq = std::prev(std::prev(instr_it));
+            auto before_arg = std::prev(std::prev(instr_it));//now is leaq
+            auto arg_in_stack = static_cast<assem::OperInstr*>(*instr_it)->arg_in_stack;
+            for(auto i = 0 ; i < arg_in_stack;i++){
+                before_arg = std::prev(before_arg);
+            }
+            before_arg = std::prev(before_arg);//subq rsp
+            // std::cout<<static_cast<assem::OperInstr*>(*before_arg)->assem_<<" "<<static_cast<assem::OperInstr*>(*instr_it)->pointer_map_->str_<<std::endl;
             instr_list->Insert(
-                leaq,
+                before_arg,
                 new assem::OperInstr(
                     "subq $"+std::to_string(extend_size)+",`d0",
                     new temp::TempList(rsp),
@@ -156,10 +168,10 @@ void RegAllocator::RegAlloc(){
                 )
             );
 
-            auto offset = wordsize;//leave pointer map slot
+            auto offset = 0;
             for(const auto &t:temps){
                 instr_list->Insert(
-                    leaq,
+                    before_arg,
                     new assem::OperInstr(
                         "movq `s0,"+std::to_string(offset)+"(`s1)",
                         new temp::TempList(),
@@ -170,23 +182,14 @@ void RegAllocator::RegAlloc(){
                 offset += wordsize;
             }
 
-
-            instr_list->Insert(
-                std::next(instr_it),
-                new assem::OperInstr(
-                    "addq $"+std::to_string(extend_size)+",`d0",
-                    new temp::TempList(rsp),
-                    new temp::TempList(rsp),
-                    nullptr
-                )
-            );
-
+            auto after_addq = std::next(std::next(instr_it));
+            // std::cout<<static_cast<assem::OperInstr*>(*std::next(instr_it))->assem_<<std::endl;
             //get updated value for registers
-            offset = wordsize;
+            offset = 0;
 
             for(const auto &t:temps){
                 instr_list->Insert(
-                    std::next(instr_it),
+                    after_addq,
                     new assem::OperInstr(
                         "movq "+std::to_string(offset)+"(`s0),`d0",
                         new temp::TempList(t),
@@ -196,6 +199,16 @@ void RegAllocator::RegAlloc(){
                 );
                 offset += wordsize;
             }
+
+            instr_list->Insert(
+                after_addq,
+                new assem::OperInstr(
+                    "addq $"+std::to_string(extend_size)+",`d0",
+                    new temp::TempList(rsp),
+                    new temp::TempList(rsp),
+                    nullptr
+                )
+            );
 
 
 

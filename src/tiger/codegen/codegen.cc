@@ -698,7 +698,7 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
     new assem::OperInstr(
       "callq " + temp::LabelFactory::LabelString(static_cast<NameExp *>(fun_)->name_),
       calldefs, args,
-      nullptr,pointer_map_
+      nullptr,pointer_map_,arg_in_stack_
     )
   );
 

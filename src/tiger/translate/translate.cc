@@ -351,9 +351,11 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                  tr::Level *level, temp::Label *label,
                                  err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
+  auto max_arg_size = reg_manager->ArgRegs()->GetList().size();
 
   auto exp_list = args_->GetList();
   auto arg_list = new tree::ExpList();
+  auto arg_size = exp_list.size();
   for(const auto &exp:exp_list){
     auto arg_exp_ty = exp->Translate(venv,tenv,level,label,errormsg);
     arg_list->Append(arg_exp_ty->exp_->UnEx());
@@ -367,10 +369,10 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   if(func_label){
     //func->entry->level is the level of func itself, parent is the level defines func
     arg_list->Insert(staticLink(level,func_entry->level_->parent_));
-    call_exp = new tree::CallExp(new tree::NameExp(func_label),arg_list,string_frag);
+    call_exp = new tree::CallExp(new tree::NameExp(func_label),arg_list,string_frag,arg_size+1-max_arg_size);
   }else{//env.cc externalcall label=nullptr
     //new NamedLabel
-    call_exp = frame::externalCall(func_->Name(),arg_list,string_frag);
+    call_exp = frame::externalCall(func_->Name(),arg_list,string_frag,arg_size-max_arg_size);
   }
 
   auto res_ty = func_entry->result_;
