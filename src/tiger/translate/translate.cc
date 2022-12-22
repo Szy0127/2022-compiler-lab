@@ -35,14 +35,17 @@ frame::StringFrag* GetPointerMap(frame::Frame* frame,tr::Level *level){
 }
 
 
-Level::Level(Level *parent,temp::Label *name, std::list<bool> *formals):parent_(parent){
+Level::Level(Level *parent,temp::Label *name, std::list<bool> *formals,std::list<bool> *is_pointer):parent_(parent){
 
   //main level don't need static link
   if(formals){
     formals->push_front(true);
+
+    //static link stores stack addr,not heap addr
+    is_pointer->push_front(false);
   }
   // use x64 frame  
-  frame_ = new frame::X64Frame(name,formals);
+  frame_ = new frame::X64Frame(name,formals,is_pointer);
 }
 
 
@@ -885,9 +888,14 @@ tr::Exp *FunctionDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
       result_ty = tenv->Look(function->result_); 
     }
     auto formals = params->MakeFormalTyList(tenv, errormsg);
+    auto is_pointer = new std::list<bool>;
+    for(const auto&param:params->GetList()){
+      auto ty = tenv->Look(param->typ_);
+      is_pointer->push_back(type::IsPointer(ty));
+    }
     auto name = function->name_;
     auto f_label = temp::LabelFactory::NamedLabel(name->Name());
-    auto f_level = new tr::Level(level,f_label,escape);
+    auto f_level = new tr::Level(level,f_label,escape,is_pointer);
     //must add level of the function to env instead of the level defines it
     venv->Enter(name,new env::FunEntry(f_level,f_label,formals,result_ty));
   }
@@ -934,8 +942,7 @@ tr::Exp *VarDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   }else{
     ty = init_exp_ty->ty_;
   }
-  bool is_pointer = typeid(*ty) == typeid(type::ArrayTy) || typeid(*ty) == typeid(type::RecordTy) || typeid(*ty) == typeid(type::NilTy);
-  auto access = tr::Access::AllocLocal(level,escape_,is_pointer);
+  auto access = tr::Access::AllocLocal(level,escape_,type::IsPointer(ty));
   venv->Enter(var_,new env::VarEntry(access,ty));
 
   return new tr::NxExp(

@@ -16,7 +16,7 @@ struct string {
 class Roots {
   // Todo(lab7): define some member and methods here to keep track of gc roots;
 public:
-  Roots(uint64_t *rsp):_rsp(rsp){}
+  Roots(uint64_t *rsp):_rsp(rsp),_pointers{}{}
 
   void FindRoots();
 
@@ -52,8 +52,8 @@ void Roots::_findRoots(uint64_t* pointer_map_addr,bool &last,int &framesize){
 
     if(off < 0){// stack
       auto stack_value = *(uint64_t*)(sp+frame_size+off);
-      auto stack_addr = sp+frame_size-off;
-      // fprintf(stdout,"stack value:%#llx\n",stack_value);
+      auto stack_addr = sp+frame_size+off;
+      // fprintf(stdout,"stack addr:%#llx,stack value:%#llx\n",stack_addr, stack_value);
       _pointers.push_back((uint64_t*)stack_addr);
     }else{//reg
       auto reg_value = *(uint64_t*)(sp+off);

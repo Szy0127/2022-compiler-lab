@@ -85,7 +85,7 @@ void RegAllocator::RegAlloc(){
         instr_list->Insert(
             begin,
             new assem::OperInstr(
-                "movq $0,"+std::to_string(frame_size_o-off)+"(`s0)",
+                "movq $0,"+std::to_string(frame_size_o+off)+"(`s0)",
                 new temp::TempList(),
                 new temp::TempList(rsp),
                 nullptr

@@ -89,14 +89,16 @@ tree::Exp *externalCall(std::string s,tree::ExpList *args,StringFrag *string_fra
 
 /* TODO: Put your lab5 code here */
 //NewFrame
-X64Frame::X64Frame(temp::Label *name,std::list<bool> *f):Frame(name,f){
+X64Frame::X64Frame(temp::Label *name,std::list<bool> *f,std::list<bool> *is_pointer):Frame(name,f){
   if(!f){
     return;
   }
   // although some escape params should be allocated in frame instead of register
   // we should follow the x86 64 rules to move frame param to reg e.g. rdi rsi
+  auto it = is_pointer->begin();
   for(const auto &escape:*f){
-    formals_.push_back(AllocLocal(escape));
+    formals_.push_back(AllocLocal(escape,*it));
+    it++;
   }
   auto reg_list = reg_manager->ArgRegs()->GetList();
   auto max_index = reg_list.size();

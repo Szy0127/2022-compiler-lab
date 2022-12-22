@@ -108,6 +108,7 @@ private:
   std::list<Field *> field_list_;
 };
 
+bool IsPointer(Ty *ty);
 } // namespace type
 
 #endif // TIGER_SEMANT_TYPES_H_

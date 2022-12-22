@@ -104,7 +104,7 @@ protected:
   //use list<bool> to allocate list<access>
   std::list<frame::Access *> formals_;
 
-  std::vector<int> pointer_off;//bp-addr (>0)
+  std::vector<int> pointer_off;//addr-fp (<0)
 };
 
 /**
