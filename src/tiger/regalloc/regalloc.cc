@@ -184,21 +184,26 @@ void RegAllocator::RegAlloc(){
 
             auto after_addq = std::next(std::next(instr_it));
             // std::cout<<static_cast<assem::OperInstr*>(*std::next(instr_it))->assem_<<std::endl;
-            //get updated value for registers
-            offset = 0;
 
-            for(const auto &t:temps){
-                instr_list->Insert(
-                    after_addq,
-                    new assem::OperInstr(
-                        "movq "+std::to_string(offset)+"(`s0),`d0",
-                        new temp::TempList(t),
-                        new temp::TempList{rsp},
-                        nullptr
-                    )
-                );
-                offset += wordsize;
+            auto call = static_cast<assem::OperInstr*>(*instr_it)->assem_;
+            if(call.size()>=18 && call.substr(6,12)=="alloc_record" || call.size() >= 16 && call.substr(6,10)=="init_array"){
+                //get updated value for registers
+                offset = 0;
+
+                for(const auto &t:temps){
+                    instr_list->Insert(
+                        after_addq,
+                        new assem::OperInstr(
+                            "movq "+std::to_string(offset)+"(`s0),`d0",
+                            new temp::TempList(t),
+                            new temp::TempList{rsp},
+                            nullptr
+                        )
+                    );
+                    offset += wordsize;
+                }
             }
+
 
             instr_list->Insert(
                 after_addq,
