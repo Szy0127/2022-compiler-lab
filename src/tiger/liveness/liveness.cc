@@ -113,11 +113,11 @@ void LiveGraphFactory::InterfGraph() {
         auto new_live_node = live_graph_.interf_graph->NewNode(temp);
         temp_node_map_->Enter(temp,new_live_node);
       }
-      for(const auto&temp:fg::FlowGraphFactory::GetDef(node)->GetList()){
-        if (!temp_node_map_->Look(temp)){
-          auto new_live_node = live_graph_.interf_graph->NewNode(temp);
-          temp_node_map_->Enter(temp,new_live_node);
-        }
+    }
+    for(const auto&temp:fg::FlowGraphFactory::GetDef(node)->GetList()){
+      if (!temp_node_map_->Look(temp)){
+        auto new_live_node = live_graph_.interf_graph->NewNode(temp);
+        temp_node_map_->Enter(temp,new_live_node);
       }
     }
   }
