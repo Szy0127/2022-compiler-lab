@@ -95,6 +95,8 @@ private:
 
   temp::TempList spill_introduced_temps;
 
+  std::list<std::pair<frame::InFrameAccess*,std::list<live::INodePtr>>> spilled_access_records;
+
 
   static const unsigned int K=15;
 };

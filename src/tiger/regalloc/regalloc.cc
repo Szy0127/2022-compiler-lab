@@ -397,8 +397,27 @@ void RegAllocator::RewriteProgram(){
     auto rsp = reg_manager->StackPointer();
     for(const auto&spill_node:spillNodes.GetList()){
         auto spill_temp = spill_node->NodeInfo();
+        frame::InFrameAccess *frame_access = nullptr;
         // std::cout<<"spilled:"<<spill_temp->Int()<<std::endl;
-        auto frame_access = static_cast<frame::InFrameAccess*>(frame_->AllocLocal(true));
+        for(auto &item:spilled_access_records){//reuse
+            auto &[spilled_access,temp_node_list] = item;
+            bool can_reuse = true;
+            for(const auto &spilled_node:temp_node_list){
+                if(spill_node->Adj(spilled_node)){
+                    can_reuse = false;
+                    break;
+                }
+            }
+            if(can_reuse){
+                frame_access = spilled_access;
+                temp_node_list.push_back(spill_node);
+                break;
+            }
+        }
+        if(!frame_access){
+            frame_access = static_cast<frame::InFrameAccess*>(frame_->AllocLocal(true));
+            spilled_access_records.emplace_back(frame_access,std::list<live::INodePtr>{spill_node});
+        }
         auto instr_list_ = assem_instr_->GetInstrList();
         auto end = instr_list_->GetList().end();
         auto instr_it = instr_list_->GetList().begin();
