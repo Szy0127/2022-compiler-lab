@@ -15,3 +15,7 @@ interfgraph处输出冲突图，手动分析是否是冲突图生成错了
 
 
 预着色节点是无法simplify的，所以degree需要设为无穷
+
+- 实现合并move
+- 启发式selectspill:优先不考虑由rewrite引入的，优先选择度数高的
+- spill：如果没有活跃冲突，可以多个共用一个frame slot
