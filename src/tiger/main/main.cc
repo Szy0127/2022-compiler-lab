@@ -6,9 +6,13 @@
 #include "tiger/parse/parser.h"
 #include "tiger/translate/translate.h"
 #include "tiger/semant/semant.h"
+#include "tiger/preprocess/preprocessor.h"
 
 frame::RegManager *reg_manager;
 frame::Frags *frags;
+
+
+//sudo g++ -Wl,--wrap,getchar -m64 final_test.tig.s ../src/tiger/runtime/runtime.cc ../src/tiger/runtime/gc/heap/derived_heap.cc -o test.out
 
 int main(int argc, char **argv) {
   std::string_view fname;
@@ -21,15 +25,23 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  fname = std::string_view(argv[1]);
+  fname = std::string_view("final_"+std::string(argv[1]));
 
   {
     std::unique_ptr<err::ErrorMsg> errormsg;
 
     {
+      // Preprocess
+      TigerLog("-------====Preprocess=====-----\n");
+      Preprocessor preprocessor(argv[1], std::string("final_"+std::string(argv[1])));
+      preprocessor.preprocess();
+    }
+
+    {
       // Lab 3: parsing
       TigerLog("-------====Parse=====-----\n");
-      Parser parser(fname, std::cerr);
+      //if use fname, cannot open file ,strange bug
+      Parser parser(std::string("final_"+std::string(argv[1])), std::cerr);
       parser.parse();
       absyn_tree = parser.TransferAbsynTree();
       errormsg = parser.TransferErrormsg();
@@ -66,7 +78,7 @@ int main(int argc, char **argv) {
 
   {
     // Output assembly
-    output::AssemGen assem_gen(fname);
+    output::AssemGen assem_gen(std::string("final_"+std::string(argv[1])));
     assem_gen.GenAssem(true);
   }
 

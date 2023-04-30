@@ -39,6 +39,7 @@ file(GLOB TIGER_SOURCES
         "src/tiger/regalloc/*.cc"
         "src/tiger/output/*.cc"
         "src/tiger/runtime/gc/roots/*.cc"
+        "src/tiger/preprocess/*.cc"
         )
 
 SET(TIGER_LEX_PARSE_SOURCES
