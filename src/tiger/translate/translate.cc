@@ -211,6 +211,9 @@ tr::ExpAndTy *SimpleVar::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                    err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
   auto entry = static_cast<env::VarEntry*>(venv->Look(sym_));
+  if(!entry){
+    return nullptr;
+  }
   //entry must not be null in type checking
   auto access = entry->access_->access_;
   tree::Exp *framePtr = nullptr;
@@ -614,10 +617,23 @@ tr::ExpAndTy *AssignExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   /* TODO: Put your lab5 code here */
   auto var_exp_ty = var_->Translate(venv,tenv,level,label,errormsg);
   auto exp_exp_ty = exp_->Translate(venv,tenv,level,label,errormsg);
+  if(var_exp_ty){
+      return new tr::ExpAndTy(
+        new tr::NxExp(
+          new tree::MoveStm(
+            var_exp_ty->exp_->UnEx(),
+            exp_exp_ty->exp_->UnEx()
+          )
+        ),
+        type::VoidTy::Instance()
+      );
+  }
+  auto access = tr::Access::AllocLocal(level,false,type::IsPointer(exp_exp_ty->ty_));
+  venv->Enter(((SimpleVar*)var_)->sym_,new env::VarEntry(access,exp_exp_ty->ty_));
   return new tr::ExpAndTy(
     new tr::NxExp(
       new tree::MoveStm(
-        var_exp_ty->exp_->UnEx(),
+        access->access_->ToExp(new tree::TempExp(reg_manager->FramePointer())),
         exp_exp_ty->exp_->UnEx()
       )
     ),

@@ -68,14 +68,14 @@
   "&" {adjust(); return Parser::AND;}
   "|" {adjust(); return Parser::OR;}
 
-  "=" {adjust(); return Parser::EQ;}
-  "<>" {adjust(); return Parser::NEQ;}
+  "==" {adjust(); return Parser::EQ;}
+  "!=" {adjust(); return Parser::NEQ;}
   "<" {adjust(); return Parser::LT;}
   "<=" {adjust(); return Parser::LE;}
   ">" {adjust(); return Parser::GT;}
   ">=" {adjust(); return Parser::GE;}
 
-  ":=" {adjust(); return Parser::ASSIGN;}
+  "=" {adjust(); return Parser::ASSIGN;}
 
  /* reserved words */
   "nil" {adjust(); return Parser::NIL;}

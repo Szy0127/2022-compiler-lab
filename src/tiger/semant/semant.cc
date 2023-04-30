@@ -1,6 +1,7 @@
 #include "tiger/absyn/absyn.h"
 #include "tiger/semant/semant.h"
 #include <set>
+#include <iostream>
 namespace absyn {
 
 void AbsynTree::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
@@ -16,7 +17,8 @@ type::Ty *SimpleVar::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
   if (entry && typeid(*entry) == typeid(env::VarEntry)) {
     return (static_cast<env::VarEntry *>(entry))->ty_->ActualTy();
   } else {
-    errormsg->Error(pos_, "undefined variable %s", sym_->Name().data());
+    return nullptr;
+    // errormsg->Error(pos_, "undefined variable %s", sym_->Name().data());
   }
   return type::IntTy::Instance();
 }
@@ -185,9 +187,19 @@ type::Ty *SeqExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
 
 type::Ty *AssignExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
                                 int labelcount, err::ErrorMsg *errormsg) const {
-   
-  auto var_ty = var_->SemAnalyze(venv, tenv, labelcount, errormsg)->ActualTy();
+  auto var_ty = var_->SemAnalyze(venv, tenv, labelcount, errormsg);
   auto exp_ty = exp_->SemAnalyze(venv, tenv, labelcount, errormsg)->ActualTy();
+  //simple var not defined
+  if(!var_ty){
+    if(typeid(*var_)!=typeid(SimpleVar)){
+      errormsg->Error(var_->pos_, "undefined variable");
+      return type::VoidTy::Instance();
+    }
+    auto sym = static_cast<SimpleVar*>(var_)->sym_;
+    venv->Enter(sym,new env::VarEntry(exp_ty));
+    return type::VoidTy::Instance();
+  }
+  var_ty = var_ty->ActualTy();
   if(!var_ty->IsSameType(exp_ty)){
     errormsg->Error(var_->pos_,"unmatched assign exp");
   }
