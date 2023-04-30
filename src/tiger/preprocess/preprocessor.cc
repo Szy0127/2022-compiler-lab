@@ -8,8 +8,15 @@ void Preprocessor::preprocess(){
     std::string buf;
     std::getline(input,buf);
     output<<"/*preprocessed*/"<<std::endl;
+    output<<"("<<std::endl;
+    bool first = true;
     while(!input.eof()){
-        output<<buf<<std::endl;
+        if(!first){
+            output<<";"<<std::endl;
+        }
+        first = false;
+        output<<buf;
         std::getline(input,buf);
     }
+    output<<")"<<std::endl;
 }
