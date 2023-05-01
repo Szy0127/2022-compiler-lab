@@ -292,6 +292,16 @@ type::Ty *BreakExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
   return type::VoidTy::Instance();
 }
 
+type::Ty *ReturnExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
+                               int labelcount, err::ErrorMsg *errormsg) const {
+   
+  if(labelcount==0){
+    errormsg->Error(pos_,"return is not inside any function");
+  }
+  ret_->SemAnalyze(venv, tenv, labelcount-1, errormsg)->ActualTy();
+  return type::VoidTy::Instance();
+}
+
 type::Ty *LetExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
                              int labelcount, err::ErrorMsg *errormsg) const {
    
@@ -366,7 +376,7 @@ void FunctionDec::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
     auto param_it = params->GetList().begin();
     for (; param_it != params->GetList().end(); formal_it++, param_it++)
         venv->Enter((*param_it)->name_, new env::VarEntry(*formal_it));
-    auto res = function->body_->SemAnalyze(venv, tenv, labelcount, errormsg)->ActualTy();
+    auto res = function->body_->SemAnalyze(venv, tenv, labelcount+1, errormsg)->ActualTy();
 
     type::Ty *result_ty = type::VoidTy::Instance();
 

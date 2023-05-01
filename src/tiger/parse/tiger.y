@@ -41,6 +41,7 @@
   RANGE
   PLUSS MINUSS TIMESS DIVIDES
   DEF
+  RETURN
 
  /* token priority */
 
@@ -130,6 +131,7 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
   | FOR ID IN RANGE LPAREN exp RPAREN COLON exp {$$ = new absyn::ForExp(scanner_.GetTokPos(),$2,new absyn::IntExp(scanner_.GetTokPos(),0),$6,$9);}
 
   | BREAK {$$ = new absyn::BreakExp(scanner_.GetTokPos());}
+  | RETURN exp {$$ = new absyn::ReturnExp(scanner_.GetTokPos(),$2);}
   | {$$ = new absyn::VoidExp(scanner_.GetTokPos());}
   ;
 

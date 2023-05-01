@@ -809,6 +809,29 @@ tr::ExpAndTy *BreakExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
 
 }
 
+
+
+tr::ExpAndTy *ReturnExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
+                                  tr::Level *level, temp::Label *label,
+                                  err::ErrorMsg *errormsg) const {
+  auto res_exp_ty = ret_->Translate(venv,tenv,level,label,errormsg);
+  return new::tr::ExpAndTy(
+    new tr::NxExp(
+      tr::list2tree({
+        new tree::MoveStm(
+          new tree::TempExp(reg_manager->ReturnValue()),
+          res_exp_ty->exp_->UnEx()
+        ),
+        new tree::JumpStm(
+          new tree::NameExp(label),new std::vector<temp::Label*>{label}
+        )
+      })
+    ),
+    type::VoidTy::Instance()
+  );
+
+}
+
 tr::ExpAndTy *LetExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                 tr::Level *level, temp::Label *label,
                                 err::ErrorMsg *errormsg) const {
@@ -938,10 +961,13 @@ tr::Exp *FunctionDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
     auto res_exp_ty = function->body_->Translate(venv,tenv,f_level,ret_label,errormsg);
     venv->EndScope();
 
-    auto ret = new tree::MoveStm(
-      new tree::TempExp(reg_manager->ReturnValue()),
-      res_exp_ty->exp_->UnEx()
-    );
+    auto ret = tr::list2tree({
+      new tree::MoveStm(
+        new tree::TempExp(reg_manager->ReturnValue()),
+        res_exp_ty->exp_->UnEx()
+      ),
+      new tree::LabelStm(ret_label)
+    });
 
     auto frag = new frame::ProcFrag(tr::list2tree(frame::ProcEntryExit1(f_level->frame_,ret)),f_level->frame_);
     frags->PushBack(frag);

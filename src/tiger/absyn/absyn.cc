@@ -84,7 +84,9 @@ WhileExp::~WhileExp() {
 ForExp::~ForExp() = default;
 
 BreakExp::~BreakExp() = default;
-
+ReturnExp::~ReturnExp() {
+  delete ret_;
+}
 LetExp::~LetExp() {
   delete decs_;
   delete body_;
@@ -260,6 +262,11 @@ void BreakExp::Print(FILE *out, int d) const {
   Indent(out, d);
   fprintf(out, "breakExp()");
 }
+void ReturnExp::Print(FILE *out, int d) const {
+  Indent(out, d);
+  fprintf(out, "ReturnExp()");
+}
+
 
 void LetExp::Print(FILE *out, int d) const {
   Indent(out, d);

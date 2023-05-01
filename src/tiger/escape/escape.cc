@@ -118,6 +118,10 @@ void BreakExp::Traverse(esc::EscEnvPtr env, int depth) {
   /* TODO: Put your lab5 code here */
   return;
 }
+void ReturnExp::Traverse(esc::EscEnvPtr env, int depth) {
+  ret_->Traverse(env,depth);
+  return;
+}
 
 void LetExp::Traverse(esc::EscEnvPtr env, int depth) {
   /* TODO: Put your lab5 code here */

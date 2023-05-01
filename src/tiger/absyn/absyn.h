@@ -387,6 +387,22 @@ public:
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
 
+class ReturnExp : public Exp {
+public:
+  Exp *ret_;
+  explicit ReturnExp(int pos,Exp *ret) : Exp(pos),ret_(ret) {}
+  ~ReturnExp() override;
+
+  void Print(FILE *out, int d) const override;
+  type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
+                       err::ErrorMsg *errormsg) const override;
+  tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
+                          tr::Level *level, temp::Label *label,
+                          err::ErrorMsg *errormsg) const override;
+  void Traverse(esc::EscEnvPtr env, int depth) override;
+};
+
+
 class LetExp : public Exp {
 public:
   DecList *decs_;
