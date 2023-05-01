@@ -85,13 +85,13 @@ EXTERNC int string_equal(struct string *s, struct string *t) {
   return 1;
 }
 
-EXTERNC void print(struct string *s) {
+EXTERNC void prints(struct string *s) {
   int i;
   unsigned char *p = s->chars;
   for (i = 0; i < s->length; i++, p++) putchar(*p);
 }
 
-EXTERNC void printi(int k) { printf("%d", k); }
+EXTERNC void print(int k) { printf("%d", k); }
 
 EXTERNC void flush() { fflush(stdout); }
 

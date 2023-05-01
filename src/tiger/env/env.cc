@@ -35,9 +35,9 @@ void ProgSem::FillBaseVEnv() {
   formals = new type::TyList(type::StringTy::Instance());
 
   venv_->Enter(
-      sym::Symbol::UniqueSymbol("print"),
+      sym::Symbol::UniqueSymbol("prints"),
       new env::FunEntry(formals, type::VoidTy::Instance()));
-  venv_->Enter(sym::Symbol::UniqueSymbol("printi"),
+  venv_->Enter(sym::Symbol::UniqueSymbol("print"),
                new env::FunEntry(new type::TyList(type::IntTy::Instance()),
                                  type::VoidTy::Instance()));
 
