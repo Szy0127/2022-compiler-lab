@@ -457,7 +457,7 @@ tr::ExpAndTy *OpExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
     }
     if(op != tree::REL_OPER_COUNT){
       tree::CjumpStm* cj = nullptr;
-      if(left_exp_ty->ty_->IsSameType(type::StringTy::Instance())){
+      if(left_exp_ty->ty_ && left_exp_ty->ty_->IsSameType(type::StringTy::Instance())){
 
         auto str_cmp = frame::externalCall("string_equal",
         new tree::ExpList({left_exp_ty->exp_->UnEx(),right_exp_ty->exp_->UnEx()}),

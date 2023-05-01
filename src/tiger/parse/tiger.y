@@ -110,10 +110,11 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
   | lvalue DIVIDES exp {$$ = new absyn::AssignExp(scanner_.GetTokPos(),$1,new absyn::OpExp(scanner_.GetTokPos(),absyn::DIVIDE_OP,new absyn::VarExp(scanner_.GetTokPos(),$1),$3));}
   | lvalue MODS exp {$$ = new absyn::AssignExp(scanner_.GetTokPos(),$1,new absyn::OpExp(scanner_.GetTokPos(),absyn::MOD_OP,new absyn::VarExp(scanner_.GetTokPos(),$1),$3));}
 
-
+  | exp IF exp ELSE exp {$$ = new absyn::IfExp(scanner_.GetTokPos(),$3,$1,$5);}
 
   | IF exp COLON exp ELSE COLON exp {$$ = new absyn::IfExp(scanner_.GetTokPos(),$2,$4,$7);}
   | IF exp COLON exp {$$ = new absyn::IfExp(scanner_.GetTokPos(),$2,$4,nullptr);}
+
 
   | ID LPAREN RPAREN {$$ = new absyn::CallExp(scanner_.GetTokPos(),$1,new absyn::ExpList());}
   | ID LPAREN actuals RPAREN {$$ = new absyn::CallExp(scanner_.GetTokPos(),$1,$3);}

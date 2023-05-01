@@ -235,14 +235,14 @@ type::Ty *IfExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
   if(typeid(*test_ty) != typeid(type::IntTy)) {
     errormsg->Error(test_->pos_, "if exp's range type is not integer");
   }
-  if(!then_ty->IsSameType(else_ty)){
-    if(!elsee_){
-      errormsg->Error(pos_, "if-then exp's body must produce no value");
-    }else{
-      errormsg->Error(then_->pos_, "then exp and else exp type mismatch");
-    }
+  // if(!then_ty->IsSameType(else_ty)){
+  //   if(!elsee_){
+  //     errormsg->Error(pos_, "if-then exp's body must produce no value");
+  //   }else{
+  //     errormsg->Error(then_->pos_, "then exp and else exp type mismatch");
+  //   }
    
-  }
+  // }
   return then_ty;
 }
 
