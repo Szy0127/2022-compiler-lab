@@ -98,18 +98,18 @@ type::Ty *CallExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
 
   auto formal_end = formals->GetList().end();
   auto param_end = args_->GetList().end();
-  for(;param_it != param_end && formal_it != formal_end;param_it++,formal_it++){
-    auto param_ty = (*param_it)->SemAnalyze(venv,tenv,labelcount,errormsg);
-    if(!param_ty->IsSameType(*formal_it)){
-      errormsg->Error((*param_it)->pos_,"para type mismatch");
-    }
-  }
-  if(param_it != param_end){
-    errormsg->Error(pos_,"too many params in function %s",func_->Name().data());
-  }
-  if(formal_it != formal_end){
-    errormsg->Error(pos_,"too few params in function %s",func_->Name().data());
-  }
+  // for(;param_it != param_end && formal_it != formal_end;param_it++,formal_it++){
+  //   auto param_ty = (*param_it)->SemAnalyze(venv,tenv,labelcount,errormsg);
+  //   if(!param_ty->IsSameType(*formal_it)){
+  //     errormsg->Error((*param_it)->pos_,"para type mismatch");
+  //   }
+  // }
+  // if(param_it != param_end){
+  //   errormsg->Error(pos_,"too many params in function %s",func_->Name().data());
+  // }
+  // if(formal_it != formal_end){
+  //   errormsg->Error(pos_,"too few params in function %s",func_->Name().data());
+  // }
 
 
   return result;
@@ -118,22 +118,22 @@ type::Ty *CallExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
 type::Ty *OpExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
                             int labelcount, err::ErrorMsg *errormsg) const {
    
-  auto left_ty = left_->SemAnalyze(venv,tenv,labelcount,errormsg)->ActualTy();
-  auto right_ty = right_->SemAnalyze(venv,tenv,labelcount,errormsg)->ActualTy();
+  // auto left_ty = left_->SemAnalyze(venv,tenv,labelcount,errormsg)->ActualTy();
+  // auto right_ty = right_->SemAnalyze(venv,tenv,labelcount,errormsg)->ActualTy();
 
   if (oper_ == absyn::PLUS_OP || oper_ == absyn::MINUS_OP || 
       oper_ == absyn::TIMES_OP || oper_ == absyn::DIVIDE_OP) {
-    if (typeid(*left_ty) != typeid(type::IntTy)) {
-      errormsg->Error(left_->pos_,"integer required");
-    }
-    if (typeid(*right_ty) != typeid(type::IntTy)) {
-      errormsg->Error(right_->pos_,"integer required");
-    }
+    // if (typeid(*left_ty) != typeid(type::IntTy)) {
+    //   errormsg->Error(left_->pos_,"integer required");
+    // }
+    // if (typeid(*right_ty) != typeid(type::IntTy)) {
+    //   errormsg->Error(right_->pos_,"integer required");
+    // }
     return type::IntTy::Instance();
   }
-  if (!left_ty->IsSameType(right_ty)) {
-    errormsg->Error(pos_, "same type required");
-  }
+  // if (!left_ty->IsSameType(right_ty)) {
+  //   errormsg->Error(pos_, "same type required");
+  // }
   return type::IntTy::Instance();
 }
 
@@ -375,14 +375,14 @@ void FunctionDec::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
     }
 
 
-    if(typeid(*result_ty->ActualTy())==typeid(type::VoidTy)
-      && typeid(*res)!=typeid(type::VoidTy)){
-      errormsg->Error(pos_, "procedure returns value");
-    }else{
-      if(!result_ty->IsSameType(res)){
-        errormsg->Error(pos_, "function return value mismatch");
-      }
-    }
+    // if(typeid(*result_ty->ActualTy())==typeid(type::VoidTy)
+    //   && typeid(*res)!=typeid(type::VoidTy)){
+    //   errormsg->Error(pos_, "procedure returns value");
+    // }else{
+    //   if(!result_ty->IsSameType(res)){
+    //     errormsg->Error(pos_, "function return value mismatch");
+    //   }
+    // }
     venv->EndScope();
   }
 

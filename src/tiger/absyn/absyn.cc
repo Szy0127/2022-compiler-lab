@@ -374,15 +374,15 @@ type::TyList *FieldList::MakeFormalTyList(env::TEnvPtr tenv,
                                           err::ErrorMsg *errormsg) const {
   auto formal_tylist = new type::TyList();
 
-  for (absyn::Field *param : field_list_) {
-    type::Ty *ty = tenv->Look(param->typ_);
+  // for (absyn::Field *param : field_list_) {
+  //   type::Ty *ty = tenv->Look(param->typ_);
 
-    if (!ty) {
-      errormsg->Error(param->pos_, "undefined type %s",
-                      param->typ_->Name().c_str());
-    }
-    formal_tylist->Append(ty);
-  }
+  //   if (!ty) {
+  //     errormsg->Error(param->pos_, "undefined type %s",
+  //                     param->typ_->Name().c_str());
+  //   }
+  //   formal_tylist->Append(ty);
+  // }
 
   return formal_tylist;
 }

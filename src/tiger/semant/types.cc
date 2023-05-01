@@ -26,6 +26,9 @@ bool Ty::IsSameType(Ty *expected) {
 }
 
 bool IsPointer(Ty *ty){
+  if(!ty){
+    return false;
+  }
   ty = ty->ActualTy();
   return typeid(*ty) == typeid(type::ArrayTy) || typeid(*ty) == typeid(type::RecordTy) || typeid(*ty) == typeid(type::NilTy);
 }

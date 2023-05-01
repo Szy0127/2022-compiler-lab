@@ -230,7 +230,8 @@ tr::ExpAndTy *SimpleVar::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   }
   return new tr::ExpAndTy(
     new tr::ExExp(entry->access_->access_->ToExp(framePtr)),
-    entry->ty_->ActualTy()
+    // entry->ty_->ActualTy()
+    nullptr
   );
 }
 
@@ -925,14 +926,16 @@ tr::Exp *FunctionDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
     //after new frame,params will be allocated
     auto formal_it = entry->level_->frame_->GetFormalList().begin();
     formal_it++;//static link
-    auto ty_it = entry->formals_->GetList().begin();//not contain static link
+    // auto ty_it = entry->formals_->GetList().begin();//not contain static link
     auto param_it = params->GetList().begin();
     for (; param_it != params->GetList().end(); formal_it++, param_it++){
       //this access shows the level of where formal defines is the same as the function
-      venv->Enter((*param_it)->name_,new env::VarEntry(new tr::Access(f_level,*formal_it),*ty_it));
+      venv->Enter((*param_it)->name_,new env::VarEntry(new tr::Access(f_level,*formal_it),nullptr));
     }
     
-    auto res_exp_ty = function->body_->Translate(venv,tenv,f_level,entry->label_,errormsg);
+
+    auto ret_label = temp::LabelFactory::NewLabel();
+    auto res_exp_ty = function->body_->Translate(venv,tenv,f_level,ret_label,errormsg);
     venv->EndScope();
 
     auto ret = new tree::MoveStm(

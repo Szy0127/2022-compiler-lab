@@ -183,16 +183,23 @@ ty : ID {$$ = new absyn::NameTy(scanner_.GetTokPos(),$1);}
   | ARRAY OF ID {$$ = new absyn::ArrayTy(scanner_.GetTokPos(),$3);}
   ;
 
-tyfields_nonempty : tyfield COMMA tyfields {$$=$3->Prepend($1);}
-  | tyfield {$$ = new absyn::FieldList($1);}
-  ;
+// tyfields_nonempty : tyfield COMMA tyfields {$$=$3->Prepend($1);}
+//   | tyfield {$$ = new absyn::FieldList($1);}
+//   ;
+// tyfields : tyfield COMMA tyfields {$$=$3->Prepend($1);}
+//   | tyfield {$$ = new absyn::FieldList($1);}
+//   | {$$ = new absyn::FieldList();}
+//   ;
+
+// tyfield : ID COLON ID {$$ = new absyn::Field(scanner_.GetTokPos(),$1,$3);};
+
+
 tyfields : tyfield COMMA tyfields {$$=$3->Prepend($1);}
   | tyfield {$$ = new absyn::FieldList($1);}
   | {$$ = new absyn::FieldList();}
   ;
 
-tyfield : ID COLON ID {$$ = new absyn::Field(scanner_.GetTokPos(),$1,$3);};
-
+tyfield : ID {$$ = new absyn::Field(scanner_.GetTokPos(),$1,nullptr);};
 
 rec_nonempty : rec_one COMMA rec {if($3)$$=$3->Prepend($1);else $$ = new absyn::EFieldList($1);}
   | rec_one {$$ = new absyn::EFieldList($1);}
