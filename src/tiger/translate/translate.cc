@@ -761,7 +761,7 @@ tr::ExpAndTy *ForExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   // auto cj2 = new tree::CjumpStm(tree::EQ_OP,i,limit,done,loop);
   // auto cj3 = new tree::CjumpStm(tree::LT_OP,i,limit,loop,done);
 
-  auto cj = new tree::CjumpStm(tree::LE_OP,i,limit,body,done);
+  auto cj = new tree::CjumpStm(tree::LT_OP,i,limit,body,done);
 
   auto body_stm = body_exp_ty->exp_->UnNx();
   auto seq = tr::list2tree({

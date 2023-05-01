@@ -61,9 +61,17 @@
 
 
   "+" {adjust(); return Parser::PLUS;}
+  "+=" {adjust(); return Parser::PLUSS;}
+
   "-" {adjust(); return Parser::MINUS;}
+  "-=" {adjust(); return Parser::MINUSS;}
+
   "*" {adjust(); return Parser::TIMES;}
+  "*=" {adjust(); return Parser::TIMESS;}
+
   "/" {adjust(); return Parser::DIVIDE;}
+  "/=" {adjust(); return Parser::DIVIDES;}
+
 
   "&" {adjust(); return Parser::AND;}
   "|" {adjust(); return Parser::OR;}
@@ -95,6 +103,8 @@
   "type" {adjust(); return Parser::TYPE;}
   "function" {adjust(); return Parser::FUNCTION;}
   "of" {adjust(); return Parser::OF;}
+
+  "range" {adjust(); return Parser::RANGE;}
 
 
   [[:alnum:]][[:alnum:]_]* {adjust();switch(dispose_id()){case 0:return Parser::ID;case 1:return Parser::INT;default:errormsg_->Error(errormsg_->tok_pos_, "illegal token");}}

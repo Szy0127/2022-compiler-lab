@@ -37,6 +37,9 @@
   ARRAY IF THEN ELSE WHILE FOR TO DO LET IN END OF
   BREAK NIL
   FUNCTION VAR TYPE
+  
+  RANGE
+  PLUSS MINUSS TIMESS DIVIDES
 
  /* token priority */
 
@@ -91,6 +94,14 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
   | ID LBRACE rec RBRACE {$$ = new absyn::RecordExp(scanner_.GetTokPos(),$1,$3);}
   | STRING {$$ = new absyn::StringExp(scanner_.GetTokPos(), $1);}
   | lvalue ASSIGN exp {$$ = new absyn::AssignExp(scanner_.GetTokPos(),$1,$3);}
+
+  | lvalue PLUSS exp {$$ = new absyn::AssignExp(scanner_.GetTokPos(),$1,new absyn::OpExp(scanner_.GetTokPos(),absyn::PLUS_OP,new absyn::VarExp(scanner_.GetTokPos(),$1),$3));}
+  | lvalue MINUSS exp {$$ = new absyn::AssignExp(scanner_.GetTokPos(),$1,new absyn::OpExp(scanner_.GetTokPos(),absyn::MINUS_OP,new absyn::VarExp(scanner_.GetTokPos(),$1),$3));}
+  | lvalue TIMESS exp {$$ = new absyn::AssignExp(scanner_.GetTokPos(),$1,new absyn::OpExp(scanner_.GetTokPos(),absyn::TIMES_OP,new absyn::VarExp(scanner_.GetTokPos(),$1),$3));}
+  | lvalue DIVIDES exp {$$ = new absyn::AssignExp(scanner_.GetTokPos(),$1,new absyn::OpExp(scanner_.GetTokPos(),absyn::DIVIDE_OP,new absyn::VarExp(scanner_.GetTokPos(),$1),$3));}
+
+
+
   | IF exp THEN exp ELSE exp {$$ = new absyn::IfExp(scanner_.GetTokPos(),$2,$4,$6);}
   | IF exp THEN exp {$$ = new absyn::IfExp(scanner_.GetTokPos(),$2,$4,nullptr);}
   | ID LPAREN RPAREN {$$ = new absyn::CallExp(scanner_.GetTokPos(),$1,new absyn::ExpList());}
@@ -113,6 +124,10 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
   | LPAREN sequencing_exps RPAREN {$$ = new absyn::SeqExp(scanner_.GetTokPos(),$2);}
   | WHILE exp DO exp {$$ = new absyn::WhileExp(scanner_.GetTokPos(),$2,$4);}
   | FOR ID ASSIGN exp TO exp DO exp {$$ = new absyn::ForExp(scanner_.GetTokPos(),$2,$4,$6,$8);}
+
+  | FOR ID IN RANGE LPAREN exp COMMA exp RPAREN COLON exp {$$ = new absyn::ForExp(scanner_.GetTokPos(),$2,$6,$8,$11);}
+  | FOR ID IN RANGE LPAREN exp RPAREN COLON exp {$$ = new absyn::ForExp(scanner_.GetTokPos(),$2,new absyn::IntExp(scanner_.GetTokPos(),0),$6,$9);}
+
   | BREAK {$$ = new absyn::BreakExp(scanner_.GetTokPos());}
   | {$$ = new absyn::VoidExp(scanner_.GetTokPos());}
   ;
