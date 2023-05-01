@@ -60,6 +60,9 @@
   "}" {adjust(); return Parser::RBRACE;}
 
 
+  "%" {adjust(); return Parser::MOD;}
+  "%=" {adjust(); return Parser::MODS;}
+
   "+" {adjust(); return Parser::PLUS;}
   "+=" {adjust(); return Parser::PLUSS;}
 

@@ -502,7 +502,36 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
       return rax;
       break;
   }
-  
+  case MOD_OP:{
+      //%rax <-- %rdx %rax / S  %rdx = mod
+      auto rax = reg_manager->GetRegister(0);
+      auto rdx = reg_manager->GetRegister(3);
+      instr_list.Append(
+        new assem::MoveInstr(
+          "movq `s0,%rax",//`d0?
+          new temp::TempList(rax),
+          new temp::TempList(left_temp)
+        )
+      );
+      instr_list.Append(
+        new assem::OperInstr(
+          "cqto",
+          new temp::TempList(rdx),
+          new temp::TempList(),
+          nullptr
+        )
+      );
+      instr_list.Append(
+        new assem::OperInstr(
+          "idivq `s0",
+          new temp::TempList{rax, rdx},
+          new temp::TempList{right_->Munch(instr_list,fs), rax,rdx},
+          nullptr
+        )
+      );
+      return rdx;
+      break;
+  }
   default:
     break;
   }

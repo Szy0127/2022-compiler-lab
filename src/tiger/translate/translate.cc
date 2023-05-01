@@ -406,6 +406,7 @@ tr::ExpAndTy *OpExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
     case MINUS_OP:op = tree::MINUS_OP;break;
     case TIMES_OP:op = tree::MUL_OP;break;
     case DIVIDE_OP:op = tree::DIV_OP;break;
+    case MOD_OP:op = tree::MOD_OP;break;
     default:
       break;
     }

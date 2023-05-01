@@ -39,7 +39,7 @@
   FUNCTION VAR TYPE
   
   RANGE
-  PLUSS MINUSS TIMESS DIVIDES
+  PLUSS MINUSS TIMESS DIVIDES MODS
   DEF
   RETURN
 
@@ -52,6 +52,7 @@
 %nonassoc GE GT LE LT EQ NEQ
 %left MINUS PLUS
 %left DIVIDE TIMES
+%left MOD
  /* TODO: Put your lab3 code here */
 
 %type <exp> exp expseq
@@ -107,6 +108,7 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
   | lvalue MINUSS exp {$$ = new absyn::AssignExp(scanner_.GetTokPos(),$1,new absyn::OpExp(scanner_.GetTokPos(),absyn::MINUS_OP,new absyn::VarExp(scanner_.GetTokPos(),$1),$3));}
   | lvalue TIMESS exp {$$ = new absyn::AssignExp(scanner_.GetTokPos(),$1,new absyn::OpExp(scanner_.GetTokPos(),absyn::TIMES_OP,new absyn::VarExp(scanner_.GetTokPos(),$1),$3));}
   | lvalue DIVIDES exp {$$ = new absyn::AssignExp(scanner_.GetTokPos(),$1,new absyn::OpExp(scanner_.GetTokPos(),absyn::DIVIDE_OP,new absyn::VarExp(scanner_.GetTokPos(),$1),$3));}
+  | lvalue MODS exp {$$ = new absyn::AssignExp(scanner_.GetTokPos(),$1,new absyn::OpExp(scanner_.GetTokPos(),absyn::MOD_OP,new absyn::VarExp(scanner_.GetTokPos(),$1),$3));}
 
 
 
@@ -121,6 +123,8 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
   | exp DIVIDE exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::DIVIDE_OP,$1,$3);}
   | exp MINUS exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::MINUS_OP,$1,$3);}
   | exp PLUS exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::PLUS_OP,$1,$3);}
+  | exp MOD exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::MOD_OP,$1,$3);}
+
   | exp GT exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::GT_OP,$1,$3);}
   | exp LT exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::LT_OP,$1,$3);}
   | exp LE exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::LE_OP,$1,$3);}

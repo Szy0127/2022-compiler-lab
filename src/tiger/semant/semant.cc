@@ -126,7 +126,7 @@ type::Ty *OpExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
   // auto right_ty = right_->SemAnalyze(venv,tenv,labelcount,errormsg)->ActualTy();
 
   if (oper_ == absyn::PLUS_OP || oper_ == absyn::MINUS_OP || 
-      oper_ == absyn::TIMES_OP || oper_ == absyn::DIVIDE_OP) {
+      oper_ == absyn::TIMES_OP || oper_ == absyn::DIVIDE_OP || oper_ == absyn::MOD_OP) {
     // if (typeid(*left_ty) != typeid(type::IntTy)) {
     //   errormsg->Error(left_->pos_,"integer required");
     // }

@@ -41,6 +41,7 @@ enum Oper {
   MINUS_OP,
   TIMES_OP,
   DIVIDE_OP,
+  MOD_OP,
   EQ_OP,
   NEQ_OP,
   LT_OP,
