@@ -40,6 +40,7 @@
   
   RANGE
   PLUSS MINUSS TIMESS DIVIDES
+  DEF
 
  /* token priority */
 
@@ -171,8 +172,8 @@ tydec_one : TYPE ID EQ ty {$$ = new absyn::NameAndTy($2,$4);};
 fundec : fundec_one fundec {if($2)$$=$2->Prepend($1);else $$ = new absyn::FunDecList($1);}
   | 
   ;
-fundec_one : FUNCTION ID LPAREN tyfields RPAREN EQ exp {$$ = new absyn::FunDec(scanner_.GetTokPos(),$2,$4,nullptr,$7);}
-  | FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp {$$ = new absyn::FunDec(scanner_.GetTokPos(),$2,$4,$7,$9);}
+fundec_one : DEF ID LPAREN tyfields RPAREN COLON exp  {$$ = new absyn::FunDec(scanner_.GetTokPos(),$2,$4,nullptr,$7);}
+  | DEF ID LPAREN tyfields RPAREN COLON ID COLON exp {$$ = new absyn::FunDec(scanner_.GetTokPos(),$2,$4,$7,$9);}
   ;
 
 

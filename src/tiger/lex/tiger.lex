@@ -105,7 +105,7 @@
   "of" {adjust(); return Parser::OF;}
 
   "range" {adjust(); return Parser::RANGE;}
-
+  "def" {adjust(); return Parser::DEF;}
 
   [[:alnum:]][[:alnum:]_]* {adjust();switch(dispose_id()){case 0:return Parser::ID;case 1:return Parser::INT;default:errormsg_->Error(errormsg_->tok_pos_, "illegal token");}}
 

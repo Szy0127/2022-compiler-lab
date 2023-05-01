@@ -2,25 +2,34 @@
 #include <fstream>
 #include <iostream>
 #include <stack>
+#include <tuple>
 Preprocessor::Preprocessor(std::string ifname,std::string ofname):ifname(ifname),ofname(ofname){}
 
-std::string processFor(std::string forexp){
+std::tuple<std::string,bool> processFunc(std::string defexp){
     std::string result;
     int index = 0;
-    char c = forexp[index];
+    char c = defexp[index];
     while(c == '\t' || c== ' '){
-        c = forexp[++index];
+        c = defexp[++index];
     }
-    if(forexp.substr(index,3) != "for"){
-        return forexp;
+    if(defexp.substr(index,3) != "def"){
+        return std::tuple<std::string,bool>("",false);
     }
     while(c != ':'){
         result.push_back(c);
-        c = forexp[++index];
+        c = defexp[++index];
     }
-    result += "do";
-    return result;
+    result.push_back('=');
+    return std::tuple<std::string,bool>(defexp,true);
 }
+
+enum DefStatus{
+    before_let,
+    after_let,
+    before_in,
+    after_in,
+    before_end
+};
 
 void Preprocessor::preprocess(){
     std::ifstream input(ifname);
@@ -30,6 +39,8 @@ void Preprocessor::preprocess(){
     output<<"/*preprocessed*/"<<std::endl;
     bool first = true;
     std::stack<int> indentation;
+    std::stack<std::pair<DefStatus,int>> def_record;
+    def_record.emplace(before_let,0);
     while(!input.eof()){
         int cur_indent = 0;
         while(buf[cur_indent]=='\t'){
@@ -48,17 +59,48 @@ void Preprocessor::preprocess(){
                     exit(1);
                 }else{
                     output<<")"<<std::endl;
+                    if(cur_indent == def_record.top().second && def_record.top().first == after_let){
+                            def_record.pop();
+                            def_record.emplace(before_in,cur_indent);
+                    }
+                    if(cur_indent < def_record.top().second &&  def_record.top().first == after_in){
+                            def_record.pop();
+                            def_record.emplace(before_end,cur_indent);
+                    }
                 }
             }
         }
-        if(first){
-            output<<"("<<std::endl;
+        std::tuple<std::string,int> ret = processFunc(buf);
+        if(std::get<1>(ret)){
+            if(def_record.top().first == before_let){
+                output<<"let"<<std::endl;
+            }else{
+                def_record.pop();
+            }
+            def_record.emplace(after_let,cur_indent);
+            buf = std::get<0>(ret);
         }else{
-            output<<";"<<std::endl;
+            auto indent = def_record.top().second;
+            if(def_record.top().first == before_in){
+                output<<"in("<<std::endl;
+                def_record.pop();
+                def_record.emplace(after_in,indent);
+            }else if(def_record.top().first == before_end){
+                output<<")end"<<std::endl;
+                def_record.pop();
+            }else{
+                if(first){
+                    output<<"("<<std::endl;
+                }else{
+                    output<<";"<<std::endl;
+                }
+            }
         }
-        // buf = processFor(buf);
         output<<buf;
         std::getline(input,buf);
     }
     output<<")"<<std::endl;
+    if(def_record.top().first >=after_in){
+        output<<"end"<<std::endl;
+    }
 }

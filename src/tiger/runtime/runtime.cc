@@ -91,7 +91,7 @@ EXTERNC void prints(struct string *s) {
   for (i = 0; i < s->length; i++, p++) putchar(*p);
 }
 
-EXTERNC void print(int k) { printf("%d", k); }
+EXTERNC void print(int k) { printf("%d\n", k); }
 
 EXTERNC void flush() { fflush(stdout); }
 
