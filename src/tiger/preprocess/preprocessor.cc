@@ -23,6 +23,28 @@ std::tuple<std::string,bool> processFunc(std::string defexp){
     return std::tuple<std::string,bool>(defexp,true);
 }
 
+enum StmType{
+    OTHER,
+    IF,
+    ELSE
+};
+
+StmType getType(std::string stm){
+    int index = 0;
+    char c = stm[index];
+    while(c == '\t' || c== ' '){
+        c = stm[++index];
+    }
+    // std::cout<<stm.substr(index,2)<<std::endl;
+    if(stm.substr(index,2) == "if"){
+        return IF;
+    }
+    if(stm.substr(index,4) == "else"){
+        return ELSE;
+    }
+    return OTHER;
+}
+
 enum DefStatus{
     before_let,
     after_let,
@@ -31,15 +53,26 @@ enum DefStatus{
     before_end
 };
 
+enum IfStatus{
+    before_if,
+    after_if,
+    before_else,
+    after_else
+};
+
+
 void Preprocessor::preprocess(){
     std::ifstream input(ifname);
     std::ofstream output(ofname);
     std::string buf;
     std::getline(input,buf);
     output<<"/*preprocessed*/"<<std::endl;
+
+
     bool first = true;
     std::stack<int> indentation;
     std::stack<std::pair<DefStatus,int>> def_record;
+    std::stack<std::pair<IfStatus,int>> if_record;
     def_record.emplace(before_let,0);
     while(!input.eof()){
         int cur_indent = 0;
@@ -62,6 +95,10 @@ void Preprocessor::preprocess(){
                     if(cur_indent == def_record.top().second && def_record.top().first == after_let){
                             def_record.pop();
                             def_record.emplace(before_in,cur_indent);
+                    }
+                    if(!if_record.empty() && cur_indent == if_record.top().second  && if_record.top().first == after_if){
+                            if_record.pop();
+                            if_record.emplace(before_else,cur_indent);
                     }
                     if(cur_indent < def_record.top().second &&  def_record.top().first == after_in){
                             def_record.pop();
@@ -92,9 +129,17 @@ void Preprocessor::preprocess(){
                 if(first){
                     output<<"("<<std::endl;
                 }else{
-                    output<<";"<<std::endl;
+                    if(!if_record.empty() && if_record.top().first == before_else && getType(buf)==ELSE){
+                        if_record.pop();
+                    }else{
+                        output<<";"<<std::endl;
+                    }
+
                 }
             }
+        }
+        if(getType(buf)==IF){
+            if_record.emplace(after_if,cur_indent);
         }
         output<<buf;
         std::getline(input,buf);

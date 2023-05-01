@@ -43,6 +43,8 @@
   DEF
   RETURN
 
+  TRUE FALSE
+
  /* token priority */
 
 %left OR 
@@ -92,6 +94,10 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
     /*fake subscriptvar is unused*/
   | one {$$ = new absyn::VarExp(scanner_.GetTokPos(),$1);}
   | INT {$$ = new absyn::IntExp(scanner_.GetTokPos(),$1);}
+
+  | TRUE {$$ = new absyn::IntExp(scanner_.GetTokPos(),1);}
+  | FALSE {$$ = new absyn::IntExp(scanner_.GetTokPos(),0);}
+
   | lvalue {$$ = new absyn::VarExp(scanner_.GetTokPos(),$1);}
   | ID LBRACE rec RBRACE {$$ = new absyn::RecordExp(scanner_.GetTokPos(),$1,$3);}
   | STRING {$$ = new absyn::StringExp(scanner_.GetTokPos(), $1);}
@@ -104,8 +110,9 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
 
 
 
-  | IF exp THEN exp ELSE exp {$$ = new absyn::IfExp(scanner_.GetTokPos(),$2,$4,$6);}
-  | IF exp THEN exp {$$ = new absyn::IfExp(scanner_.GetTokPos(),$2,$4,nullptr);}
+  | IF exp COLON exp ELSE COLON exp {$$ = new absyn::IfExp(scanner_.GetTokPos(),$2,$4,$7);}
+  | IF exp COLON exp {$$ = new absyn::IfExp(scanner_.GetTokPos(),$2,$4,nullptr);}
+
   | ID LPAREN RPAREN {$$ = new absyn::CallExp(scanner_.GetTokPos(),$1,new absyn::ExpList());}
   | ID LPAREN actuals RPAREN {$$ = new absyn::CallExp(scanner_.GetTokPos(),$1,$3);}
   | exp EQ exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::EQ_OP,$1,$3);}

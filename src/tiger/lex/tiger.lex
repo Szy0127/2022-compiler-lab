@@ -108,6 +108,10 @@
   "def" {adjust(); return Parser::DEF;}
   "return" {adjust(); return Parser::RETURN;}
 
+  "True" {adjust(); return Parser::TRUE;}
+  "False" {adjust(); return Parser::FALSE;}
+
+
   [[:alnum:]][[:alnum:]_]* {adjust();switch(dispose_id()){case 0:return Parser::ID;case 1:return Parser::INT;default:errormsg_->Error(errormsg_->tok_pos_, "illegal token");}}
 
   /*

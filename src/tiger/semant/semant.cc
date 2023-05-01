@@ -15,7 +15,11 @@ type::Ty *SimpleVar::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
    
   auto entry = venv->Look(sym_);
   if (entry && typeid(*entry) == typeid(env::VarEntry)) {
-    return (static_cast<env::VarEntry *>(entry))->ty_->ActualTy();
+    if(static_cast<env::VarEntry *>(entry)->ty_){
+      return (static_cast<env::VarEntry *>(entry))->ty_->ActualTy();
+    }else{
+      return nullptr;
+    }
   } else {
     return nullptr;
     // errormsg->Error(pos_, "undefined variable %s", sym_->Name().data());
@@ -298,7 +302,7 @@ type::Ty *ReturnExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
   if(labelcount==0){
     errormsg->Error(pos_,"return is not inside any function");
   }
-  ret_->SemAnalyze(venv, tenv, labelcount-1, errormsg)->ActualTy();
+  ret_->SemAnalyze(venv, tenv, labelcount-1, errormsg);
   return type::VoidTy::Instance();
 }
 
