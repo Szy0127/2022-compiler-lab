@@ -73,6 +73,7 @@
   "*=" {adjust(); return Parser::TIMESS;}
 
   "/" {adjust(); return Parser::DIVIDE;}
+  "//" {adjust(); return Parser::DIVIDE;}
   "/=" {adjust(); return Parser::DIVIDES;}
 
 

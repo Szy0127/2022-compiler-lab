@@ -232,9 +232,10 @@ type::Ty *IfExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
   if(elsee_){
     else_ty = elsee_->SemAnalyze(venv, tenv, labelcount, errormsg)->ActualTy();
   }
-  if(typeid(*test_ty) != typeid(type::IntTy)) {
-    errormsg->Error(test_->pos_, "if exp's range type is not integer");
-  }
+  //dont know what type func returns
+  // if(typeid(*test_ty) != typeid(type::IntTy)) {
+  //   errormsg->Error(test_->pos_, "if exp's range type is not integer");
+  // }
   // if(!then_ty->IsSameType(else_ty)){
   //   if(!elsee_){
   //     errormsg->Error(pos_, "if-then exp's body must produce no value");
