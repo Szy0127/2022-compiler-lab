@@ -422,6 +422,24 @@ public:
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
 
+class FunctionDec;
+class FunctionExp : public Exp {
+public:
+  FunctionDec *funcs_;
+
+  FunctionExp(int pos, FunctionDec *funcs)
+      : Exp(pos), funcs_(funcs){}
+  ~FunctionExp() override;
+
+  void Print(FILE *out, int d) const override;
+  type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
+                       err::ErrorMsg *errormsg) const override;
+  tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
+                          tr::Level *level, temp::Label *label,
+                          err::ErrorMsg *errormsg) const override;
+  void Traverse(esc::EscEnvPtr env, int depth) override;
+};
+
 class ArrayExp : public Exp {
 public:
   sym::Symbol *typ_;

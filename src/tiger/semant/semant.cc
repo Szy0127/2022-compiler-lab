@@ -1,7 +1,7 @@
 #include "tiger/absyn/absyn.h"
 #include "tiger/semant/semant.h"
 #include <set>
-#include <iostream>
+// #include <iostream>
 namespace absyn {
 
 void AbsynTree::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
@@ -122,8 +122,8 @@ type::Ty *CallExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
 type::Ty *OpExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
                             int labelcount, err::ErrorMsg *errormsg) const {
    
-  // auto left_ty = left_->SemAnalyze(venv,tenv,labelcount,errormsg)->ActualTy();
-  // auto right_ty = right_->SemAnalyze(venv,tenv,labelcount,errormsg)->ActualTy();
+  auto left_ty = left_->SemAnalyze(venv,tenv,labelcount,errormsg);//->ActualTy();
+  auto right_ty = right_->SemAnalyze(venv,tenv,labelcount,errormsg);//->ActualTy();
 
   if (oper_ == absyn::PLUS_OP || oper_ == absyn::MINUS_OP || 
       oper_ == absyn::TIMES_OP || oper_ == absyn::DIVIDE_OP || oper_ == absyn::MOD_OP) {
@@ -326,6 +326,13 @@ type::Ty *LetExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
   venv->EndScope();
   return result;
 }
+
+type::Ty *FunctionExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
+                             int labelcount, err::ErrorMsg *errormsg) const {
+  funcs_->SemAnalyze(venv, tenv, labelcount, errormsg);
+  return type::VoidTy::Instance();
+}
+
 
 type::Ty *ArrayExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
                                int labelcount, err::ErrorMsg *errormsg) const {

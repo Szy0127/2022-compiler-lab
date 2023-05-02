@@ -89,6 +89,10 @@ one : ID LBRACK exp RBRACK {$$ = new absyn::SubscriptVar(scanner_.GetTokPos(), n
 
 exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.GetTokPos(),$2,new absyn::SeqExp(scanner_.GetTokPos(),$4));}
   /*| ID LBRACK exp RBRACK OF exp {$$ = new absyn::ArrayExp(scanner_.GetTokPos(),$1,$3,$6);}*/
+  
+  
+  | fundec_one {$$ = new absyn::FunctionExp(scanner_.GetTokPos(),new absyn::FunctionDec(scanner_.GetTokPos(),new absyn::FunDecList($1)));}
+  
   | one OF exp {auto scvar = static_cast<absyn::SubscriptVar*>($1);
     auto svar = static_cast<absyn::SimpleVar*>(scvar->var_);
     $$ = new absyn::ArrayExp(scanner_.GetTokPos(),svar->sym_,scvar->subscript_,$3);}

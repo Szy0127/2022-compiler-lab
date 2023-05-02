@@ -131,6 +131,10 @@ void LetExp::Traverse(esc::EscEnvPtr env, int depth) {
   }
   body_->Traverse(env,depth);
 }
+void FunctionExp::Traverse(esc::EscEnvPtr env, int depth) {
+  /* TODO: Put your lab5 code here */
+  funcs_->Traverse(env,depth);
+}
 
 void ArrayExp::Traverse(esc::EscEnvPtr env, int depth) {
   /* TODO: Put your lab5 code here */

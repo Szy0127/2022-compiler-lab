@@ -8,6 +8,7 @@
 #include "tiger/frame/temp.h"
 #include "tiger/frame/frame.h"
 #include <sstream>
+// #include <iostream>
 
 
 #define NOP (new tr::ExExp(new tree::ConstExp(0)))
@@ -373,6 +374,7 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
 
   auto string_frag = tr::GetPointerMap(level->frame_,level);
   tree::Exp *call_exp;
+
   if(func_label){
     //func->entry->level is the level of func itself, parent is the level defines func
     arg_list->Insert(staticLink(level,func_entry->level_->parent_));
@@ -382,7 +384,9 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
     call_exp = frame::externalCall(func_->Name(),arg_list,string_frag,arg_size-max_arg_size);
   }
 
+
   auto res_ty = func_entry->result_;
+
   return new tr::ExpAndTy(
     new tr::ExExp(call_exp),
     res_ty
@@ -875,6 +879,25 @@ tr::ExpAndTy *LetExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
 
 }
 
+tr::ExpAndTy *FunctionExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
+                                tr::Level *level, temp::Label *label,
+                                err::ErrorMsg *errormsg) const {
+  /* TODO: Put your lab5 code here */
+
+  // venv->BeginScope();
+  // tenv->BeginScope();
+  auto dec_exp = funcs_->Translate(venv, tenv, level,label, errormsg);
+  // tenv->EndScope();
+  // venv->EndScope();
+  return new tr::ExpAndTy(
+    new tr::NxExp(
+      dec_exp->UnNx()
+    ),
+    type::VoidTy::Instance()
+  );
+
+}
+
 tr::ExpAndTy *ArrayExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                   tr::Level *level, temp::Label *label,                    
                                   err::ErrorMsg *errormsg) const {
@@ -914,7 +937,6 @@ tr::Exp *FunctionDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                 tr::Level *level, temp::Label *label,
                                 err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
-
   auto func_list = functions_->GetList();
 
   for(const auto&function:func_list){

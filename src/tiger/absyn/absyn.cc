@@ -91,7 +91,9 @@ LetExp::~LetExp() {
   delete decs_;
   delete body_;
 }
-
+FunctionExp::~FunctionExp() {
+  delete funcs_;
+}
 ArrayExp::~ArrayExp() {
   delete typ_;
   delete size_;
@@ -280,6 +282,16 @@ void LetExp::Print(FILE *out, int d) const {
   }
   fprintf(out, ")");
 }
+void FunctionExp::Print(FILE *out, int d) const {
+  Indent(out, d);
+  fprintf(out, "functionExp(\n");
+  if (funcs_) {
+    funcs_->Print(out, d + 1);
+  }
+  fprintf(out, ")");
+}
+
+
 
 void ArrayExp::Print(FILE *out, int d) const {
   Indent(out, d);

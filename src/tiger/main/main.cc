@@ -55,6 +55,8 @@ int main(int argc, char **argv) {
       absyn_tree = prog_sem.TransferAbsynTree();
       errormsg = prog_sem.TransferErrormsg();
     }
+    if (errormsg->AnyErrors())
+      return 1; // Don't continue if error occurrs
 
     {
       // Lab 5: escape analysis
