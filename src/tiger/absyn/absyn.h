@@ -69,7 +69,7 @@ public:
   void SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
                   err::ErrorMsg *errormsg) const;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const;
   void Traverse(esc::EscEnvPtr env);
 
@@ -90,7 +90,7 @@ public:
                                int labelcount,
                                err::ErrorMsg *errormsg) const = 0;
   virtual tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                                  tr::Level *level, temp::Label *label,
+                                  tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                                   err::ErrorMsg *errormsg) const = 0;
   virtual void Traverse(esc::EscEnvPtr env, int depth) = 0;
 
@@ -108,7 +108,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -126,7 +126,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -144,7 +144,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -162,7 +162,7 @@ public:
                                int labelcount,
                                err::ErrorMsg *errormsg) const = 0;
   virtual tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                                  tr::Level *level, temp::Label *label,
+                                  tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                                   err::ErrorMsg *errormsg) const = 0;
   virtual void Traverse(esc::EscEnvPtr env, int depth) = 0;
 
@@ -181,7 +181,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -195,7 +195,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -211,7 +211,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -227,7 +227,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -247,7 +247,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -265,7 +265,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -283,7 +283,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -299,7 +299,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -316,7 +316,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -333,7 +333,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -350,7 +350,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -369,7 +369,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -383,7 +383,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -398,7 +398,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -417,7 +417,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -435,7 +435,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -453,7 +453,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -467,7 +467,7 @@ public:
   type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                        err::ErrorMsg *errormsg) const override;
   tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                          tr::Level *level, temp::Label *label,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -484,7 +484,7 @@ public:
   virtual void SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                           err::ErrorMsg *errormsg) const = 0;
   virtual tr::Exp *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
-                             tr::Level *level, temp::Label *label,
+                             tr::Level *level, temp::Label *break_label, temp::Label *return_label,
                              err::ErrorMsg *errormsg) const = 0;
   virtual void Traverse(esc::EscEnvPtr env, int depth) = 0;
 
@@ -504,7 +504,7 @@ public:
   void SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                   err::ErrorMsg *errormsg) const override;
   tr::Exp *Translate(env::VEnvPtr venv, env::TEnvPtr tenv, tr::Level *level,
-                     temp::Label *label, 
+                     temp::Label *break_label, temp::Label *return_label, 
                      err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -524,7 +524,7 @@ public:
   void SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                   err::ErrorMsg *errormsg) const override;
   tr::Exp *Translate(env::VEnvPtr venv, env::TEnvPtr tenv, tr::Level *level,
-                     temp::Label *label, 
+                     temp::Label *break_label, temp::Label *return_label, 
                      err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
@@ -540,7 +540,7 @@ public:
   void SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
                   err::ErrorMsg *errormsg) const override;
   tr::Exp *Translate(env::VEnvPtr venv, env::TEnvPtr tenv, tr::Level *level,
-                     temp::Label *label, 
+                     temp::Label *break_label, temp::Label *return_label, 
                      err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
