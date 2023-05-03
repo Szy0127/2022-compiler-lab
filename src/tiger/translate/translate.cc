@@ -8,12 +8,16 @@
 #include "tiger/frame/temp.h"
 #include "tiger/frame/frame.h"
 #include <sstream>
+#include <map>
+#include <set>
 // #include <iostream>
 
 
 #define NOP (new tr::ExExp(new tree::ConstExp(0)))
 extern frame::Frags *frags;
 extern frame::RegManager *reg_manager;
+extern bool compile_function;
+static std::map<std::string,std::set<uint64_t>> function2keys;
 
 namespace tr {
 
@@ -193,6 +197,7 @@ void ProgTr::Translate() {
   FillBaseTEnv();
   auto main = absyn_tree_->Translate(venv_.get(),tenv_.get(),main_level_.get(),nullptr,nullptr,errormsg_.get());
   auto frag = new frame::ProcFrag(tr::list2tree(frame::ProcEntryExit1(main_level_->frame_,main->exp_->UnNx())),main_level_->frame_);
+
   frags->PushBack(frag);
 }
 
@@ -229,10 +234,10 @@ tr::ExpAndTy *SimpleVar::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
       // }
       framePtr = tr::staticLink(level,entry->access_->level_);
   }
+  // std::cout<<sym_->Name()<<(!!entry->ty_)<<std::endl;
   return new tr::ExpAndTy(
     new tr::ExExp(entry->access_->access_->ToExp(framePtr)),
-    // entry->ty_->ActualTy()
-    nullptr
+    entry->ty_ ? entry->ty_->ActualTy():nullptr
   );
 }
 
@@ -360,24 +365,36 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                  err::ErrorMsg *errormsg) const {
   /* TODO: Put your lab5 code here */
   auto max_arg_size = reg_manager->ArgRegs()->GetList().size();
-
   auto exp_list = args_->GetList();
   auto arg_list = new tree::ExpList();
   auto arg_size = exp_list.size();
+  auto formal_tylist = new type::TyList();
   for(const auto &exp:exp_list){
     auto arg_exp_ty = exp->Translate(venv,tenv,level,break_label,return_label,errormsg);
     arg_list->Append(arg_exp_ty->exp_->UnEx());
+    auto ty = arg_exp_ty->ty_->ActualTy();
+    formal_tylist->Append(ty);
   }
 
-  auto func_entry = static_cast<env::FunEntry*>(venv->Look(func_));
-  auto func_label = func_entry->label_;
+  //tell next functiondec how to generate codes
+  auto key = formal_tylist->Key();
+  if(function2keys.count(func_->Name())){
+    function2keys[func_->Name()].emplace(key);
+  }else{
+    function2keys.emplace(func_->Name(),std::set<uint64_t>{key});
+  }
 
+
+  auto func_entry = static_cast<env::FunEntry*>(venv->Look(func_));
+
+  auto func_label = compile_function ? func_entry->labels_[key]: func_entry->label_;
+  auto func_level = compile_function ? func_entry->levels_[key]: func_entry->level_;
   auto string_frag = tr::GetPointerMap(level->frame_,level);
   tree::Exp *call_exp;
 
   if(func_label){
     //func->entry->level is the level of func itself, parent is the level defines func
-    arg_list->Insert(staticLink(level,func_entry->level_->parent_));
+    arg_list->Insert(staticLink(level,func_level->parent_));
     call_exp = new tree::CallExp(new tree::NameExp(func_label),arg_list,string_frag,arg_size+1-max_arg_size);
   }else{//env.cc externalcall label=nullptr
     //new NamedLabel
@@ -385,12 +402,14 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   }
 
 
-  auto res_ty = func_entry->result_;
+  auto res_ty = compile_function ? func_entry->results_[key]: func_entry->result_;
 
   return new tr::ExpAndTy(
     new tr::ExExp(call_exp),
     res_ty
   );
+
+
 }
 
 tr::ExpAndTy *OpExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
@@ -464,7 +483,7 @@ tr::ExpAndTy *OpExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
     }
     if(op != tree::REL_OPER_COUNT){
       tree::CjumpStm* cj = nullptr;
-      if(left_exp_ty->ty_ && left_exp_ty->ty_->IsSameType(type::StringTy::Instance())){
+      if(compile_function && left_exp_ty->ty_->IsSameType(type::StringTy::Instance())){
 
         auto str_cmp = frame::externalCall("string_equal",
         new tree::ExpList({left_exp_ty->exp_->UnEx(),right_exp_ty->exp_->UnEx()}),
@@ -967,48 +986,106 @@ tr::Exp *FunctionDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
     }
     auto formals = params->MakeFormalTyList(tenv, errormsg);
     auto is_pointer = new std::list<bool>;
+    //TODO is_pointer if compile_function
     for(const auto&param:params->GetList()){
       auto ty = tenv->Look(param->typ_);
       is_pointer->push_back(type::IsPointer(ty));
     }
     auto name = function->name_;
-    auto f_label = temp::LabelFactory::NamedLabel(name->Name());
-    auto f_level = new tr::Level(level,f_label,escape,is_pointer);
-    //must add level of the function to env instead of the level defines it
-    venv->Enter(name,new env::FunEntry(f_level,f_label,formals,result_ty));
+    if(!compile_function){
+      auto f_label = temp::LabelFactory::NamedLabel(name->Name());
+      auto f_level = new tr::Level(level,f_label,escape,is_pointer);
+      //must add level of the function to env instead of the level defines it
+      venv->Enter(name,new env::FunEntry(f_level,f_label,formals,result_ty));
+    }else{
+      auto keys = function2keys[name->Name()];
+      for(auto key:keys){
+        auto f_label = temp::LabelFactory::NamedLabel(name->Name()+"_"+std::to_string(key));
+        auto f_level = new tr::Level(level,f_label,escape,is_pointer);
+        auto entry = static_cast<env::FunEntry*>(venv->Look(name));
+        if(!entry){
+          venv->Enter(name,new env::FunEntry(
+            std::map<uint64_t,tr::Level*>{{key,f_level}},
+            std::map<uint64_t,temp::Label*>{{key,f_label}},
+            std::map<uint64_t,type::TyList*>{{key,type::key2List(key)}},
+            std::map<uint64_t,type::Ty*>{{key,result_ty}}
+            ));
+        }else{
+          entry->Append(key,f_level,f_label,type::key2List(key),result_ty);
+        }
+      }
+    }
   }
   for(const auto&function:func_list){
-    auto entry = static_cast<env::FunEntry*>(venv->Look(function->name_));
-    auto f_level = entry->level_;
-    auto params = function->params_;
-    auto formals = params->MakeFormalTyList(tenv, errormsg);
-    venv->BeginScope();
+    if(!compile_function){
+      auto entry = static_cast<env::FunEntry*>(venv->Look(function->name_));
+      auto f_level = entry->level_;
+      auto params = function->params_;
+      auto formals = params->MakeFormalTyList(tenv, errormsg);
+      venv->BeginScope();
 
-    //after new frame,params will be allocated
-    auto formal_it = entry->level_->frame_->GetFormalList().begin();
-    formal_it++;//static link
-    // auto ty_it = entry->formals_->GetList().begin();//not contain static link
-    auto param_it = params->GetList().begin();
-    for (; param_it != params->GetList().end(); formal_it++, param_it++){
-      //this access shows the level of where formal defines is the same as the function
-      venv->Enter((*param_it)->name_,new env::VarEntry(new tr::Access(f_level,*formal_it),nullptr));
+      //after new frame,params will be allocated
+      auto formal_it = entry->level_->frame_->GetFormalList().begin();
+      formal_it++;//static link
+      // auto ty_it = entry->formals_->GetList().begin();//not contain static link
+      auto param_it = params->GetList().begin();
+      for (; param_it != params->GetList().end(); formal_it++, param_it++){
+        //this access shows the level of where formal defines is the same as the function
+        venv->Enter((*param_it)->name_,new env::VarEntry(new tr::Access(f_level,*formal_it),nullptr));
+      }
+      
+
+      auto ret_label = temp::LabelFactory::NewLabel();
+      auto res_exp_ty = function->body_->Translate(venv,tenv,f_level,break_label,ret_label,errormsg);
+      venv->EndScope();
+
+      auto ret = tr::list2tree({
+        new tree::MoveStm(
+          new tree::TempExp(reg_manager->ReturnValue()),
+          res_exp_ty->exp_->UnEx()
+        ),
+        new tree::LabelStm(ret_label)
+      });
+
+      auto frag = new frame::ProcFrag(tr::list2tree(frame::ProcEntryExit1(f_level->frame_,ret)),f_level->frame_);
+      frags->PushBack(frag);
+    }else{
+      auto keys = function2keys[function->name_->Name()];
+      for(auto key:keys){
+        auto entry = static_cast<env::FunEntry*>(venv->Look(function->name_));
+        auto f_level = entry->levels_[key];
+        auto params = function->params_;
+        auto formals = entry->formalss_[key];
+        venv->BeginScope();
+
+        //after new frame,params will be allocated
+        auto formal_it = f_level->frame_->GetFormalList().begin();
+        formal_it++;//static link
+        auto ty_it = formals->GetList().begin();//not contain static link
+        auto param_it = params->GetList().begin();
+        for (; param_it != params->GetList().end(); formal_it++, param_it++,ty_it++){
+          //this access shows the level of where formal defines is the same as the function
+          // std::cout<<"enter"<<(*param_it)->name_->Name()<<(!!*ty_it)<<std::endl;
+          venv->Enter((*param_it)->name_,new env::VarEntry(new tr::Access(f_level,*formal_it),*ty_it));
+        }
+        
+
+        auto ret_label = temp::LabelFactory::NewLabel();
+        auto res_exp_ty = function->body_->Translate(venv,tenv,f_level,break_label,ret_label,errormsg);
+        venv->EndScope();
+
+        auto ret = tr::list2tree({
+          new tree::MoveStm(
+            new tree::TempExp(reg_manager->ReturnValue()),
+            res_exp_ty->exp_->UnEx()
+          ),
+          new tree::LabelStm(ret_label)
+        });
+
+        auto frag = new frame::ProcFrag(tr::list2tree(frame::ProcEntryExit1(f_level->frame_,ret)),f_level->frame_);
+        frags->PushBack(frag);
+      }
     }
-    
-
-    auto ret_label = temp::LabelFactory::NewLabel();
-    auto res_exp_ty = function->body_->Translate(venv,tenv,f_level,break_label,ret_label,errormsg);
-    venv->EndScope();
-
-    auto ret = tr::list2tree({
-      new tree::MoveStm(
-        new tree::TempExp(reg_manager->ReturnValue()),
-        res_exp_ty->exp_->UnEx()
-      ),
-      new tree::LabelStm(ret_label)
-    });
-
-    auto frag = new frame::ProcFrag(tr::list2tree(frame::ProcEntryExit1(f_level->frame_,ret)),f_level->frame_);
-    frags->PushBack(frag);
   }
 
   return NOP;

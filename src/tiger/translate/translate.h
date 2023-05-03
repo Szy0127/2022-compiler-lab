@@ -86,6 +86,9 @@ public:
     return std::move(errormsg_);
   }
 
+  std::unique_ptr<absyn::AbsynTree> TransferAbsynTree(){
+    return std::move(absyn_tree_);
+  }  
 
 private:
   std::unique_ptr<absyn::AbsynTree> absyn_tree_;

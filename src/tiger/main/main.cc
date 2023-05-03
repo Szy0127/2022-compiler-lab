@@ -7,9 +7,11 @@
 #include "tiger/translate/translate.h"
 #include "tiger/semant/semant.h"
 #include "tiger/preprocess/preprocessor.h"
-
+#include <map>
+// #include <iostream>
 frame::RegManager *reg_manager;
 frame::Frags *frags;
+bool compile_function = false;
 
 
 //sudo g++ -Wl,--wrap,getchar -m64 final_test.tig.s ../src/tiger/runtime/runtime.cc ../src/tiger/runtime/gc/heap/derived_heap.cc -o test.out
@@ -72,7 +74,19 @@ int main(int argc, char **argv) {
       tr::ProgTr prog_tr(std::move(absyn_tree), std::move(errormsg));
       prog_tr.Translate();
       errormsg = prog_tr.TransferErrormsg();
+      absyn_tree = prog_tr.TransferAbsynTree();
     }
+    if (errormsg->AnyErrors())
+      return 1; // Don't continue if error occurrs
+
+    // std::cout<<"compile_function"<<std::endl;
+    compile_function = true;
+    {
+      tr::ProgTr prog_tr(std::move(absyn_tree), std::move(errormsg));
+      prog_tr.Translate();
+      errormsg = prog_tr.TransferErrormsg();
+    }
+
 
     if (errormsg->AnyErrors())
       return 1; // Don't continue if error occurrs

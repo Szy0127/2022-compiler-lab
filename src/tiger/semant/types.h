@@ -83,6 +83,8 @@ public:
 
   const std::list<Ty *> &GetList() { return ty_list_; }
   void Append(Ty *ty) { ty_list_.push_back(ty); }
+  void PushFront(Ty *ty) { ty_list_.push_front(ty); }
+  uint64_t Key()const;
 
 private:
   std::list<Ty *> ty_list_;
@@ -109,6 +111,8 @@ private:
 };
 
 bool IsPointer(Ty *ty);
+
+type::TyList *key2List(uint64_t key);
 } // namespace type
 
 #endif // TIGER_SEMANT_TYPES_H_

@@ -9,7 +9,7 @@
 #include "tiger/translate/tree.h"
 #include "tiger/codegen/assem.h"
 
-
+extern bool compile_function;
 namespace frame {
 
 class RegManager {
@@ -151,7 +151,7 @@ public:
 class Frags {
 public:
   Frags() = default;
-  void PushBack(Frag *frag) { frags_.emplace_back(frag); }
+  void PushBack(Frag *frag) { if(compile_function)frags_.emplace_back(frag); }
   const std::list<Frag*> &GetList() { return frags_; }
 
 private:
