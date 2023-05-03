@@ -49,10 +49,11 @@
 
 %left OR 
 %left AND
+%left NOT
 %nonassoc GE GT LE LT EQ NEQ
+%left MOD
 %left MINUS PLUS
 %left DIVIDE TIMES
-%left MOD
  /* TODO: Put your lab3 code here */
 
 %type <exp> exp expseq
@@ -116,7 +117,7 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
 
   | exp IF exp ELSE exp {$$ = new absyn::IfExp(scanner_.GetTokPos(),$3,$1,$5);}
 
-  | IF exp COLON exp ELSE COLON exp {$$ = new absyn::IfExp(scanner_.GetTokPos(),$2,$4,$7);}
+  | IF exp COLON exp SEMICOLON ELSE COLON exp {$$ = new absyn::IfExp(scanner_.GetTokPos(),$2,$4,$8);}
   | IF exp COLON exp {$$ = new absyn::IfExp(scanner_.GetTokPos(),$2,$4,nullptr);}
 
 
@@ -134,13 +135,16 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
   | exp LT exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::LT_OP,$1,$3);}
   | exp LE exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::LE_OP,$1,$3);}
   | exp GE exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::GE_OP,$1,$3);}
+
   | exp AND exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::AND_OP,$1,$3);}
   | exp OR exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::OR_OP,$1,$3);}
+  | NOT exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::NOT_OP,nullptr,$2);}
+
   | MINUS exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::MINUS_OP,new absyn::IntExp(scanner_.GetTokPos(),0),$2); }
   | NIL {$$ = new absyn::NilExp(scanner_.GetTokPos());}
   | LPAREN exp RPAREN {$$ = $2;}
   | LPAREN sequencing_exps RPAREN {$$ = new absyn::SeqExp(scanner_.GetTokPos(),$2);}
-  | WHILE exp DO exp {$$ = new absyn::WhileExp(scanner_.GetTokPos(),$2,$4);}
+  | WHILE exp COLON exp {$$ = new absyn::WhileExp(scanner_.GetTokPos(),$2,$4);}
   | FOR ID ASSIGN exp TO exp DO exp {$$ = new absyn::ForExp(scanner_.GetTokPos(),$2,$4,$6,$8);}
 
   | FOR ID IN RANGE LPAREN exp COMMA exp RPAREN COLON exp {$$ = new absyn::ForExp(scanner_.GetTokPos(),$2,$6,$8,$11);}

@@ -16,8 +16,8 @@ void Preprocessor::preprocess(){
 
     bool first = true;
     std::stack<int> indentation;
-    while(!input.eof()){
-        if(buf[0] == '\n'){
+    while(!input.eof() || !buf.empty()){
+        if(buf.empty()){
             std::getline(input,buf);
             continue;
         }
@@ -25,7 +25,7 @@ void Preprocessor::preprocess(){
         while(buf[cur_indent]=='\t'){
             cur_indent++;
         }
-        // // std::cout<<"buf:#"<<buf<<"#"<<cur_indent<<std::endl;
+        // std::cout<<"buf:#"<<buf<<"#"<<cur_indent<<std::endl;
         if(indentation.empty() ||  cur_indent>indentation.top()){
             indentation.push(cur_indent);
             output<<"("<<std::endl;
@@ -41,10 +41,13 @@ void Preprocessor::preprocess(){
             output<<";"<<std::endl;
         }
         output<<buf;
+        if(input.eof()){
+            break;
+        }
         std::getline(input,buf);
     }
-    output<<")"<<std::endl;
-    // if(def_record.top().first >=after_in){
-    //     output<<"end"<<std::endl;
-    // }
+    while(!indentation.empty()){
+        indentation.pop();
+        output<<")"<<std::endl;
+    }
 }

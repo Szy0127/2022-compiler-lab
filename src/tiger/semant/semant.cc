@@ -122,7 +122,10 @@ type::Ty *CallExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
 type::Ty *OpExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
                             int labelcount, err::ErrorMsg *errormsg) const {
    
-  auto left_ty = left_->SemAnalyze(venv,tenv,labelcount,errormsg);//->ActualTy();
+  type::Ty *left_ty = nullptr;
+  if(left_){
+    left_ty = left_->SemAnalyze(venv,tenv,labelcount,errormsg);//->ActualTy();
+  }
   auto right_ty = right_->SemAnalyze(venv,tenv,labelcount,errormsg);//->ActualTy();
 
   if (oper_ == absyn::PLUS_OP || oper_ == absyn::MINUS_OP || 

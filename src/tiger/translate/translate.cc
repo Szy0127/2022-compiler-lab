@@ -400,7 +400,10 @@ tr::ExpAndTy *OpExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
 
   // cjump
 
-  auto left_exp_ty = left_->Translate(venv,tenv,level,break_label,return_label,errormsg);
+  tr::ExpAndTy *left_exp_ty = nullptr;
+  if(left_){
+    left_exp_ty = left_->Translate(venv,tenv,level,break_label,return_label,errormsg);
+  }
   auto right_exp_ty = right_->Translate(venv,tenv,level,break_label,return_label,errormsg);
   {
     tree::BinOp op = tree::BinOp::BIN_OPER_COUNT;
@@ -522,6 +525,18 @@ tr::ExpAndTy *OpExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
       type::IntTy::Instance()
     );
   }
+  if(oper_ == NOT_OP){
+    auto rcx = right_exp_ty->exp_->UnCx(errormsg);
+    return new tr::ExpAndTy(
+      new tr::CxExp(
+        rcx.falses_,
+        rcx.trues_,
+        rcx.stm_
+      ),
+      type::IntTy::Instance()
+    );
+  }
+
 }
 
 tr::ExpAndTy *RecordExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,

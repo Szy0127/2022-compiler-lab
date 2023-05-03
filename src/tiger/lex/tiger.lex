@@ -77,8 +77,11 @@
   "/=" {adjust(); return Parser::DIVIDES;}
 
 
-  "&" {adjust(); return Parser::AND;}
-  "|" {adjust(); return Parser::OR;}
+  "and" {adjust(); return Parser::AND;}
+  "or" {adjust(); return Parser::OR;}
+  "not" {adjust(); return Parser::NOT;}
+
+
 
   "==" {adjust(); return Parser::EQ;}
   "!=" {adjust(); return Parser::NEQ;}

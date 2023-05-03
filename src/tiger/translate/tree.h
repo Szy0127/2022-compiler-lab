@@ -39,6 +39,7 @@ enum BinOp {
   MUL_OP,
   DIV_OP,
   MOD_OP,
+  NOT_OP,
   AND_OP,
   OR_OP,
   LSHIFT_OP,
