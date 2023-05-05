@@ -45,7 +45,6 @@ public:
   std::map<uint64_t,tr::Level*> levels_;
   std::map<uint64_t,temp::Label*> labels_;
   std::map<uint64_t,type::TyList*> formalss_;
-  std::map<uint64_t,type::Ty*> results_;
 
   // For lab4(semantic analysis) only
   FunEntry(type::TyList *formals, type::Ty *result)
@@ -56,18 +55,16 @@ public:
            type::Ty *result)
       : formals_(formals), result_(result), level_(level), label_(label) {}
 
-  FunEntry(std::map<uint64_t,tr::Level*> levels, std::map<uint64_t,temp::Label*> labels, std::map<uint64_t,type::TyList*> formalss,
-           std::map<uint64_t,type::Ty*> results)
-      : formalss_(formalss), results_(results), levels_(levels), labels_(labels) {}
-  void Append(uint64_t key,tr::Level *level, temp::Label *label, type::TyList *formals,
-           type::Ty *result){
+  FunEntry(uint64_t key,tr::Level *level, temp::Label *label, type::TyList *formals):result_(type::VoidTy::Instance()){
+    Append(key,level,label,formals);
+  }
+  void Append(uint64_t key,tr::Level *level, temp::Label *label, type::TyList *formals){
             if(levels_.count(key)){
               return;
             }
             levels_.emplace(key,level);
             labels_.emplace(key,label);
             formalss_.emplace(key,formals);
-            results_.emplace(key,result);
            }
 };
 
