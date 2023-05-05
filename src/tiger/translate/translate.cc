@@ -398,7 +398,7 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
     call_exp = new tree::CallExp(new tree::NameExp(func_label),arg_list,string_frag,arg_size+1-max_arg_size);
   }else{//env.cc externalcall label=nullptr
     //new NamedLabel
-    call_exp = frame::externalCall(func_->Name(),arg_list,string_frag,arg_size-max_arg_size);
+    call_exp = frame::externalCall(func_->Name()+"_"+std::to_string(key),arg_list,string_frag,arg_size-max_arg_size);
   }
 
 
