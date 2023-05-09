@@ -55,15 +55,39 @@ EXTERNC long *init_array(int size, long init) {
 
 EXTERNC long *init_list() {
   int i;
-  uint64_t allocate_size = 32 * sizeof(long);
+  uint64_t allocate_size = 2048 * sizeof(long);
   long *a = (long *)tiger_heap->Allocate(allocate_size,false);
   if(!a) {
     tiger_heap->GC();
     a = (long*)tiger_heap->Allocate(allocate_size,false);
   }
   //  capability     |     size
-  a[0] = (32 << 4) | 0;
+  a[0] = ((long)32 << 32) | 0;
   return a;
+}
+
+EXTERNC long len(long *array) {
+  return array[0] & 0xFFFFFFFF;
+}
+
+EXTERNC void append(long *array, long value) {
+  long size = array[0] & 0xFFFFFFFF;
+  long cap = (array[0]) >> 32 & 0xFFFFFFFF;
+  if(size == cap) {
+    long *new_array = (long *)tiger_heap->Allocate((cap << 1) * sizeof(long),false);
+    if(!new_array) {
+      tiger_heap->GC();
+      new_array = (long*)tiger_heap->Allocate((cap << 1) * sizeof(long),false);
+    }
+    memcpy(new_array, array, size * sizeof(long));
+    new_array[0] = (cap << 33) | (size+1);
+    new_array[size+1] = value;
+    // return new_array;
+  }
+  //size++
+  array[0]++;
+  array[size+1] = value;
+  // return array;
 }
 
 

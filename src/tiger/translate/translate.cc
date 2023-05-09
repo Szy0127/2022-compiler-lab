@@ -10,7 +10,7 @@
 #include <sstream>
 #include <map>
 #include <set>
-// #include <iostream>
+#include <iostream>
 
 
 #define NOP (new tr::ExExp(new tree::ConstExp(0)))
@@ -383,6 +383,7 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
 
   //tell next functiondec how to generate codes
   auto key = formal_tylist->Key();
+  std::cout<<"func:"<<func_->Name()<<" key:"<<key<<std::endl;
   if(function2keys.count(func_->Name())){
     function2keys[func_->Name()].emplace(key);
   }else{
@@ -403,7 +404,11 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
     call_exp = new tree::CallExp(new tree::NameExp(func_label),arg_list,string_frag,arg_size+1-max_arg_size);
   }else{//env.cc externalcall label=nullptr
     //new NamedLabel
-    call_exp = frame::externalCall(func_->Name()+"_"+std::to_string(key),arg_list,string_frag,arg_size-max_arg_size);
+    auto func_name = func_->Name();
+    if(func_name !="len" && func_name != "append"){
+      func_name += "_"+std::to_string(key);
+    }
+    call_exp = frame::externalCall(func_name,arg_list,string_frag,arg_size-max_arg_size);
   }
 
   auto res_ty = func_entry->result_;

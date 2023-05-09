@@ -100,6 +100,7 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
 
   | LBRACK RBRACK {$$ = new absyn::ListExp(scanner_.GetTokPos());} 
 
+
     /*fake subscriptvar is unused*/
   | one {$$ = new absyn::VarExp(scanner_.GetTokPos(),$1);}
   | INT {$$ = new absyn::IntExp(scanner_.GetTokPos(),$1);}
@@ -126,6 +127,11 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
 
   | ID LPAREN RPAREN {$$ = new absyn::CallExp(scanner_.GetTokPos(),$1,new absyn::ExpList());}
   | ID LPAREN actuals RPAREN {$$ = new absyn::CallExp(scanner_.GetTokPos(),$1,$3);}
+
+  | lvalue DOT ID LPAREN RPAREN {$$ = new absyn::CallExp(scanner_.GetTokPos(),$3,new absyn::ExpList(new absyn::VarExp(scanner_.GetTokPos(),$1)));}
+  | lvalue DOT ID LPAREN actuals RPAREN {$$ = new absyn::CallExp(scanner_.GetTokPos(),$3,($5)->Prepend(new absyn::VarExp(scanner_.GetTokPos(),$1)));}
+
+
   | exp EQ exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::EQ_OP,$1,$3);}
   | exp NEQ exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::NEQ_OP,$1,$3);}
   | exp TIMES exp {$$ = new absyn::OpExp(scanner_.GetTokPos(),absyn::TIMES_OP,$1,$3);}

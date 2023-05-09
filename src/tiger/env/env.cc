@@ -60,6 +60,14 @@ void ProgSem::FillBaseVEnv() {
   venv_->Enter(sym::Symbol::UniqueSymbol("substring"),
                new env::FunEntry(formals, result));
 
+
+  venv_->Enter(sym::Symbol::UniqueSymbol("len"),
+               new env::FunEntry(new type::TyList(type::ListTy::Instance()),
+                                 type::IntTy::Instance()));
+  venv_->Enter(sym::Symbol::UniqueSymbol("append"),
+               new env::FunEntry(new type::TyList({type::ListTy::Instance(),type::IntTy::Instance()}),
+                                 type::VoidTy::Instance()));
+
 }
 
 } // namespace sem
@@ -128,6 +136,17 @@ void ProgTr::FillBaseVEnv() {
                         type::IntTy::Instance()});
   venv_->Enter(sym::Symbol::UniqueSymbol("substring"),
                new env::FunEntry(level, label, formals, result));
+
+
+
+  venv_->Enter(sym::Symbol::UniqueSymbol("len"),
+               new env::FunEntry(level, label,
+                                 new type::TyList(type::ListTy::Instance()),
+                                 type::IntTy::Instance()));
+venv_->Enter(sym::Symbol::UniqueSymbol("append"),
+               new env::FunEntry(level, label,
+                                 new type::TyList({type::ListTy::Instance(),type::IntTy::Instance()}),
+                                 type::VoidTy::Instance()));
 
 }
 
