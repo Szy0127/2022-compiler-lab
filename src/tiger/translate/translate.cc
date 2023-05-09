@@ -297,12 +297,17 @@ tr::ExpAndTy *SubscriptVar::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
           base,
           new tree::BinopExp(
             tree::MUL_OP,
-            offset,size
+            size,
+            new tree::BinopExp(
+              tree::PLUS_OP,
+              offset,new tree::ConstExp(1)
+            )
           )
         )
       )
     ),
-    static_cast<type::ArrayTy*>(var_exp_ty->ty_)->ty_->ActualTy()
+    // static_cast<type::ArrayTy*>(var_exp_ty->ty_)->ty_->ActualTy()
+    type::IntTy::Instance()
   );
 }
 
@@ -957,6 +962,26 @@ tr::ExpAndTy *ArrayExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   );
   
 }
+
+
+tr::ExpAndTy *ListExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
+                                  tr::Level *level, temp::Label *break_label, temp::Label *return_label,type::Ty **func_res,                    
+                                  err::ErrorMsg *errormsg) const {
+  /* TODO: Put your lab5 code here */
+  auto init_list = frame::externalCall("init_list",
+  new tree::ExpList(),
+  tr::GetPointerMap(level->frame_,level));
+
+  //externalcall already mov init value
+  return new tr::ExpAndTy(
+    new tr::ExExp(
+      init_list
+    ),
+    type::ListTy::Instance()
+  );
+  
+}
+
 
 tr::ExpAndTy *VoidExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                  tr::Level *level, temp::Label *break_label, temp::Label *return_label,type::Ty **func_res,

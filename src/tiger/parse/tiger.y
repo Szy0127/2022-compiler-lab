@@ -97,6 +97,9 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
   | one OF exp {auto scvar = static_cast<absyn::SubscriptVar*>($1);
     auto svar = static_cast<absyn::SimpleVar*>(scvar->var_);
     $$ = new absyn::ArrayExp(scanner_.GetTokPos(),svar->sym_,scvar->subscript_,$3);}
+
+  | LBRACK RBRACK {$$ = new absyn::ListExp(scanner_.GetTokPos());} 
+
     /*fake subscriptvar is unused*/
   | one {$$ = new absyn::VarExp(scanner_.GetTokPos(),$1);}
   | INT {$$ = new absyn::IntExp(scanner_.GetTokPos(),$1);}

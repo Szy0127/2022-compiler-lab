@@ -142,6 +142,11 @@ void ArrayExp::Traverse(esc::EscEnvPtr env, int depth) {
   init_->Traverse(env,depth);
 }
 
+void ListExp::Traverse(esc::EscEnvPtr env, int depth) {
+
+}
+
+
 void VoidExp::Traverse(esc::EscEnvPtr env, int depth) {
   /* TODO: Put your lab5 code here */
   return;

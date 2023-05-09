@@ -65,6 +65,18 @@ public:
   explicit ArrayTy(Ty *ty) : ty_(ty) {}
 };
 
+class ListTy : public Ty {
+public:
+  // Ty *ty_;
+
+  // explicit ListTy(Ty *ty) : ty_(ty) {}
+
+static ListTy *Instance() { return &listty_; }
+
+private:
+  static ListTy listty_;
+};
+
 class NameTy : public Ty {
 public:
   sym::Symbol *sym_;

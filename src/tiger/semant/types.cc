@@ -6,6 +6,7 @@ NilTy NilTy::nilty_;
 IntTy IntTy::intty_;
 StringTy StringTy::stringty_;
 VoidTy VoidTy::voidty_;
+ListTy ListTy::listty_;
 
 Ty *Ty::ActualTy() { return this; }
 
@@ -50,7 +51,7 @@ uint64_t KeyOfType(Ty *ty){
   if(typeid(*a) == typeid(RecordTy)){
     return 5;
   }
-  if(typeid(*a) == typeid(ArrayTy)){
+  if(typeid(*a) == typeid(ListTy)){
     return 6;
   }
   return 7;
@@ -86,7 +87,7 @@ type::TyList *key2List(uint64_t key){
         list->PushFront(new type::RecordTy(nullptr));
         break;
       case 6:
-        list->PushFront(new type::ArrayTy(nullptr));
+        list->PushFront(type::ListTy::Instance());
         break;
       default:
         assert(false);

@@ -99,6 +99,9 @@ ArrayExp::~ArrayExp() {
   delete size_;
   delete init_;
 }
+ListExp::~ListExp() {
+}
+
 
 VoidExp::~VoidExp() = default;
 
@@ -304,6 +307,10 @@ void ArrayExp::Print(FILE *out, int d) const {
     init_->Print(out, d + 1);
   }
   fprintf(out, ")");
+}
+void ListExp::Print(FILE *out, int d) const {
+  Indent(out, d);
+  fprintf(out, "ListExp()");
 }
 
 void VoidExp::Print(FILE *out, int d) const {

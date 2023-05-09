@@ -53,6 +53,20 @@ EXTERNC long *init_array(int size, long init) {
   return a;
 }
 
+EXTERNC long *init_list() {
+  int i;
+  uint64_t allocate_size = 32 * sizeof(long);
+  long *a = (long *)tiger_heap->Allocate(allocate_size,false);
+  if(!a) {
+    tiger_heap->GC();
+    a = (long*)tiger_heap->Allocate(allocate_size,false);
+  }
+  //  capability     |     size
+  a[0] = (32 << 4) | 0;
+  return a;
+}
+
+
 struct string {
   int length;
   unsigned char chars[1];

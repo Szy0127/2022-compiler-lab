@@ -49,8 +49,8 @@ type::Ty *SubscriptVar::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
                                    err::ErrorMsg *errormsg) const {
    
   auto ty = var_->SemAnalyze(venv,tenv,labelcount,errormsg)->ActualTy();
-  if(typeid(*ty)!=typeid(type::ArrayTy)){
-    errormsg->Error(var_->pos_,"array type required");
+  if(typeid(*ty)!=typeid(type::ListTy)){
+    errormsg->Error(var_->pos_,"list type required");
     return type::IntTy::Instance();
   }
   auto exp_ty = subscript_->SemAnalyze(venv,tenv,labelcount,errormsg)->ActualTy();
@@ -59,7 +59,8 @@ type::Ty *SubscriptVar::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
     return type::IntTy::Instance();
   }
   //exam length
-  return static_cast<type::ArrayTy*>(ty)->ty_->ActualTy();
+  // return static_cast<type::ArrayTy*>(ty)->ty_->ActualTy();
+  return type::IntTy::Instance();
 }
 
 type::Ty *VarExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
@@ -358,6 +359,12 @@ type::Ty *ArrayExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
     errormsg->Error(pos_, "array type mismatch");
   }
   return ty;
+}
+
+type::Ty *ListExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
+                               int labelcount, err::ErrorMsg *errormsg) const {
+   
+  return type::ListTy::Instance();
 }
 
 type::Ty *VoidExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
