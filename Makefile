@@ -23,32 +23,9 @@ build:transform
 build-debug:transform
 	mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug .. && make
 
-gradelab1:transform
-	bash scripts/grade.sh lab1
 
-gradelab2:transform
-	bash scripts/grade.sh lab2
-
-gradelab3:transform
-	bash scripts/grade.sh lab3
-
-gradelab4:transform
-	bash scripts/grade.sh lab4
-
-gradelab5-1:transform
-	bash scripts/grade.sh lab5-part1
-
-gradelab5:transform
-	bash scripts/grade.sh lab5
-
-gradelab6:#transform
-	bash scripts/grade.sh lab6
-
-gradelab7:#transform
-	bash scripts/grade.sh lab7
-
-gradeall:transform
-	bash scripts/grade.sh all
+testpython:
+	bash scripts/grade.sh 
 
 clean:
 	rm -rf build/ src/tiger/lex/scannerbase.h src/tiger/lex/lex.cc \
