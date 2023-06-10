@@ -26,8 +26,8 @@ test_python() {
     local assem=${testcase}.tig.s
     # echo "compiling [$testcase]"
     ./tiger-compiler "$testcase" &>/dev/null
+    rm test.out &>/dev/null
     g++ -Wl,--wrap,getchar -m64 "$assem" "$runtime_path" "$heap_path" -o test.out &>/dev/null
-    rm ${testcase}.tig
     if [ ! -s test.out ]; then
       echo "Error: Link error [$testcase_name]"
       full_score=0
@@ -44,7 +44,8 @@ test_python() {
     fi
     echo "Pass $testcase_name"
   done
-
+  rm "$testcase_dir"/*.py.tig
+  rm "$testcase_dir"/*.py.tig.s
 }
 
 main() {
