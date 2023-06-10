@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  fname = std::string_view("final_"+std::string(argv[1]));
+  fname = std::string_view(std::string(argv[1])+".tig");
 
   {
     std::unique_ptr<err::ErrorMsg> errormsg;
@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
     {
       // Preprocess
       TigerLog("-------====Preprocess=====-----\n");
-      Preprocessor preprocessor(argv[1], std::string("final_"+std::string(argv[1])));
+      Preprocessor preprocessor(argv[1], std::string(std::string(argv[1])+".tig"));
       preprocessor.preprocess();
     }
 
@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
       // Lab 3: parsing
       TigerLog("-------====Parse=====-----\n");
       //if use fname, cannot open file ,strange bug
-      Parser parser(std::string("final_"+std::string(argv[1])), std::cerr);
+      Parser parser(std::string(std::string(argv[1])+".tig"), std::cerr);
       parser.parse();
       absyn_tree = parser.TransferAbsynTree();
       errormsg = parser.TransferErrormsg();
@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
 
   {
     // Output assembly
-    output::AssemGen assem_gen(std::string("final_"+std::string(argv[1])));
+    output::AssemGen assem_gen(std::string(std::string(argv[1])+".tig"));
     assem_gen.GenAssem(true);
   }
 

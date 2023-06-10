@@ -23,10 +23,11 @@ test_python() {
   for testcase in "$testcase_dir"/*.py; do
     testcase_name=$(basename "$testcase" | cut -f1 -d".")
     local ref=${ref_dir}/${testcase_name}.out
-    local assem=final_${testcase}.s
-
+    local assem=${testcase}.tig.s
+    # echo "compiling [$testcase]"
     ./tiger-compiler "$testcase" &>/dev/null
     g++ -Wl,--wrap,getchar -m64 "$assem" "$runtime_path" "$heap_path" -o test.out &>/dev/null
+    rm ${testcase}.tig
     if [ ! -s test.out ]; then
       echo "Error: Link error [$testcase_name]"
       full_score=0
