@@ -44,8 +44,8 @@ test_python() {
     fi
     echo "Pass $testcase_name"
   done
-  rm "$testcase_dir"/*.py.tig
-  rm "$testcase_dir"/*.py.tig.s
+  rm "$testcase_dir"/*.py.tig &>/dev/null
+  rm "$testcase_dir"/*.py.tig.s &>/dev/null
 }
 
 main() {
