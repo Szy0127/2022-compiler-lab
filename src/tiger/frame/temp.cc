@@ -38,6 +38,7 @@ Temp *TempFactory::NewTemp(bool is_pointer) {
 
 int Temp::Int() const { return num_; }
 bool Temp::IsPointer() const { return is_pointer_; }
+bool Temp::IsDouble() const { return is_double_; }
 Map *Map::Empty() { return new Map(); }
 
 Map *Map::Name() {

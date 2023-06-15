@@ -34,6 +34,13 @@ public:
 private:
   static IntTy intty_;
 };
+class DoubleTy : public Ty {
+public:
+  static DoubleTy *Instance() { return &doublety_; }
+
+private:
+  static DoubleTy doublety_;
+};
 
 class StringTy : public Ty {
 public:

@@ -80,7 +80,11 @@ type::Ty *IntExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
    
   return type::IntTy::Instance();
 }
-
+type::Ty *DoubleExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
+                             int labelcount, err::ErrorMsg *errormsg) const {
+   
+  return type::DoubleTy::Instance();
+}
 type::Ty *StringExp::SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv,
                                 int labelcount, err::ErrorMsg *errormsg) const {
    

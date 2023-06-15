@@ -4,6 +4,7 @@ namespace type {
 
 NilTy NilTy::nilty_;
 IntTy IntTy::intty_;
+DoubleTy DoubleTy::doublety_;
 StringTy StringTy::stringty_;
 VoidTy VoidTy::voidty_;
 ListTy ListTy::listty_;
@@ -42,19 +43,22 @@ uint64_t KeyOfType(Ty *ty){
   if(typeid(*a) == typeid(IntTy)){
     return 2;
   }
-  if(typeid(*a) == typeid(StringTy)){
+    if(typeid(*a) == typeid(DoubleTy)){
     return 3;
   }
-  if(typeid(*a) == typeid(VoidTy)){
+  if(typeid(*a) == typeid(StringTy)){
     return 4;
   }
-  if(typeid(*a) == typeid(RecordTy)){
+  if(typeid(*a) == typeid(VoidTy)){
     return 5;
   }
-  if(typeid(*a) == typeid(ListTy)){
+  if(typeid(*a) == typeid(RecordTy)){
     return 6;
   }
-  return 7;
+  if(typeid(*a) == typeid(ListTy)){
+    return 7;
+  }
+  return 8;
 }
 
 uint64_t TyList::Key()const{
@@ -78,15 +82,18 @@ type::TyList *key2List(uint64_t key){
         list->PushFront(type::IntTy::Instance());
         break;
       case 3:
-        list->PushFront(type::StringTy::Instance());
+        list->PushFront(type::DoubleTy::Instance());
         break;
       case 4:
-        list->PushFront(type::VoidTy::Instance());
+        list->PushFront(type::StringTy::Instance());
         break;
       case 5:
-        list->PushFront(new type::RecordTy(nullptr));
+        list->PushFront(type::VoidTy::Instance());
         break;
       case 6:
+        list->PushFront(new type::RecordTy(nullptr));
+        break;
+      case 7:
         list->PushFront(type::ListTy::Instance());
         break;
       default:

@@ -45,7 +45,7 @@ VarExp::~VarExp() { delete var_; }
 NilExp::~NilExp() = default;
 
 IntExp::~IntExp() = default;
-
+DoubleExp::~DoubleExp() = default;
 StringExp::~StringExp() = default;
 
 CallExp::~CallExp() {
@@ -165,7 +165,10 @@ void IntExp::Print(FILE *out, int d) const {
   Indent(out, d);
   fprintf(out, "intExp(%d)", val_);
 }
-
+void DoubleExp::Print(FILE *out, int d) const {
+  Indent(out, d);
+  fprintf(out, "doubleExp(%lf)", val_);
+}
 void StringExp::Print(FILE *out, int d) const {
   Indent(out, d);
   fprintf(out, "stringExp(%s)", str_.data());

@@ -226,8 +226,9 @@ public:
 class NameExp : public Exp {
 public:
   temp::Label *name_;
+  bool is_double_;
 
-  explicit NameExp(temp::Label *name) : name_(name) {}
+  explicit NameExp(temp::Label *name,bool is_double=false) : name_(name),is_double_(is_double) {}
   ~NameExp() override;
 
   void Print(FILE *out, int d) const override;

@@ -76,6 +76,9 @@ inline int Parser::lex() {
   case Parser::INT:
     d_val__.ival = std::stoi(scanner_.matched());
     break;
+  case Parser::DOUBLE:
+    d_val__.dval = std::stod(scanner_.matched());
+    break;
   default:
     break;
   }

@@ -216,7 +216,21 @@ public:
                           err::ErrorMsg *errormsg) const override;
   void Traverse(esc::EscEnvPtr env, int depth) override;
 };
+class DoubleExp : public Exp {
+public:
+  double val_;
 
+  DoubleExp(int pos, double val) : Exp(pos), val_(val) {}
+  ~DoubleExp() override;
+
+  void Print(FILE *out, int d) const override;
+  type::Ty *SemAnalyze(env::VEnvPtr venv, env::TEnvPtr tenv, int labelcount,
+                       err::ErrorMsg *errormsg) const override;
+  tr::ExpAndTy *Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
+                          tr::Level *level, temp::Label *break_label, temp::Label *return_label,type::Ty **func_res,
+                          err::ErrorMsg *errormsg) const override;
+  void Traverse(esc::EscEnvPtr env, int depth) override;
+};
 class StringExp : public Exp {
 public:
   std::string str_;

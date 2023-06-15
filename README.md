@@ -33,6 +33,10 @@ print(eq("aa","ab"))
 a = 1+3
 print(a)
 print("hello world")
+
+
+a = 3.4
+print(a) # 3.400000
 ```
 
 ## 编译
@@ -41,11 +45,11 @@ runtime生成.so
 
 `sudo g++ -m64 -shared -fPIC ../src/tiger/runtime/runtime.cc ../src/tiger/runtime/gc/heap/derived_heap.cc -o libtigerruntime.so`
 
-`sudo g++ -m64 -no-pie -Wl,-rpath,. final_test.tig.s -o test.out -L. -ltigerruntime -Wl,--wrap=getchar`
+`sudo g++ -m64 -no-pie -Wl,-rpath,. test.py.tig.s -o test.out -L. -ltigerruntime -Wl,--wrap=getchar`
 
 或者直接一起编译
 
-`sudo g++ -Wl,--wrap,getchar -m64 final_test.tig.s ../src/tiger/runtime/runtime.cc ../src/tiger/runtime/gc/heap/derived_heap.cc -o test.out`
+` `
 
 比python快10倍
 
@@ -172,6 +176,7 @@ runtime生成.so
     增加len和append
 
     append会修改数组指针(realloc)  怎么办？  目前只能固定大小
+16. 加入double，只支持assign和print 之后需要加入计算和寄存器分配
 
 ## 待完成
 
@@ -185,7 +190,7 @@ runtime生成.so
 
 4. 支持float
 
-   1. 前端增加小数token 增加Double对象
+   1. 前端增加小数token 增加Double对象 完成
 
    2. temp增加bool表示是否用xmm寄存器
 

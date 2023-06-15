@@ -47,7 +47,10 @@ void IntExp::Traverse(esc::EscEnvPtr env, int depth) {
   /* TODO: Put your lab5 code here */
   return;
 }
-
+void DoubleExp::Traverse(esc::EscEnvPtr env, int depth) {
+  /* TODO: Put your lab5 code here */
+  return;
+}
 void StringExp::Traverse(esc::EscEnvPtr env, int depth) {
   /* TODO: Put your lab5 code here */
   return;

@@ -348,6 +348,20 @@ tr::ExpAndTy *IntExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
     type::IntTy::Instance()
   );
 }
+tr::ExpAndTy *DoubleExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
+                                tr::Level *level, temp::Label *break_label, temp::Label *return_label,type::Ty **func_res,
+                                err::ErrorMsg *errormsg) const {
+  /* TODO: Put your lab5 code here */
+  auto double_label = temp::LabelFactory::NewLabel();
+  frags->PushBack(new frame::DoubleFrag(double_label,val_));
+  return new tr::ExpAndTy(
+    new tr::ExExp(
+      new tree::NameExp(double_label,true)
+    ),
+    type::DoubleTy::Instance()
+  );
+}
+
 
 tr::ExpAndTy *StringExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
                                    tr::Level *level, temp::Label *break_label, temp::Label *return_label,type::Ty **func_res,

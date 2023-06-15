@@ -642,7 +642,11 @@ temp::Temp *NameExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   */
   auto str_addr_temp = temp::TempFactory::NewTemp();
   std::stringstream assem;
-  assem << "leaq " << temp::LabelFactory::LabelString(name_) << "(%rip),`d0";
+  if(is_double_){
+    assem << "movsd " << temp::LabelFactory::LabelString(name_) << "(%rip),%xmm0";
+  }else{
+    assem << "leaq " << temp::LabelFactory::LabelString(name_) << "(%rip),`d0";
+  }
   instr_list.Append(
     new assem::OperInstr(
       assem.str(),
@@ -772,13 +776,23 @@ temp::TempList *ExpList::MunchArgs(assem::InstrList &instr_list, std::string_vie
           )
         );
       }else{
-        instr_list.Append(
-          new assem::MoveInstr(
-            "movq `s0,`d0",
-            new temp::TempList(*arg_it),
-            new temp::TempList(temp)
-          )
-        );
+        if(temp->IsDouble()){
+            instr_list.Append(
+            new assem::MoveInstr(
+              "movapd %xmm0, %xmm0",
+              new temp::TempList(),
+              new temp::TempList()
+            )
+          );
+        }else{
+          instr_list.Append(
+            new assem::MoveInstr(
+              "movq `s0,`d0",
+              new temp::TempList(*arg_it),
+              new temp::TempList(temp)
+            )
+          );
+        }
       }
       arg_it++;
     }else{

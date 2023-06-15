@@ -118,6 +118,7 @@ public:
   enum OutputPhase {
     Proc,
     String,
+    Double,
   };
 
   /**
@@ -134,6 +135,16 @@ public:
 
   StringFrag(temp::Label *label, std::string str)
       : label_(label), str_(std::move(str)) {}
+
+  void OutputAssem(FILE *out, OutputPhase phase, bool need_ra) const override;
+};
+class DoubleFrag : public Frag {
+public:
+  temp::Label *label_;
+  double val_;
+
+  DoubleFrag(temp::Label *label, double val)
+      : label_(label), val_(val) {}
 
   void OutputAssem(FILE *out, OutputPhase phase, bool need_ra) const override;
 };

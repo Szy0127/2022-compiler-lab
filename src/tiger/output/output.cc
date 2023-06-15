@@ -22,6 +22,11 @@ void AssemGen::GenAssem(bool need_ra) {
   fprintf(out_, ".section .rodata\n");
   for (auto &&frag : frags->GetList())
     frag->OutputAssem(out_, phase, need_ra);
+
+  // Output double
+  phase = frame::Frag::Double;
+  for (auto &&frag : frags->GetList())
+    frag->OutputAssem(out_, phase, need_ra);
 }
 
 } // namespace output
@@ -126,5 +131,15 @@ void StringFrag::OutputAssem(FILE *out, OutputPhase phase, bool need_ra) const {
     }
   }
   fprintf(out, "\"\n");
+}
+void DoubleFrag::OutputAssem(FILE *out, OutputPhase phase, bool need_ra) const {
+  // When generating string fragment, do not output proc assembly
+  if (phase != Double)
+    return;
+
+  fprintf(out, "%s:\n", label_->Name().data());
+
+  fprintf(out, ".long %d\n", ((*(unsigned long long*)(&val_))<<32)>>32);
+  fprintf(out, ".long %d\n", (*(unsigned long long*)(&val_))>>32);
 }
 } // namespace frame

@@ -26,11 +26,12 @@ class Temp {//virtual registers
 public:
   [[nodiscard]] int Int() const;
   [[nodiscard]] bool IsPointer()const;
-
+  [[nodiscard]] bool IsDouble()const;
 private:
   int num_;
   bool is_pointer_;
-  explicit Temp(int num,bool is_pointer) : num_(num),is_pointer_(is_pointer) {}
+  bool is_double_;
+  explicit Temp(int num,bool is_pointer,bool is_double=false) : num_(num),is_pointer_(is_pointer),is_double_(is_double) {}
 };
 
 class TempFactory {

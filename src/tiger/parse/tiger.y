@@ -8,6 +8,7 @@
 
 %union {
   int ival;
+  double dval;
   std::string* sval;
   sym::Symbol *sym;
   absyn::Exp *exp;
@@ -29,6 +30,7 @@
 %token <sym> ID
 %token <sval> STRING
 %token <ival> INT
+%token <dval> DOUBLE 
 
 %token
   COMMA COLON SEMICOLON LPAREN RPAREN LBRACK RBRACK
@@ -104,6 +106,7 @@ exp : LET decs_nonempty IN sequencing_exps END {$$ = new absyn::LetExp(scanner_.
     /*fake subscriptvar is unused*/
   | one {$$ = new absyn::VarExp(scanner_.GetTokPos(),$1);}
   | INT {$$ = new absyn::IntExp(scanner_.GetTokPos(),$1);}
+  | DOUBLE {$$ = new absyn::DoubleExp(scanner_.GetTokPos(),$1);}
 
   | TRUE {$$ = new absyn::IntExp(scanner_.GetTokPos(),1);}
   | FALSE {$$ = new absyn::IntExp(scanner_.GetTokPos(),0);}
