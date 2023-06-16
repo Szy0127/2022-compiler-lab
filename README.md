@@ -176,8 +176,8 @@ runtime生成.so
     增加len和append
 
     append会修改数组指针(realloc)  怎么办？  目前只能固定大小
-16. 加入double，支持assign print add
-    后面修改binop的codgen补全所有运算然后加入和整数的互转
+16. 加入double，支持assign print 四则运算
+    需要加入转换和比较
 ## 待完成
 
 1. 修改for 全改为for i in  list

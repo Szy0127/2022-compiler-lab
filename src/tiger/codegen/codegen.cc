@@ -389,44 +389,38 @@ void ExpStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
 
 }
 
+//consider double,we need other instructions,so it will be much complicated if considering maximum munch
+
 temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   /* TODO: Put your lab5 code here */
 
+  auto left_temp = left_->Munch(instr_list,fs);
+  auto right_temp = right_->Munch(instr_list,fs);
+  temp::Temp* result_temp;
+  auto is_double = right_temp->IsDouble() || left_temp->IsDouble();
+  if(is_double){
+    result_temp = temp::TempFactory::NewTemp(false,true);
+    instr_list.Append(
+      new assem::MoveInstr(
+        "movapd `s0,`d0",
+        new temp::TempList(result_temp),
+        new temp::TempList(left_temp)
+      )
+    );
+  }else{
+    result_temp = temp::TempFactory::NewTemp();
+    instr_list.Append(
+      new assem::MoveInstr(
+        "movq `s0,`d0",
+        new temp::TempList(result_temp),
+        new temp::TempList(left_temp)
+      )
+    );
+  }
   switch (op_)
   { 
   case PLUS_OP:{
-    if(typeid(*right_)==typeid(ConstExp)){
-      auto result_temp = temp::TempFactory::NewTemp();
-      auto left_temp = left_->Munch(instr_list,fs);
-      instr_list.Append(
-        new assem::MoveInstr(
-          "movq `s0,`d0",
-          new temp::TempList(result_temp),
-          new temp::TempList(left_temp)
-        )
-      );
-      instr_list.Append(
-        new assem::OperInstr(
-          "addq $"+std::to_string(static_cast<ConstExp*>(right_)->consti_)+",`d0",
-          new temp::TempList(result_temp),
-          new temp::TempList{result_temp},
-          nullptr
-        )
-      );
-      return result_temp;
-    }
-    auto left_temp = left_->Munch(instr_list,fs);
-    auto right_temp = right_->Munch(instr_list,fs);
-    temp::Temp* result_temp;
-    if(right_temp->IsDouble() || left_temp->IsDouble()){
-      result_temp = temp::TempFactory::NewTemp(false,true);
-      instr_list.Append(
-        new assem::MoveInstr(
-          "movapd `s0,`d0",
-          new temp::TempList(result_temp),
-          new temp::TempList(left_temp)
-        )
-      );
+    if(is_double){
       instr_list.Append(
       new assem::OperInstr(
           "addsd `s0,`d0",
@@ -435,45 +429,26 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
           nullptr
         )
       );
-    }else{
-      result_temp = temp::TempFactory::NewTemp();
-      instr_list.Append(
-        new assem::MoveInstr(
-          "movq `s0,`d0",
-          new temp::TempList(result_temp),
-          new temp::TempList(left_temp)
-        )
-      );
-      instr_list.Append(
-      new assem::OperInstr(
-          "addq `s0,`d0",
-          new temp::TempList(result_temp),
-          new temp::TempList{right_temp,result_temp},
-          nullptr
-        )
-      );
+      return result_temp;
     }
+    instr_list.Append(
+    new assem::OperInstr(
+        "addq `s0,`d0",
+        new temp::TempList(result_temp),
+        new temp::TempList{right_temp,result_temp},
+        nullptr
+      )
+    );
     return result_temp;
     break;
     }
   case MINUS_OP:{
-    auto result_temp = temp::TempFactory::NewTemp();
-
-
-    auto left_temp = left_->Munch(instr_list,fs);
-    instr_list.Append(
-      new assem::MoveInstr(
-        "movq `s0,`d0",
-        new temp::TempList(result_temp),
-        new temp::TempList(left_temp)
-      )
-    );
-    if(typeid(*right_)==typeid(ConstExp)){
+    if(is_double){
       instr_list.Append(
-        new assem::OperInstr(
-          "subq $"+std::to_string(static_cast<ConstExp*>(right_)->consti_)+",`d0",
+      new assem::OperInstr(
+          "subsd `s0,`d0",
           new temp::TempList(result_temp),
-          new temp::TempList{result_temp},
+          new temp::TempList{right_temp,result_temp},
           nullptr
         )
       );
@@ -492,17 +467,17 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
 
   }
   case MUL_OP:{
-    auto result_temp = temp::TempFactory::NewTemp();
-
-
-    auto left_temp = left_->Munch(instr_list,fs);
-    instr_list.Append(
-      new assem::MoveInstr(
-        "movq `s0,`d0",
-        new temp::TempList(result_temp),
-        new temp::TempList(left_temp)
-      )
-    );
+    if(is_double){
+      instr_list.Append(
+      new assem::OperInstr(
+          "mulsd `s0,`d0",
+          new temp::TempList(result_temp),
+          new temp::TempList{right_temp,result_temp},
+          nullptr
+        )
+      );
+      return result_temp;
+    }
     //%rdx %rax <-- S x %rax
       auto rax = reg_manager->GetRegister(0);
       auto rdx = reg_manager->GetRegister(3);
@@ -517,7 +492,7 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
         new assem::OperInstr(
           "imulq `s0",
           new temp::TempList{rax, rdx},
-          new temp::TempList{right_->Munch(instr_list,fs), rax},
+          new temp::TempList{right_temp, rax},
           nullptr
         )
       );
@@ -525,58 +500,49 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
       break;
   }
   case DIV_OP:{
-    auto result_temp = temp::TempFactory::NewTemp();
-
-
-    auto left_temp = left_->Munch(instr_list,fs);
+    if(is_double){
+      instr_list.Append(
+      new assem::OperInstr(
+          "divsd `s0,`d0",
+          new temp::TempList(result_temp),
+          new temp::TempList{right_temp,result_temp},
+          nullptr
+        )
+      );
+      return result_temp;
+    }
+    //%rax <-- %rdx %rax / S  %rdx = mod
+    auto rax = reg_manager->GetRegister(0);
+    auto rdx = reg_manager->GetRegister(3);
     instr_list.Append(
       new assem::MoveInstr(
-        "movq `s0,`d0",
-        new temp::TempList(result_temp),
+        "movq `s0,%rax",//`d0?
+        new temp::TempList(rax),
         new temp::TempList(left_temp)
       )
     );
-      //%rax <-- %rdx %rax / S  %rdx = mod
-      auto rax = reg_manager->GetRegister(0);
-      auto rdx = reg_manager->GetRegister(3);
-      instr_list.Append(
-        new assem::MoveInstr(
-          "movq `s0,%rax",//`d0?
-          new temp::TempList(rax),
-          new temp::TempList(left_temp)
-        )
-      );
-      instr_list.Append(
-        new assem::OperInstr(
-          "cqto",
-          new temp::TempList(rdx),
-          new temp::TempList(),
-          nullptr
-        )
-      );
-      instr_list.Append(
-        new assem::OperInstr(
-          "idivq `s0",
-          new temp::TempList{rax, rdx},
-          new temp::TempList{right_->Munch(instr_list,fs), rax,rdx},
-          nullptr
-        )
-      );
-      return rax;
-      break;
+    instr_list.Append(
+      new assem::OperInstr(
+        "cqto",
+        new temp::TempList(rdx),
+        new temp::TempList(),
+        nullptr
+      )
+    );
+    instr_list.Append(
+      new assem::OperInstr(
+        "idivq `s0",
+        new temp::TempList{rax, rdx},
+        new temp::TempList{right_->Munch(instr_list,fs), rax,rdx},
+        nullptr
+      )
+    );
+    return rax;
+    break;
   }
   case MOD_OP:{
-      auto result_temp = temp::TempFactory::NewTemp();
+      //if double,error
 
-
-      auto left_temp = left_->Munch(instr_list,fs);
-      instr_list.Append(
-        new assem::MoveInstr(
-          "movq `s0,`d0",
-          new temp::TempList(result_temp),
-          new temp::TempList(left_temp)
-        )
-      );
       //%rax <-- %rdx %rax / S  %rdx = mod
       auto rax = reg_manager->GetRegister(0);
       auto rdx = reg_manager->GetRegister(3);
