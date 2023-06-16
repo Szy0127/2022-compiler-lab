@@ -392,21 +392,19 @@ void ExpStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
 temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   /* TODO: Put your lab5 code here */
 
-  auto result_temp = temp::TempFactory::NewTemp();
-
-
-  auto left_temp = left_->Munch(instr_list,fs);
-  instr_list.Append(
-    new assem::MoveInstr(
-      "movq `s0,`d0",
-      new temp::TempList(result_temp),
-      new temp::TempList(left_temp)
-    )
-  );
   switch (op_)
   { 
   case PLUS_OP:{
     if(typeid(*right_)==typeid(ConstExp)){
+      auto result_temp = temp::TempFactory::NewTemp();
+      auto left_temp = left_->Munch(instr_list,fs);
+      instr_list.Append(
+        new assem::MoveInstr(
+          "movq `s0,`d0",
+          new temp::TempList(result_temp),
+          new temp::TempList(left_temp)
+        )
+      );
       instr_list.Append(
         new assem::OperInstr(
           "addq $"+std::to_string(static_cast<ConstExp*>(right_)->consti_)+",`d0",
@@ -415,19 +413,61 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
           nullptr
         )
       );
-    }else{
+      return result_temp;
+    }
+    auto left_temp = left_->Munch(instr_list,fs);
+    auto right_temp = right_->Munch(instr_list,fs);
+    temp::Temp* result_temp;
+    if(right_temp->IsDouble() || left_temp->IsDouble()){
+      result_temp = temp::TempFactory::NewTemp(false,true);
       instr_list.Append(
-        new assem::OperInstr(
-            "addq `s0,`d0",
-            new temp::TempList(result_temp),
-            new temp::TempList{right_->Munch(instr_list,fs),result_temp},
-            nullptr
-          )
-        );
-      }
+        new assem::MoveInstr(
+          "movapd `s0,`d0",
+          new temp::TempList(result_temp),
+          new temp::TempList(left_temp)
+        )
+      );
+      instr_list.Append(
+      new assem::OperInstr(
+          "addsd `s0,`d0",
+          new temp::TempList(result_temp),
+          new temp::TempList{right_temp,result_temp},
+          nullptr
+        )
+      );
+    }else{
+      result_temp = temp::TempFactory::NewTemp();
+      instr_list.Append(
+        new assem::MoveInstr(
+          "movq `s0,`d0",
+          new temp::TempList(result_temp),
+          new temp::TempList(left_temp)
+        )
+      );
+      instr_list.Append(
+      new assem::OperInstr(
+          "addq `s0,`d0",
+          new temp::TempList(result_temp),
+          new temp::TempList{right_temp,result_temp},
+          nullptr
+        )
+      );
+    }
+    return result_temp;
     break;
     }
   case MINUS_OP:{
+    auto result_temp = temp::TempFactory::NewTemp();
+
+
+    auto left_temp = left_->Munch(instr_list,fs);
+    instr_list.Append(
+      new assem::MoveInstr(
+        "movq `s0,`d0",
+        new temp::TempList(result_temp),
+        new temp::TempList(left_temp)
+      )
+    );
     if(typeid(*right_)==typeid(ConstExp)){
       instr_list.Append(
         new assem::OperInstr(
@@ -437,20 +477,32 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
           nullptr
         )
       );
-    }else{
-      instr_list.Append(
-        new assem::OperInstr(
-          "subq `s0,`d0",
-          new temp::TempList(result_temp),
-          new temp::TempList{right_->Munch(instr_list,fs),result_temp},
-          nullptr
-        )
-      );
+      return result_temp;
     }
+    instr_list.Append(
+      new assem::OperInstr(
+        "subq `s0,`d0",
+        new temp::TempList(result_temp),
+        new temp::TempList{right_->Munch(instr_list,fs),result_temp},
+        nullptr
+      )
+    );
+    return result_temp;
     break;
 
   }
   case MUL_OP:{
+    auto result_temp = temp::TempFactory::NewTemp();
+
+
+    auto left_temp = left_->Munch(instr_list,fs);
+    instr_list.Append(
+      new assem::MoveInstr(
+        "movq `s0,`d0",
+        new temp::TempList(result_temp),
+        new temp::TempList(left_temp)
+      )
+    );
     //%rdx %rax <-- S x %rax
       auto rax = reg_manager->GetRegister(0);
       auto rdx = reg_manager->GetRegister(3);
@@ -473,6 +525,17 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
       break;
   }
   case DIV_OP:{
+    auto result_temp = temp::TempFactory::NewTemp();
+
+
+    auto left_temp = left_->Munch(instr_list,fs);
+    instr_list.Append(
+      new assem::MoveInstr(
+        "movq `s0,`d0",
+        new temp::TempList(result_temp),
+        new temp::TempList(left_temp)
+      )
+    );
       //%rax <-- %rdx %rax / S  %rdx = mod
       auto rax = reg_manager->GetRegister(0);
       auto rdx = reg_manager->GetRegister(3);
@@ -503,6 +566,17 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
       break;
   }
   case MOD_OP:{
+      auto result_temp = temp::TempFactory::NewTemp();
+
+
+      auto left_temp = left_->Munch(instr_list,fs);
+      instr_list.Append(
+        new assem::MoveInstr(
+          "movq `s0,`d0",
+          new temp::TempList(result_temp),
+          new temp::TempList(left_temp)
+        )
+      );
       //%rax <-- %rdx %rax / S  %rdx = mod
       auto rax = reg_manager->GetRegister(0);
       auto rdx = reg_manager->GetRegister(3);
@@ -535,7 +609,6 @@ temp::Temp *BinopExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   default:
     break;
   }
-  return result_temp;
 
 }
 
@@ -640,12 +713,14 @@ temp::Temp *NameExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
       return self._string_address + int(mem[1:imm_index]) * 8
   
   */
-  auto str_addr_temp = temp::TempFactory::NewTemp();
+  temp::Temp *str_addr_temp;
   std::stringstream assem;
   if(is_double_){
-    assem << "movsd " << temp::LabelFactory::LabelString(name_) << "(%rip),%xmm0";
+    assem << "movsd " << temp::LabelFactory::LabelString(name_) << "(%rip),`d0";
+    str_addr_temp = temp::TempFactory::NewTemp(false,true);
   }else{
     assem << "leaq " << temp::LabelFactory::LabelString(name_) << "(%rip),`d0";
+    str_addr_temp = temp::TempFactory::NewTemp(false,false);
   }
   instr_list.Append(
     new assem::OperInstr(
@@ -752,9 +827,13 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
 temp::TempList *ExpList::MunchArgs(assem::InstrList &instr_list, std::string_view fs) {
   /* TODO: Put your lab5 code here */
   auto arg_regs = reg_manager->ArgRegs()->GetList();
+  auto double_regs = reg_manager->DoubleRegs()->GetList();
   auto i = 0;
+
+  //TODO int:6 double:8
   auto max_index = arg_regs.size();
   auto arg_it = arg_regs.begin();
+  auto arg_double_it = double_regs.begin();
   // match with frame::frame
   auto used_temps = new temp::TempList();
   auto wordsize = reg_manager->WordSize();
@@ -779,9 +858,9 @@ temp::TempList *ExpList::MunchArgs(assem::InstrList &instr_list, std::string_vie
         if(temp->IsDouble()){
             instr_list.Append(
             new assem::MoveInstr(
-              "movapd %xmm0, %xmm0",
-              new temp::TempList(),
-              new temp::TempList()
+              "movapd `s0, `d0",
+              new temp::TempList(*arg_double_it),
+              new temp::TempList(temp)
             )
           );
         }else{
@@ -795,6 +874,7 @@ temp::TempList *ExpList::MunchArgs(assem::InstrList &instr_list, std::string_vie
         }
       }
       arg_it++;
+      arg_double_it++;
     }else{
       std::stringstream assem;
       //rsp-->

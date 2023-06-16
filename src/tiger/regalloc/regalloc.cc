@@ -473,8 +473,13 @@ void RegAllocator::DecrementDegree(const live::INodePtr &m) {
 void RegAllocator::AssignColors(){
     // std::cout<<"---assign---"<<std::endl;
     for(const auto &n:selectStack->GetList()){
-        auto okColors = reg_manager->Registers()->GetList();
-        okColors.remove(reg_manager->StackPointer());
+        std::list<temp::Temp *> okColors;
+        if(n->NodeInfo()->IsDouble()){
+            okColors = reg_manager->DoubleRegs()->GetList();
+        }else{
+            okColors = reg_manager->Registers()->GetList();
+            okColors.remove(reg_manager->StackPointer());
+        }
         for(const auto &w:n->Adj()->GetList()){
             auto real_w = GetAlias(w);
             if(coloredNodes.Contain(real_w)){

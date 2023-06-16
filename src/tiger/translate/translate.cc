@@ -21,9 +21,9 @@ static std::map<std::string,std::set<uint64_t>> function2keys;
 
 namespace tr {
 
-Access *Access::AllocLocal(Level *level, bool escape,bool is_pointer) {
+Access *Access::AllocLocal(Level *level, bool escape,bool is_pointer,bool is_double) {
   /* TODO: Put your lab5 code here */
-  return new Access(level,level->frame_->AllocLocal(escape,is_pointer));
+  return new Access(level,level->frame_->AllocLocal(escape,is_pointer,is_double));
 }
 
 frame::StringFrag* GetPointerMap(frame::Frame* frame,tr::Level *level){
@@ -690,7 +690,7 @@ tr::ExpAndTy *AssignExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
         type::VoidTy::Instance()
       );
   }
-  auto access = tr::Access::AllocLocal(level,false,type::IsPointer(exp_exp_ty->ty_));
+  auto access = tr::Access::AllocLocal(level,false,type::IsPointer(exp_exp_ty->ty_),type::IsDouble(exp_exp_ty->ty_));
   venv->Enter(((SimpleVar*)var_)->sym_,new env::VarEntry(access,exp_exp_ty->ty_));
   return new tr::ExpAndTy(
     new tr::NxExp(

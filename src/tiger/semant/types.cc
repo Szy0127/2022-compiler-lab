@@ -34,7 +34,13 @@ bool IsPointer(Ty *ty){
   ty = ty->ActualTy();
   return typeid(*ty) == typeid(type::ArrayTy) || typeid(*ty) == typeid(type::RecordTy) || typeid(*ty) == typeid(type::NilTy);
 }
-
+bool IsDouble(Ty *ty){
+  if(!ty){
+    return false;
+  }
+  ty = ty->ActualTy();
+  return typeid(*ty) == typeid(type::DoubleTy);
+}
 uint64_t KeyOfType(Ty *ty){
   Ty *a = ty->ActualTy();
   if(typeid(*a) == typeid(NilTy)){

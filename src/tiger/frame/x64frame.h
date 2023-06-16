@@ -30,6 +30,7 @@ public:
   temp::Temp *StackPointer() override;
 
   temp::Temp *ReturnValue() override;
+  temp::TempList *DoubleRegs() override;
 };
 
 //must be declared in .h instead of .cc
@@ -37,7 +38,7 @@ class X64Frame : public Frame {
   /* TODO: Put your lab5 code here */
 public:
   X64Frame(temp::Label *name,std::list<bool> *f,std::list<bool> *is_pointer);
-  Access *AllocLocal(bool escape,bool is_pointer=false)override;
+  Access *AllocLocal(bool escape,bool is_pointer=false,bool is_double=false)override;
 
 };
 

@@ -130,7 +130,7 @@ private:
 };
 
 bool IsPointer(Ty *ty);
-
+bool IsDouble(Ty *ty);
 type::TyList *key2List(uint64_t key);
 } // namespace type
 

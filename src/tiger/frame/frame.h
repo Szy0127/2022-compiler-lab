@@ -63,9 +63,12 @@ public:
 
   [[nodiscard]] virtual temp::Temp *ReturnValue() = 0;
 
+  [[nodiscard]] virtual temp::TempList *DoubleRegs() = 0;
+
   temp::Map *temp_map_;
 protected:
   std::vector<temp::Temp *> regs_;
+  std::vector<temp::Temp *> double_regs_;
 };
 
 class Access {
@@ -81,7 +84,7 @@ class Frame {
   /* TODO: Put your lab5 code here */
 public:
   Frame(temp::Label *name,std::list<bool> *f):name_(name){}
-  virtual Access *AllocLocal(bool escape,bool is_pointer=false) = 0;
+  virtual Access *AllocLocal(bool escape,bool is_pointer=false,bool is_double=false) = 0;
   virtual ~Frame()=default;
 
 

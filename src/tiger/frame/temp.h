@@ -36,7 +36,7 @@ private:
 
 class TempFactory {
 public:
-  static Temp *NewTemp(bool is_pointer=false);
+  static Temp *NewTemp(bool is_pointer=false,bool is_double=false);
 
 private:
   int temp_id_ = 100;

@@ -11,9 +11,18 @@ X64RegManager::X64RegManager(){
     "%rax","%rbx","%rcx","%rdx","%rsi","%rdi","%rbp","%rsp",
     "%r8","%r9","%r10","%r11","%r12","%r13","%r14","%r15"
   };
+  auto doubles = std::vector<std::string>{
+    "%xmm0","%xmm1","%xmm2","%xmm3","%xmm4","%xmm5","%xmm6","%xmm7",
+    "%xmm8","%xmm9","%xmm10","%xmm11","%xmm12","%xmm13","%xmm14","%xmm15"
+  };
   for(const auto &reg:regs){
     auto temp = temp::TempFactory::NewTemp();
     regs_.push_back(temp);
+    temp_map_->Enter(temp,new std::string(reg));
+  }
+  for(const auto &reg:doubles){
+    auto temp = temp::TempFactory::NewTemp(false,true);
+    double_regs_.push_back(temp);
     temp_map_->Enter(temp,new std::string(reg));
   }
 }
@@ -51,7 +60,13 @@ temp::TempList *X64RegManager::ReturnSink() {
   temp_list->Append(ReturnValue());
   return temp_list;
 }
-
+temp::TempList *X64RegManager::DoubleRegs() {
+  auto templist = new temp::TempList();
+  for(const auto& reg:double_regs_){
+    templist->Append(reg);
+  }
+  return templist;
+}
 int X64RegManager::WordSize() {
   return 8;
 }
@@ -190,7 +205,7 @@ std::list<tree::Stm*> ProcEntryExit1(frame::Frame *frame, tree::Stm *func_body){
 
 }
 
-Access *X64Frame::AllocLocal(bool escape,bool is_pointer){
+Access *X64Frame::AllocLocal(bool escape,bool is_pointer,bool is_double){
   if(escape){
     sp_off -= reg_manager->WordSize();
     if(is_pointer){
@@ -198,7 +213,7 @@ Access *X64Frame::AllocLocal(bool escape,bool is_pointer){
     }
     return new InFrameAccess(sp_off);
   }
-  return new InRegAccess(temp::TempFactory::NewTemp(is_pointer));
+  return new InRegAccess(temp::TempFactory::NewTemp(is_pointer,is_double));
 }
 
 

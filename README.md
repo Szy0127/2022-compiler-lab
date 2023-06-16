@@ -49,7 +49,7 @@ runtime生成.so
 
 或者直接一起编译
 
-` `
+`sudo g++ -Wl,--wrap,getchar -m64 test.py.tig.s ../src/tiger/runtime/runtime.cc ../src/tiger/runtime/gc/heap/derived_heap.cc -o test.out`
 
 比python快10倍
 
@@ -176,8 +176,8 @@ runtime生成.so
     增加len和append
 
     append会修改数组指针(realloc)  怎么办？  目前只能固定大小
-16. 加入double，只支持assign和print 之后需要加入计算和寄存器分配
-
+16. 加入double，支持assign print add
+    后面修改binop的codgen补全所有运算然后加入和整数的互转
 ## 待完成
 
 1. 修改for 全改为for i in  list
@@ -245,6 +245,7 @@ runtime生成.so
 
 2核2G的跑gitlab-runner+编译似乎跑不下来，升级4G内存
 
+正常来说应该和python执行结果比较，但是涉及到数据运算可能会出现有无后缀.0的不一样结果，需要和提前设置好的答案比较
 
 ## codon
 

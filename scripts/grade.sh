@@ -13,8 +13,8 @@ build() {
 
 test_python() {
   local score_str="LAB7 SCORE"
-  local testcase_dir=${WORKDIR}/testdata/python
-  local ref_dir=${WORKDIR}/testdata/lab7/refs
+  local testcase_dir=${WORKDIR}/testdata/python/testcases
+  local ref_dir=${WORKDIR}/testdata/python/refs
   local runtime_path=${WORKDIR}/src/tiger/runtime/runtime.cc
   local heap_path=${WORKDIR}/src/tiger/runtime/gc/heap/derived_heap.cc
   local testcase_name
@@ -35,7 +35,12 @@ test_python() {
     fi
 
     ./test.out >&/tmp/output.txt
-    python3 "$testcase" &>/tmp/ref.txt
+    if [[ -f  "$ref" ]]; 
+    then
+      cp "$ref" /tmp/ref.txt
+    else
+      python3 "$testcase" &>/tmp/ref.txt
+    fi
     diff -w -B /tmp/output.txt /tmp/ref.txt
     if [[ $? != 0 ]]; then
       echo "Error: Output mismatch [$testcase_name]"
