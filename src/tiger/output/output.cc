@@ -139,7 +139,7 @@ void DoubleFrag::OutputAssem(FILE *out, OutputPhase phase, bool need_ra) const {
 
   fprintf(out, "%s:\n", label_->Name().data());
 
-  fprintf(out, ".long %d\n", ((*(unsigned long long*)(&val_))<<32)>>32);
-  fprintf(out, ".long %d\n", (*(unsigned long long*)(&val_))>>32);
+  fprintf(out, ".long %d\n", (unsigned int)(((*(unsigned long long*)(&val_))<<32)>>32));
+  fprintf(out, ".long %d\n", (unsigned int)((*(unsigned long long*)(&val_))>>32));
 }
 } // namespace frame
