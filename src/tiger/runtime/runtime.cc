@@ -8,7 +8,7 @@
 #define EXTERNC extern "C" 
 #endif
 
-#define TIGER_HEAP_SIZE ( 1 << 20 )
+#define TIGER_HEAP_SIZE ( 1 << 24 )
 
 EXTERNC int tigermain(int);
 gc::DerivedHeap *tiger_heap = nullptr;
@@ -53,41 +53,44 @@ EXTERNC long *init_array(int size, long init) {
   return a;
 }
 
-EXTERNC long *init_list() {
+EXTERNC long **init_list() {
   int i;
-  uint64_t allocate_size = 2048 * sizeof(long);
-  long *a = (long *)tiger_heap->Allocate(allocate_size,false);
-  if(!a) {
+  long **a = (long **)tiger_heap->Allocate(sizeof(long*),false);
+  auto slot  = 16;
+  uint64_t allocate_size = slot * sizeof(long);
+  *a = (long *)tiger_heap->Allocate(allocate_size,false);
+  if(!*a) {
     tiger_heap->GC();
-    a = (long*)tiger_heap->Allocate(allocate_size,false);
+    *a = (long*)tiger_heap->Allocate(allocate_size,false);
   }
   //  capability     |     size
-  a[0] = ((long)32 << 32) | 0;
+  (*a)[0] = ((long)slot << 32) | 0;
   return a;
 }
 
-EXTERNC long len(long *array) {
-  return array[0] & 0xFFFFFFFF;
+EXTERNC long len(long **array) {
+  return (*array)[0] & 0xFFFFFFFF;
 }
 
-EXTERNC void append(long *array, long value) {
-  long size = array[0] & 0xFFFFFFFF;
-  long cap = (array[0]) >> 32 & 0xFFFFFFFF;
+EXTERNC void append(long **array, long value) {
+  long size = (*array)[0] & 0xFFFFFFFF;
+  long cap = ((*array)[0] >> 32) & 0xFFFFFFFF;
   if(size == cap) {
     long *new_array = (long *)tiger_heap->Allocate((cap << 1) * sizeof(long),false);
     if(!new_array) {
       tiger_heap->GC();
       new_array = (long*)tiger_heap->Allocate((cap << 1) * sizeof(long),false);
+      // printf("append %n\n",value);
     }
-    memcpy(new_array, array, size * sizeof(long));
+    memcpy(new_array, *array, (size+1) * sizeof(long));
     new_array[0] = (cap << 33) | (size+1);
     new_array[size+1] = value;
-    // return new_array;
+    *array = new_array;
+    return;
   }
   //size++
-  array[0]++;
-  array[size+1] = value;
-  // return array;
+  (*array)[0]++;
+  (*array)[size+1] = value;
 }
 
 

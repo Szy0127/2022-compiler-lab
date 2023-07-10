@@ -175,20 +175,26 @@ runtime生成.so
 
     增加len和append
 
-    append会修改数组指针(realloc)  怎么办？  目前只能固定大小
+    append会修改数组指针(realloc) 解决方法可以是类似垃圾回收，记录下所有存此指针的位置然后覆盖写回，但是这样实在太麻烦了。把init_list修改为初始化一个二级指针，这样所有对list的修改作用在一级指针上即可，访问list元素加一层mem。这样虽然访问次数多了一倍，但实际上和python比还是提升很大的。
+    限制最大元素的是runtime heap
 16. 加入double，支持assign print 四则运算
     需要加入转换和比较
 ## 待完成
 
-1. 修改for 全改为for i in  list
+1. 数组嵌套 嵌套不需要嵌套类型的标识，因为所有类型都是8字节，对于数组 元组等 可以利用存储上的格式设计，写明下一级的类型
+
+2. 增加一个模块写动态链接库的函数
+
+3. 修改for 全改为for i in  list
 
    range 改为list 增加rangeexp返回listty
 
-2. 支持元组，把代码块()改为{} 类似record还是list？
+4. 支持元组，把代码块()改为{} 类似record还是list？
 
-3. 用迭代器抽象 for支持元组和list
+5. 用迭代器抽象 for支持元组和list
+6. 垃圾回收，不定死heap，用brk增加
 
-4. 支持float
+7. 支持float
 
    1. 前端增加小数token 增加Double对象 完成
 
@@ -224,9 +230,9 @@ runtime生成.so
 
    
 
-5. if else elif
+7. if else elif
 
-6. 重写semant 编译器检查
+8. 重写semant 编译器检查
 
 
 

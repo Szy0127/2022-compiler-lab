@@ -294,7 +294,7 @@ tr::ExpAndTy *SubscriptVar::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
       new tree::MemExp(
         new tree::BinopExp(
           tree::PLUS_OP,
-          base,
+          new tree::MemExp(base),
           new tree::BinopExp(
             tree::MUL_OP,
             size,
