@@ -126,16 +126,16 @@ EXTERNC int string_equal(struct string *s, struct string *t) {
   return 1;
 }
 
-EXTERNC void print_4(struct string *s) {
-  int i;
-  unsigned char *p = s->chars;
-  for (i = 0; i < s->length; i++, p++) putchar(*p);
-  putchar('\n');
-}
+// EXTERNC void print_string(struct string *s) {
+//   int i;
+//   unsigned char *p = s->chars;
+//   for (i = 0; i < s->length; i++, p++) putchar(*p);
+//   putchar('\n');
+// }
 
-EXTERNC void print_2(int k) { printf("%d\n", k); }
-EXTERNC void print_3(double k) { printf("%lf\n", k); }
-EXTERNC void print_22(int a,int b) { printf("%d %d\n", a,b); }
+// EXTERNC void print_2(int k) { printf("%d\n", k); }
+// EXTERNC void print_3(double k) { printf("%lf\n", k); }
+// EXTERNC void print_22(int a,int b) { printf("%d %d\n", a,b); }
 
 EXTERNC void flush() { fflush(stdout); }
 

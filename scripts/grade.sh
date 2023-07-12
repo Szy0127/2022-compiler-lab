@@ -24,10 +24,11 @@ test_python() {
     testcase_name=$(basename "$testcase" | cut -f1 -d".")
     local ref=${ref_dir}/${testcase_name}.out
     local assem=${testcase}.tig.s
+    local external=${testcase}_externalFuncs.cc
     # echo "compiling [$testcase]"
     ./tiger-compiler "$testcase" &>/dev/null
     rm test.out &>/dev/null
-    g++ -Wl,--wrap,getchar -m64 "$assem" "$runtime_path" "$heap_path" -o test.out &>/dev/null
+    g++ -Wl,--wrap,getchar -m64 "$assem" "$external" "$runtime_path" "$heap_path" -o test.out &>/dev/null
     if [ ! -s test.out ]; then
       echo "Error: Link error [$testcase_name]"
       full_score=0
@@ -51,6 +52,7 @@ test_python() {
   done
   rm "$testcase_dir"/*.py.tig &>/dev/null
   rm "$testcase_dir"/*.py.tig.s &>/dev/null
+  rm "$testcase_dir"/*.py_externalFuncs.cc &>/dev/null
 }
 
 main() {

@@ -7,12 +7,14 @@
 #include "tiger/translate/translate.h"
 #include "tiger/semant/semant.h"
 #include "tiger/preprocess/preprocessor.h"
+#include "tiger/generate/externalFuncGenerator.h"
 #include <map>
+#include <set>
 // #include <iostream>
 frame::RegManager *reg_manager;
 frame::Frags *frags;
 bool compile_function = false;
-
+std::map<std::string,std::set<uint64_t>> external_functions;
 
 //sudo g++ -Wl,--wrap,getchar -m64 final_test.tig.s ../src/tiger/runtime/runtime.cc ../src/tiger/runtime/gc/heap/derived_heap.cc -o test.out
 
@@ -96,6 +98,12 @@ int main(int argc, char **argv) {
     // Output assembly
     output::AssemGen assem_gen(std::string(std::string(argv[1])+".tig"));
     assem_gen.GenAssem(true);
+  }
+
+  {
+    //generate external functions in c
+    ExternalFuncGenerator externalFuncGenerator(std::string(std::string(argv[1])+"_externalFuncs.cc"),external_functions);
+    externalFuncGenerator.generate();
   }
 
   return 0;

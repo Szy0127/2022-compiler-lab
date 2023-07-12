@@ -820,6 +820,8 @@ temp::TempList *ExpList::MunchArgs(assem::InstrList &instr_list, std::string_vie
             nullptr
           )
         );
+        arg_it++;
+        //double?
       }else{
         if(temp->IsDouble()){
             instr_list.Append(
@@ -829,6 +831,8 @@ temp::TempList *ExpList::MunchArgs(assem::InstrList &instr_list, std::string_vie
               new temp::TempList(temp)
             )
           );
+          // std::cout<<(*arg_double_it)->Int();
+          arg_double_it++;
         }else{
           instr_list.Append(
             new assem::MoveInstr(
@@ -837,10 +841,9 @@ temp::TempList *ExpList::MunchArgs(assem::InstrList &instr_list, std::string_vie
               new temp::TempList(temp)
             )
           );
+          arg_it++;
         }
       }
-      arg_it++;
-      arg_double_it++;
     }else{
       std::stringstream assem;
       //rsp-->
