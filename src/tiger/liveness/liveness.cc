@@ -90,6 +90,10 @@ void LiveGraphFactory::LiveMap() {
   //   for(const auto&temp:fg::FlowGraphFactory::GetDef(node)->GetList()){
   //     fprintf(stderr,"%d ",temp->Int());
   //   }
+  //   fprintf(stderr,"uses:");
+  //   for(const auto&temp:fg::FlowGraphFactory::GetUse(node)->GetList()){
+  //     fprintf(stderr,"%d ",temp->Int());
+  //   }
   //   fprintf(stderr,"\nlive-out:");
   //   for(const auto&temp:live_out_list){
   //     fprintf(stderr,"%d ",temp->Int());
@@ -185,7 +189,7 @@ void LiveGraphFactory::InterfGraph() {
     }
   }
   
-  // live_graph_.interf_graph->Show(stderr,live_graph_.interf_graph->Nodes(),[](temp::Temp*t){fprintf(stderr,"temp:%d",t->Int());});
+  // live_graph_.interf_graph->Show(stderr,live_graph_.interf_graph->Nodes(),[](temp::Temp*t){fprintf(stderr,"temp:%d,isdouble:%d",t->Int(),t->IsDouble());});
 }
 
 void LiveGraphFactory::Liveness() {

@@ -576,12 +576,16 @@ void RegAllocator::RewriteProgram(){
             
             //load
             if(src_list && src_list->Contain(spill_temp)){
-                auto t = temp::TempFactory::NewTemp();
+                auto t = temp::TempFactory::NewTemp(spill_temp->IsPointer(),spill_temp->IsDouble());
                 // std::cout<<"write src,new temp:"<<t->Int()<<std::endl;
                 spill_introduced_temps.Append(t);
                 src_list->Replace(spill_temp,t);
                 std::stringstream assem;
-                assem << "movq ("<< frame_->GetLabel() << "_framesize";
+                if(t->IsDouble()){
+                    assem << "movsd ("<< frame_->GetLabel() << "_framesize";
+                }else{
+                    assem << "movq ("<< frame_->GetLabel() << "_framesize";
+                }
                 if(frame_access->offset > 0){
                     assem<<"+";
                 }
@@ -597,12 +601,16 @@ void RegAllocator::RewriteProgram(){
             }
             //store
             if(dst_list && dst_list->Contain(spill_temp)){
-                auto t = temp::TempFactory::NewTemp();
+                auto t = temp::TempFactory::NewTemp(spill_temp->IsPointer(),spill_temp->IsDouble());
                 // std::cout<<"write dst,new temp:"<<t->Int()<<std::endl;
                 spill_introduced_temps.Append(t);
                 dst_list->Replace(spill_temp,t);
                 std::stringstream assem;
-                assem << "movq `s0,("<< frame_->GetLabel() << "_framesize";
+                if(t->IsDouble()){
+                    assem << "movsd `s0,("<< frame_->GetLabel() << "_framesize";
+                }else{
+                    assem << "movq `s0,("<< frame_->GetLabel() << "_framesize";
+                }
                 if(frame_access->offset > 0){
                     assem<<"+";
                 }

@@ -32,6 +32,9 @@ temp::TempList *X64RegManager::Registers() {
   for(const auto& reg:regs_){
     templist->Append(reg);
   }
+  for(const auto& reg:double_regs_){
+    templist->Append(reg);
+  }
   return templist;
 }
 
@@ -43,9 +46,13 @@ temp::TempList *X64RegManager::ArgRegs() {
 }
 
 temp::TempList *X64RegManager::CallerSaves() {
-  return new temp::TempList{
+  auto res =  new temp::TempList{
     regs_[5], regs_[4], regs_[3], regs_[2], regs_[8], regs_[9],regs_[0],regs_[10],regs_[11]
   };
+  for(auto t:double_regs_){
+    res->Append(t);
+  };
+  return res;
 }
 
 temp::TempList *X64RegManager::CalleeSaves() {

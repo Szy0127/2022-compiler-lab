@@ -821,7 +821,6 @@ temp::TempList *ExpList::MunchArgs(assem::InstrList &instr_list, std::string_vie
   for(const auto&exp:exp_list_){
     auto temp = exp->Munch(instr_list,fs);
     if(i < max_index){
-      used_temps->Append(*arg_it);
       if(i==0 && temp == reg_manager->FramePointer()){//static link may use rbp
         std::stringstream assem;
         assem << "leaq " << fs << "_framesize(`s0),`d0";
@@ -833,6 +832,7 @@ temp::TempList *ExpList::MunchArgs(assem::InstrList &instr_list, std::string_vie
             nullptr
           )
         );
+        used_temps->Append(*arg_it);
         arg_it++;
         //double?
       }else{
@@ -845,6 +845,7 @@ temp::TempList *ExpList::MunchArgs(assem::InstrList &instr_list, std::string_vie
             )
           );
           // std::cout<<(*arg_double_it)->Int();
+          used_temps->Append(*arg_double_it);
           arg_double_it++;
         }else{
           instr_list.Append(
@@ -854,6 +855,7 @@ temp::TempList *ExpList::MunchArgs(assem::InstrList &instr_list, std::string_vie
               new temp::TempList(temp)
             )
           );
+          used_temps->Append(*arg_it);
           arg_it++;
         }
       }
