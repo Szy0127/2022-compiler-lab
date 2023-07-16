@@ -181,7 +181,7 @@ runtime生成.so
     限制最大元素的是runtime heap
 
 16. 加入double，支持assign print 四则运算
-    需要加入转换和比较
+    需要加入转换
 
     暂时不支持超过16个浮点参数的函数
 ## 待完成

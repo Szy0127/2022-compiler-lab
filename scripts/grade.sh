@@ -24,7 +24,7 @@ test_python() {
     testcase_name=$(basename "$testcase" | cut -f1 -d".")
     local ref=${ref_dir}/${testcase_name}.out
     local assem=${testcase}.tig.s
-    local external=${testcase}_externalFuncs.cc
+    local external=${testcase}.cc
     # echo "compiling [$testcase]"
     ./tiger-compiler "$testcase" &>/dev/null
     rm test.out &>/dev/null
@@ -52,7 +52,7 @@ test_python() {
   done
   rm "$testcase_dir"/*.py.tig &>/dev/null
   rm "$testcase_dir"/*.py.tig.s &>/dev/null
-  rm "$testcase_dir"/*.py_externalFuncs.cc &>/dev/null
+  rm "$testcase_dir"/*.py.cc &>/dev/null
 }
 
 main() {

@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
 
   {
     //generate external functions in c
-    ExternalFuncGenerator externalFuncGenerator(std::string(std::string(argv[1])+"_externalFuncs.cc"),external_functions);
+    ExternalFuncGenerator externalFuncGenerator(std::string(std::string(argv[1])+".cc"),external_functions);
     externalFuncGenerator.generate();
   }
 
