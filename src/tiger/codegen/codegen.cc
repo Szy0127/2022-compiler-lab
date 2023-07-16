@@ -66,15 +66,28 @@ void CjumpStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
   /* TODO: Put your lab5 code here */
   auto left_temp =  left_->Munch(instr_list, fs);
   auto right_temp = right_->Munch(instr_list, fs);
-  instr_list.Append(
-    new assem::OperInstr(
-      //s1 - s0
-      "cmpq `s0,`s1",
-      new temp::TempList(),
-      new temp::TempList{right_temp, left_temp},
-      nullptr
-    )
-  );
+  //TODO convert to double if one is int
+  if(left_temp->IsDouble() || right_temp->IsDouble()){
+    instr_list.Append(
+      new assem::OperInstr(
+        //s1 - s0
+        "comisd `s0,`s1",
+        new temp::TempList(),
+        new temp::TempList{right_temp, left_temp},
+        nullptr
+      )
+    );
+  }else{
+      instr_list.Append(
+      new assem::OperInstr(
+        //s1 - s0
+        "cmpq `s0,`s1",
+        new temp::TempList(),
+        new temp::TempList{right_temp, left_temp},
+        nullptr
+      )
+    );
+  }
   std::string op;
   switch (op_) {
     case EQ_OP:op = "je";break;

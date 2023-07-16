@@ -168,7 +168,7 @@ runtime生成.so
 13. 为了让runtime的函数也支持不同类型，直接在runtime中写_xxx的版本
 
     重载的实现也是在编译期完成的，达到汇编层面已经修改了函数名 对于print既是变长参数又是不限类型
-    
+
     增加一个模块 输入是需要生成的external function的参数列表 输出是一个c程序 链接的时候一起加上 达成无限重载的目标
 
 14. 函数的返回值类型很重要，由于返回值类型完全由return决定，因此在所有translate函数中加入当前所在def函数的funentry的result_ty的地址，由returnexp在translate时修改。
@@ -179,8 +179,11 @@ runtime生成.so
 
     append会修改数组指针(realloc) 解决方法可以是类似垃圾回收，记录下所有存此指针的位置然后覆盖写回，但是这样实在太麻烦了。把init_list修改为初始化一个二级指针，这样所有对list的修改作用在一级指针上即可，访问list元素加一层mem。这样虽然访问次数多了一倍，但实际上和python比还是提升很大的。
     限制最大元素的是runtime heap
+
 16. 加入double，支持assign print 四则运算
     需要加入转换和比较
+
+    暂时不支持超过16个浮点参数的函数
 ## 待完成
 
 1. 浮点有bug 都是用的xmm0 可能是染色的问题  传参拿参也有问题
