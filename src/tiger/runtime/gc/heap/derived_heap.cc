@@ -36,6 +36,8 @@ char *DerivedHeap::Allocate(std::string pointer_info){
     
     return ret;
 }
+
+static uint64_t total_size;
 char *DerivedHeap::Allocate(uint64_t slot_number,bool is_pointer){
     auto ret = Allocate(slot_number*WORD_SIZE);
     if(!ret){

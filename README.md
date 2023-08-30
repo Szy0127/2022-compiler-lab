@@ -1,43 +1,5 @@
 # python编译器
 
-```python
-def is_prime(n):
-	for i in range(2,n//2+1):
-		if n % i == 0:
-			return False
-	return True
-count = 0
-prime_list = []
-for i in range(2,10000):
-	if is_prime(i):
-		count += 1
-		if count % 100 == 0:
-			prime_list.append(i)
-print(count)
-for i in range(len(prime_list)):
-	print(prime_list[i])
-
-
-
-def eq(a,b):
-	if a==b:
-		return "eq"
-	else:
-		return "not eq"
-
-
-print(eq(1,1))
-print(eq(1,2))
-print(eq("aa","aa")) 
-print(eq("aa","ab")) 
-a = 1+3
-print(a)
-print("hello world")
-
-
-a = 3.4
-print(a) # 3.400000
-```
 
 ## 编译
 
@@ -49,7 +11,7 @@ runtime生成.so
 
 或者直接一起编译
 
-`sudo g++ -Wl,--wrap,getchar -m64 test.py.tig.s ../src/tiger/runtime/runtime.cc ../src/tiger/runtime/gc/heap/derived_heap.cc -o test.out`
+`sudo g++ -Wl,--wrap,getchar -m64 test.py.tig.s ./test.py.cc ../src/tiger/runtime/runtime.cc ../src/tiger/runtime/gc/heap/derived_heap.cc -o test.out`
 
 比python快10倍
 
@@ -180,14 +142,28 @@ runtime生成.so
     append会修改数组指针(realloc) 解决方法可以是类似垃圾回收，记录下所有存此指针的位置然后覆盖写回，但是这样实在太麻烦了。把init_list修改为初始化一个二级指针，这样所有对list的修改作用在一级指针上即可，访问list元素加一层mem。这样虽然访问次数多了一倍，但实际上和python比还是提升很大的。
     限制最大元素的是runtime heap
 
+    天然支持嵌套 但是嵌套以后需要把semant去掉，因为list本身不知道元素的类型 如果需要在编译期知道元素类型 需要进行大量的设计和修改
+
 16. 加入double，支持assign print 四则运算
     需要加入转换
 
     暂时不支持超过16个浮点参数的函数
-## 待完成
+    ```assembly
+      movsd %xmm0,(%rdi)
+      movapd %xmm0, %xmm1
+      cvttsd2siq  %xmm0, %rax
+      cvtsi2sdq       %rdx, %xmm0
+      addsd %xmm0,%xmm1
+      subsd mulsd divsd
+      comisd (%rdi),%xmm0
+      mulsd .abcde(%rip),xxx
+      .abcde
+      .long 1243451423
+      .long 12313541345
 
-1. 浮点有bug 都是用的xmm0 可能是染色的问题  传参拿参也有问题
-2. 数组嵌套 嵌套不需要嵌套类型的标识，因为所有类型都是8字节，对于数组 元组等 可以利用存储上的格式设计，写明下一级的类型
+## 待完成
+1. 一个bug：乘法必须用到rcx rdx 如果上面准备参数 下面call 导致rdx被覆盖 为什么没有冲突然后放栈上？
+2. 嵌套list bug 会发生segmentation fault 且现象很奇怪 可能是不同list间交互发生问题 可能也和list扩容有关
 
    
 
@@ -198,48 +174,10 @@ runtime生成.so
 3. 支持元组，把代码块()改为{} 类似record还是list？
 
 4. 用迭代器抽象 for支持元组和list
+
 5. 垃圾回收，不定死heap，用brk增加
 
-6. 支持float
-
-   1. 前端增加小数token 增加Double对象 完成
-
-   2. temp增加bool表示是否用xmm寄存器
-
-   3. 函数根据类型判断传参和返回值类型
-
-   4. 加减乘除 常数 改代码
-
-   5. 冲突图 如果两个temp类型不一样 不冲突
-
-   6. 寄存器分配 按类型分配 xmm一共16个
-
-      csapp带v前缀的 用法不太一样 支持3个operator 但是不带v的兼容之前的用法
-
-      三个operator对寄存器分配冲击有点大
-
-   ```assembly
-   movsd %xmm0,(%rdi)
-   movapd %xmm0, %xmm1
-   cvttsd2siq  %xmm0, %rax
-   cvtsi2sdq       %rdx, %xmm0
-   addsd %xmm0,%xmm1
-   subsd mulsd divsd
-   comisd (%rdi),%xmm0
-   
-   
-   mulsd .abcde(%rip),xxx
-   .abcde
-   .long 1243451423
-   .long 12313541345
-   ```
-
-   
-
-7. if else elif
-
-8. 重写semant 编译器检查
-
+6. if else elif
 
 
 

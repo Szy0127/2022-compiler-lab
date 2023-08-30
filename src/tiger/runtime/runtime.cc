@@ -55,16 +55,16 @@ EXTERNC long *init_array(int size, long init) {
 
 EXTERNC long **init_list() {
   int i;
-  long **a = (long **)tiger_heap->Allocate(sizeof(long*),false);
+  long **a = (long **)tiger_heap->Allocate(1,false);
   auto slot  = 16;
-  uint64_t allocate_size = slot * sizeof(long);
-  *a = (long *)tiger_heap->Allocate(allocate_size,false);
+  *a = (long *)tiger_heap->Allocate(slot,false);
   if(!*a) {
     tiger_heap->GC();
-    *a = (long*)tiger_heap->Allocate(allocate_size,false);
+    *a = (long*)tiger_heap->Allocate(slot,false);
   }
+  // slot[0] is metadata
   //  capability     |     size
-  (*a)[0] = ((long)slot << 32) | 0;
+  (*a)[0] = ((long)(slot-1) << 32) | 0;
   return a;
 }
 
@@ -76,11 +76,10 @@ EXTERNC void append(long **array, long value) {
   long size = (*array)[0] & 0xFFFFFFFF;
   long cap = ((*array)[0] >> 32) & 0xFFFFFFFF;
   if(size == cap) {
-    long *new_array = (long *)tiger_heap->Allocate((cap << 1) * sizeof(long),false);
+    long *new_array = (long *)tiger_heap->Allocate(cap << 1,false);
     if(!new_array) {
       tiger_heap->GC();
-      new_array = (long*)tiger_heap->Allocate((cap << 1) * sizeof(long),false);
-      // printf("append %n\n",value);
+      new_array = (long*)tiger_heap->Allocate(cap << 1,false);
     }
     memcpy(new_array, *array, (size+1) * sizeof(long));
     new_array[0] = (cap << 33) | (size+1);

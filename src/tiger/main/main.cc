@@ -16,7 +16,6 @@ frame::Frags *frags;
 bool compile_function = false;
 std::map<std::string,std::set<uint64_t>> external_functions;
 
-//sudo g++ -Wl,--wrap,getchar -m64 final_test.tig.s ../src/tiger/runtime/runtime.cc ../src/tiger/runtime/gc/heap/derived_heap.cc -o test.out
 
 int main(int argc, char **argv) {
   std::string_view fname;
@@ -49,18 +48,20 @@ int main(int argc, char **argv) {
       parser.parse();
       absyn_tree = parser.TransferAbsynTree();
       errormsg = parser.TransferErrormsg();
+      // absyn_tree.get()->Print(stderr);
+      // return 0;
     }
 
-    {
-      // Lab 4: semantic analysis
-      TigerLog("-------====Semantic analysis=====-----\n");
-      sem::ProgSem prog_sem(std::move(absyn_tree), std::move(errormsg));
-      prog_sem.SemAnalyze();
-      absyn_tree = prog_sem.TransferAbsynTree();
-      errormsg = prog_sem.TransferErrormsg();
-    }
-    if (errormsg->AnyErrors())
-      return 1; // Don't continue if error occurrs
+    // {
+    //   // Lab 4: semantic analysis
+    //   TigerLog("-------====Semantic analysis=====-----\n");
+    //   sem::ProgSem prog_sem(std::move(absyn_tree), std::move(errormsg));
+    //   prog_sem.SemAnalyze();
+    //   absyn_tree = prog_sem.TransferAbsynTree();
+    //   errormsg = prog_sem.TransferErrormsg();
+    // }
+    // if (errormsg->AnyErrors())
+    //   return 1; // Don't continue if error occurrs
 
     {
       // Lab 5: escape analysis
