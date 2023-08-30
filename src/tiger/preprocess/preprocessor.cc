@@ -35,6 +35,15 @@ bool empty_line(std::string line){
     }
     return true;
 }
+std::string remove_comment(const std::string& str) {
+    size_t pos = str.find("#");
+    
+    if (pos != std::string::npos) {
+        return str.substr(0, pos);
+    }
+    
+    return str;
+}
 
 void Preprocessor::preprocess(){
     std::ifstream input(ifname);
@@ -43,14 +52,25 @@ void Preprocessor::preprocess(){
     std::getline(input,buf);
     output<<"/*preprocessed*/"<<std::endl;
     // output<<"("<<std::endl;
+    bool comment = false;
 
     bool first = true;
+    bool empty;
+    int cur_indent;
+    int index;
     std::stack<int> indentation;
     while(!input.eof() || !buf.empty()){
-        bool empty = empty_line(buf);
-        auto [cur_indent,index] = get_indent(buf);
+        empty = empty_line(buf);
+        std::tie(cur_indent, index) = get_indent(buf);
         if(empty){
             cur_indent = 0;
+        }
+        if(buf.length() >= index + 3 && buf.substr(index,3) == "'''"){
+            comment = !comment;
+            goto out;
+        }
+        if(comment){
+            goto out;
         }
         // std::cout<<"buf:"<<buf.length()<<"#"<<int(buf[0])<<buf<<"#"<<cur_indent<<std::endl;
         if(indentation.empty() ||  cur_indent>indentation.top()){
@@ -68,9 +88,10 @@ void Preprocessor::preprocess(){
             if(!first){
                 output<<";"<<std::endl;
             }
-            output<<buf;
+            output<<remove_comment(buf);
         }
 
+out:
         if(input.eof()){
             break;
         }
