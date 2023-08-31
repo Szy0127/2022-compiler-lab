@@ -7,7 +7,7 @@ runtime生成.so
 
 `sudo g++ -m64 -shared -fPIC ../src/tiger/runtime/runtime.cc ../src/tiger/runtime/gc/heap/derived_heap.cc -o libtigerruntime.so`
 
-`sudo g++ -m64 -no-pie -Wl,-rpath,. test.py.tig.s -o test.out -L. -ltigerruntime -Wl,--wrap=getchar`
+`sudo g++ -m64 -no-pie -Wl,-rpath,. test.py.tig.s ./test.py.cc -o test.out -L. -ltigerruntime -Wl,--wrap=getchar`
 
 或者直接一起编译
 

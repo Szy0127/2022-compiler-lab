@@ -61,6 +61,10 @@ EXTERNC long **init_list() {
   if(!*a) {
     tiger_heap->GC();
     *a = (long*)tiger_heap->Allocate(slot,false);
+    if(!*a){
+      fprintf(stdout,"run out of memory\n");
+      exit(1);
+    }
   }
   // slot[0] is metadata
   //  capability     |     size
@@ -80,6 +84,10 @@ EXTERNC void append(long **array, long value) {
     if(!new_array) {
       tiger_heap->GC();
       new_array = (long*)tiger_heap->Allocate(cap << 1,false);
+      if(!new_array){
+        fprintf(stdout,"run out of memory\n");
+        exit(1);
+      }
     }
     memcpy(new_array, *array, (size+1) * sizeof(long));
     new_array[0] = (cap << 33) | (size+1);

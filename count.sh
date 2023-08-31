@@ -1,0 +1,1 @@
+git log 0c5ccc2860c60a6c6d6dea6cad82dc1415804903..HEAD --stat | grep -E "changed.*insertions.*deletions" | awk '{ insertions += $4 } { deletions += $6 } END { print "Total insertions: " insertions "\nTotal deletions: " deletions }'; echo commits:`git log 0c5ccc2860c60a6c6d6dea6cad82dc1415804903..HEAD --oneline | wc -l`
