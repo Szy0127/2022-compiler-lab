@@ -5,14 +5,15 @@
 
 runtime生成.so
 
-`sudo g++ -m64 -shared -fPIC ../src/tiger/runtime/runtime.cc ../src/tiger/runtime/gc/heap/derived_heap.cc -o libtigerruntime.so`
+`sudo g++ -m64 -shared -fPIC ../src/tiger/runtime/runtime.cc ../src/tiger/runtime/gc/heap/derived_heap.cc -o libruntime.so`
 
-`sudo g++ -m64 -no-pie -Wl,-rpath,. test.py.tig.s ./test.py.cc -o test.out -L. -ltigerruntime -Wl,--wrap=getchar`
+`sudo g++ -m64 -no-pie -Wl,-rpath,. test.s ./test.cc -o test.out -L. -lruntime -Wl,--wrap=getchar`
 
 或者直接一起编译
 
-`sudo g++ -Wl,--wrap,getchar -m64 test.py.tig.s ./test.py.cc ../src/tiger/runtime/runtime.cc ../src/tiger/runtime/gc/heap/derived_heap.cc -o test.out`
+`sudo g++ -Wl,--wrap,getchar -m64 test.s ./test.cc ../src/tiger/runtime/runtime.cc ../src/tiger/runtime/gc/heap/derived_heap.cc -o test.out`
 
+用提供的Makefile `make input=prime.py`
 比python快10倍
 
 ## 分析

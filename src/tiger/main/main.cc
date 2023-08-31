@@ -18,7 +18,7 @@ std::map<std::string,std::set<uint64_t>> external_functions;
 
 
 int main(int argc, char **argv) {
-  std::string_view fname;
+  std::string name;
   std::unique_ptr<absyn::AbsynTree> absyn_tree;
   reg_manager = new frame::X64RegManager();
   frags = new frame::Frags();
@@ -27,8 +27,8 @@ int main(int argc, char **argv) {
     fprintf(stderr, "usage: tiger-compiler file.tig\n");
     exit(1);
   }
-
-  fname = std::string_view(std::string(argv[1])+".tig");
+  name = std::string(argv[1]);
+  name = name.substr(0,name.find('.'));
 
   {
     std::unique_ptr<err::ErrorMsg> errormsg;
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
     {
       // Preprocess
       TigerLog("-------====Preprocess=====-----\n");
-      Preprocessor preprocessor(argv[1], std::string(std::string(argv[1])+".tig"));
+      Preprocessor preprocessor(argv[1], std::string(name+".tig"));
       preprocessor.preprocess();
     }
 
@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
       // Lab 3: parsing
       TigerLog("-------====Parse=====-----\n");
       //if use fname, cannot open file ,strange bug
-      Parser parser(std::string(std::string(argv[1])+".tig"), std::cerr);
+      Parser parser(std::string(name+".tig"), std::cerr);
       parser.parse();
       absyn_tree = parser.TransferAbsynTree();
       errormsg = parser.TransferErrormsg();
@@ -97,13 +97,13 @@ int main(int argc, char **argv) {
 
   {
     // Output assembly
-    output::AssemGen assem_gen(std::string(std::string(argv[1])+".tig"));
+    output::AssemGen assem_gen(name);
     assem_gen.GenAssem(true);
   }
 
   {
     //generate external functions in c
-    ExternalFuncGenerator externalFuncGenerator(std::string(std::string(argv[1])+".cc"),external_functions);
+    ExternalFuncGenerator externalFuncGenerator(std::string(name+".cc"),external_functions);
     externalFuncGenerator.generate();
   }
 

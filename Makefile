@@ -38,3 +38,9 @@ register:
 format:
 	find . \( -name "*.h" -o -iname "*.cc" \) | xargs clang-format -i -style=file
 
+runtime:
+	sudo g++ -m64 -shared -fPIC ./src/tiger/runtime/runtime.cc ./src/tiger/runtime/gc/heap/derived_heap.cc -o release/libruntime.so
+
+compiler:
+	mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. >/dev/null && make tiger-compiler -j >/dev/null
+	cp build/tiger-compiler release/pythoncompiler

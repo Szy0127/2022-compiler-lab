@@ -23,8 +23,8 @@ test_python() {
   for testcase in "$testcase_dir"/*.py; do
     testcase_name=$(basename "$testcase" | cut -f1 -d".")
     local ref=${ref_dir}/${testcase_name}.out
-    local assem=${testcase}.tig.s
-    local external=${testcase}.cc
+    local assem=${testcase_dir}/${testcase_name}.s
+    local external=${testcase_dir}/${testcase_name}.cc
     # echo "compiling [$testcase]"
     ./tiger-compiler "$testcase" &>/dev/null
     rm test.out &>/dev/null
@@ -50,9 +50,9 @@ test_python() {
     fi
     echo "Pass $testcase_name"
   done
-  rm "$testcase_dir"/*.py.tig &>/dev/null
-  rm "$testcase_dir"/*.py.tig.s &>/dev/null
-  rm "$testcase_dir"/*.py.cc &>/dev/null
+  rm "$testcase_dir"/*.tig &>/dev/null
+  rm "$testcase_dir"/*.s &>/dev/null
+  rm "$testcase_dir"/*.cc &>/dev/null
 }
 
 main() {

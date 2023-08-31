@@ -90,9 +90,9 @@ void DerivedHeap::GC(){
     }
     while(scan < next){
         auto des = addr2desc[scan];
-        if(!des){
-            fprintf(stdout,"%#llx\n",scan);
-        }
+        // if(!des){
+        //     fprintf(stdout,"%#lx\n",scan);
+        // }
         if(typeid(*des) == typeid(RecordDescriptor)){
             uint64_t i = 0;
             for(const auto &f:static_cast<RecordDescriptor*>(des)->GetInfo()){
