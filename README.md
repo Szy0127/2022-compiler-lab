@@ -165,8 +165,9 @@ runtime生成.so
       .long 12313541345
 
 ## 待完成
-1. 一个bug：乘法必须用到rcx rdx 如果上面准备参数 下面call 导致rdx被覆盖 为什么没有冲突然后放栈上？
-2. 嵌套list bug 会发生segmentation fault 且现象很奇怪 可能是不同list间交互发生问题 可能也和list扩容有关
+1. 加入浮点 xmm对传参 调用影响很大 栈上拿数据出问题
+2. 一个bug：乘法必须用到rcx rdx 如果上面准备参数 下面call 导致rdx被覆盖 为什么没有冲突然后放栈上？
+3. 嵌套list bug 会发生segmentation fault 且现象很奇怪 可能是不同list间交互发生问题 可能也和list扩容有关
 
    
 

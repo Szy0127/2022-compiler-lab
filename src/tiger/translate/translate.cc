@@ -10,7 +10,7 @@
 #include <sstream>
 #include <map>
 #include <set>
-#include <iostream>
+//#include<iostream>
 
 
 #define NOP (new tr::ExExp(new tree::ConstExp(0)))
@@ -41,7 +41,8 @@ frame::StringFrag* GetPointerMap(frame::Frame* frame,tr::Level *level){
 }
 
 
-Level::Level(Level *parent,temp::Label *name, std::list<bool> *formals,std::list<bool> *is_pointer):parent_(parent){
+Level::Level(Level *parent,temp::Label *name, std::list<bool> *formals,
+std::list<bool> *is_pointer,std::list<bool> *is_double):parent_(parent){
 
   //main level don't need static link
   if(formals){
@@ -49,9 +50,10 @@ Level::Level(Level *parent,temp::Label *name, std::list<bool> *formals,std::list
 
     //static link stores stack addr,not heap addr
     is_pointer->push_front(false);
+    is_double->push_front(false);
   }
   // use x64 frame  
-  frame_ = new frame::X64Frame(name,formals,is_pointer);
+  frame_ = new frame::X64Frame(name,formals,is_pointer,is_double);
 }
 
 
@@ -389,13 +391,19 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   auto arg_list = new tree::ExpList();
   auto arg_size = exp_list.size();
   auto formal_tylist = new type::TyList();
+  auto double_size = 0;
   for(const auto &exp:exp_list){
     auto arg_exp_ty = exp->Translate(venv,tenv,level,break_label,return_label,func_res,errormsg);
     arg_list->Append(arg_exp_ty->exp_->UnEx());
+    if(!arg_exp_ty->ty_){
+      return nullptr;
+    }
     auto ty = arg_exp_ty->ty_->ActualTy();
     formal_tylist->Append(ty);
+    if(type::IsDouble(ty)){
+      double_size++;
+    }
   }
-
   //tell next functiondec how to generate codes
   auto key = formal_tylist->Key();
   // std::cout<<"func:"<<func_->Name()<<" key:"<<key<<std::endl;
@@ -416,7 +424,7 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   if(func_label){
     //func->entry->level is the level of func itself, parent is the level defines func
     arg_list->Insert(staticLink(level,func_level->parent_));
-    call_exp = new tree::CallExp(new tree::NameExp(func_label),arg_list,string_frag,arg_size+1-max_arg_size);
+    call_exp = new tree::CallExp(new tree::NameExp(func_label),arg_list,string_frag,arg_size+1-max_arg_size - double_size);
   }else{//env.cc externalcall label=nullptr
     //new NamedLabel
     auto func_name = func_->Name();
@@ -428,7 +436,7 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
       }
       func_name += "_"+std::to_string(key);
     }
-    call_exp = frame::externalCall(func_name,arg_list,string_frag,arg_size-max_arg_size);
+    call_exp = frame::externalCall(func_name,arg_list,string_frag,arg_size-max_arg_size - double_size);
   }
 
   auto res_ty = func_entry->result_;
@@ -1032,37 +1040,50 @@ tr::Exp *FunctionDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
     auto params = function->params_;
     auto escape = new std::list<bool>;
     //dont add static link here ,Level will add it in constructor
-    for(const auto&arg:params->GetList()){
-      escape->push_back(arg->escape_);
-    }
     type::Ty *result_ty = type::VoidTy::Instance();
     if(function->result_){
       result_ty = tenv->Look(function->result_); 
     }
     auto formals = params->MakeFormalTyList(tenv, errormsg);
     auto is_pointer = new std::list<bool>;
+    auto is_double = new std::list<bool>;
     //TODO is_pointer if compile_function
-    for(const auto&param:params->GetList()){
-      auto ty = tenv->Look(param->typ_);
-      is_pointer->push_back(type::IsPointer(ty));
-    }
     auto name = function->name_;
     if(!compile_function){
+      for(const auto&param:params->GetList()){
+        auto ty = tenv->Look(param->typ_);
+        is_pointer->push_back(type::IsPointer(ty));
+        is_double->push_back(type::IsDouble(ty));
+      }
+      for(const auto&arg:params->GetList()){
+        escape->push_back(arg->escape_);
+      }
       auto f_label = temp::LabelFactory::NamedLabel(name->Name());
-      auto f_level = new tr::Level(level,f_label,escape,is_pointer);
+      auto f_level = new tr::Level(level,f_label,escape,is_pointer,is_double);
       //must add level of the function to env instead of the level defines it
       venv->Enter(name,new env::FunEntry(f_level,f_label,formals,result_ty));
     }else{
       auto keys = function2keys[name->Name()];
       for(auto key:keys){
+        is_pointer->clear();
+        is_double->clear();
+        escape->clear();
+        auto tylist = type::key2List(key);
+        for(const auto&ty:tylist->GetList()){
+          is_pointer->push_back(type::IsPointer(ty));
+          is_double->push_back(type::IsDouble(ty));
+        }
+        for(const auto&arg:params->GetList()){
+          escape->push_back(arg->escape_);
+        }
         auto f_label = temp::LabelFactory::NamedLabel(name->Name()+"_"+std::to_string(key));
-        auto f_level = new tr::Level(level,f_label,escape,is_pointer);
+        auto f_level = new tr::Level(level,f_label,escape,is_pointer,is_double);
         auto entry = static_cast<env::FunEntry*>(venv->Look(name));
         if(!entry){
-          entry = new env::FunEntry(key,f_level,f_label,type::key2List(key));
+          entry = new env::FunEntry(key,f_level,f_label,tylist);
           venv->Enter(name,entry);
         }else{
-          entry->Append(key,f_level,f_label,type::key2List(key));
+          entry->Append(key,f_level,f_label,tylist);
         }
         res_ty_addr = &(entry->result_);
       }
@@ -1091,16 +1112,16 @@ tr::Exp *FunctionDec::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
       auto res_exp_ty = function->body_->Translate(venv,tenv,f_level,break_label,ret_label,res_ty_addr,errormsg);
       venv->EndScope();
 
-      auto ret = tr::list2tree({
-        new tree::MoveStm(
-          new tree::TempExp(reg_manager->ReturnValue()),
-          res_exp_ty->exp_->UnEx()
-        ),
-        new tree::LabelStm(ret_label)
-      });
+      // auto ret = tr::list2tree({
+      //   new tree::MoveStm(
+      //     new tree::TempExp(reg_manager->ReturnValue()),
+      //     res_exp_ty->exp_->UnEx()
+      //   ),
+      //   new tree::LabelStm(ret_label)
+      // });
 
-      auto frag = new frame::ProcFrag(tr::list2tree(frame::ProcEntryExit1(f_level->frame_,ret)),f_level->frame_);
-      frags->PushBack(frag);
+      // auto frag = new frame::ProcFrag(tr::list2tree(frame::ProcEntryExit1(f_level->frame_,ret)),f_level->frame_);
+      // frags->PushBack(frag);
     }else{
       auto keys = function2keys[function->name_->Name()];
       for(auto key:keys){

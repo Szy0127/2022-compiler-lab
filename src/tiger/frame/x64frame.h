@@ -37,7 +37,7 @@ public:
 class X64Frame : public Frame {
   /* TODO: Put your lab5 code here */
 public:
-  X64Frame(temp::Label *name,std::list<bool> *f,std::list<bool> *is_pointer);
+  X64Frame(temp::Label *name,std::list<bool> *f,std::list<bool> *is_pointer,std::list<bool> *is_double);
   Access *AllocLocal(bool escape,bool is_pointer=false,bool is_double=false)override;
 
 };

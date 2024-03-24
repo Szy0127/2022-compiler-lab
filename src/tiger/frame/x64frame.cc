@@ -111,30 +111,36 @@ tree::Exp *externalCall(std::string s,tree::ExpList *args,StringFrag *string_fra
 
 /* TODO: Put your lab5 code here */
 //NewFrame
-X64Frame::X64Frame(temp::Label *name,std::list<bool> *f,std::list<bool> *is_pointer):Frame(name,f){
+X64Frame::X64Frame(temp::Label *name,std::list<bool> *f,std::list<bool> *is_pointer,
+std::list<bool> *is_double):Frame(name,f){
   if(!f){
     return;
   }
   // although some escape params should be allocated in frame instead of register
   // we should follow the x86 64 rules to move frame param to reg e.g. rdi rsi
-  auto it = is_pointer->begin();
+  auto it_pointer = is_pointer->begin();
+  auto it_double = is_double->begin();
   for(const auto &escape:*f){
-    formals_.push_back(AllocLocal(escape,*it));
-    it++;
+    formals_.push_back(AllocLocal(escape,*it_pointer,*it_double));
+    it_pointer++;
+    it_double++;
   }
   auto reg_list = reg_manager->ArgRegs()->GetList();
-  auto max_index = reg_list.size();
+  auto double_list = reg_manager->DoubleRegs()->GetList();
+  // auto max_index = reg_list.size();
   auto reg_it = reg_list.begin();
+  auto double_it = double_list.begin();
   auto frame_ptr = new tree::TempExp(reg_manager->FramePointer());
   auto word_size = reg_manager->WordSize();
   //here contains static link , in rdi
   auto i = 0;
+  it_double = is_double->begin();
   for(const auto&formal:formals_){
     tree::MoveStm* move = nullptr;
-    if(i < max_index){
+    if(*it_double && double_it != double_list.end() || (!*it_double) && reg_it != reg_list.end()){
       move = new tree::MoveStm(
         formal->ToExp(frame_ptr),
-        new tree::TempExp(*reg_it)
+        new tree::TempExp((*it_double) ? *double_it : *reg_it)
       );
     }else{
       /*
@@ -150,13 +156,18 @@ X64Frame::X64Frame(temp::Label *name,std::list<bool> *f,std::list<bool> *is_poin
           new tree::BinopExp(
             tree::PLUS_OP,
             frame_ptr,
-            new tree::ConstExp(word_size*(i-4))
+            new tree::ConstExp(word_size*(i+2))
           )
         )
       );
+      i++;
     }
-    i++;
-    reg_it++;
+    if(*it_double){
+      double_it++;
+    }else{
+      reg_it++;
+    }
+    it_double++;
     view_shift_stm.push_back(move);
   }
   

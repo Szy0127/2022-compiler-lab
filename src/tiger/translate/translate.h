@@ -60,7 +60,7 @@ public:
 
   //NewLevel call NewFrame  name for frame
   //use pointer to reduce copy
-  Level(Level *parent,temp::Label *name, std::list<bool> *formals,std::list<bool> *is_pointer);
+  Level(Level *parent,temp::Label *name, std::list<bool> *formals,std::list<bool> *is_pointer,std::list<bool> *is_double);
 };
 
 class ProgTr {
@@ -71,7 +71,7 @@ public:
   ProgTr(std::unique_ptr<absyn::AbsynTree> absyn_tree, std::unique_ptr<err::ErrorMsg> errormsg):
     absyn_tree_(std::move(absyn_tree)),errormsg_(std::move(errormsg)),
     tenv_(std::make_unique<env::TEnv>()),venv_(std::make_unique<env::VEnv>()),
-    main_level_{new Level(nullptr,temp::LabelFactory::NamedLabel("tigermain"),nullptr,nullptr)}{}
+    main_level_{new Level(nullptr,temp::LabelFactory::NamedLabel("tigermain"),nullptr,nullptr,nullptr)}{}
   //lab5_test 'tigermain'
   /**
    * Translate IR tree

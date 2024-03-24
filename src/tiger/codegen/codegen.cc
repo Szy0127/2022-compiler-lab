@@ -67,36 +67,26 @@ void CjumpStm::Munch(assem::InstrList &instr_list, std::string_view fs) {
   auto left_temp =  left_->Munch(instr_list, fs);
   auto right_temp = right_->Munch(instr_list, fs);
   //TODO convert to double if one is int
-  if(left_temp->IsDouble() || right_temp->IsDouble()){
-    instr_list.Append(
+  auto is_double = left_temp->IsDouble() || right_temp->IsDouble();
+  instr_list.Append(
       new assem::OperInstr(
         //s1 - s0
-        "comisd `s0,`s1",
+        is_double ? "comisd `s0,`s1" :"cmpq `s0,`s1",
         new temp::TempList(),
         new temp::TempList{right_temp, left_temp},
         nullptr
       )
     );
-  }else{
-      instr_list.Append(
-      new assem::OperInstr(
-        //s1 - s0
-        "cmpq `s0,`s1",
-        new temp::TempList(),
-        new temp::TempList{right_temp, left_temp},
-        nullptr
-      )
-    );
-  }
+  
   std::string op;
   switch (op_) {
     case EQ_OP:op = "je";break;
     case NE_OP:op = "jne";break;
     // left < right => left - right < 0
-    case LT_OP:op = "jl";break;
-    case GT_OP:op = "jg";break;
-    case LE_OP:op = "jle";break;
-    case GE_OP:op = "jge";break;
+    case LT_OP:op = is_double ? "jb" : "jl";break;
+    case GT_OP:op = is_double ? "ja" : "jg";break;
+    case LE_OP:op = is_double ? " jbe" : "jle";break;
+    case GE_OP:op = is_double ? "jae" : "jge";break;
   }
   std::stringstream assem;
   assem<<op<<" `j0";

@@ -36,6 +36,7 @@ test_python() {
     fi
 
     ./test.out >&/tmp/output.txt
+    #cat /tmp/output.txt
     if [[ -f  "$ref" ]]; 
     then
       cp "$ref" /tmp/ref.txt
