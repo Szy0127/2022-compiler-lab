@@ -1,6 +1,7 @@
 #include "tiger/frame/x64frame.h"
 #include <sstream>
 #include <list>
+
 extern frame::RegManager *reg_manager;
 
 namespace frame {
@@ -142,6 +143,11 @@ std::list<bool> *is_double):Frame(name,f){
         formal->ToExp(frame_ptr),
         new tree::TempExp((*it_double) ? *double_it : *reg_it)
       );
+      if(*it_double){
+        double_it++;
+      }else{
+        reg_it++;
+      }
     }else{
       /*
           param 7th
@@ -161,11 +167,6 @@ std::list<bool> *is_double):Frame(name,f){
         )
       );
       i++;
-    }
-    if(*it_double){
-      double_it++;
-    }else{
-      reg_it++;
     }
     it_double++;
     view_shift_stm.push_back(move);
@@ -235,10 +236,12 @@ Access *X64Frame::AllocLocal(bool escape,bool is_pointer,bool is_double){
 }
 
 
+#define ALIGN_UP(x, align) (((x) + (align - 1)) & ~(align - 1))
 
 assem::Proc *ProcEntryExit3(frame::Frame *frame,assem::InstrList *instr_list){
   std::stringstream prolog;
   auto frame_size = frame->GetFrameSize();
+  // frame_size = ALIGN_UP(frame_size, 16);
   //_scan_lines in interpreter.py
   prolog<<".set "<<frame->GetLabel()<<"_framesize, "<<frame_size<<std::endl;
   prolog<<frame->GetLabel()<<":"<<std::endl;

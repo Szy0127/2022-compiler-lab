@@ -730,19 +730,19 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
   // here to extend stack?
 
   auto rsp = reg_manager->StackPointer();
-  auto args_size = args_->GetList().size();
-  auto max_args_size = reg_manager->ArgRegs()->GetList().size();
-  int extend_stack = reg_manager->WordSize();// pointer_map_label
-  if(args_size > max_args_size){
-    extend_stack +=  (args_size - max_args_size) * reg_manager->WordSize();
-  }
+  // auto args_size = args_->GetList().size();
+  // auto max_args_size = reg_manager->ArgRegs()->GetList().size();
+  // int extend_stack = reg_manager->WordSize();// pointer_map_label
+  // if(args_size > max_args_size){
+  //   extend_stack +=  (args_size - max_args_size) * reg_manager->WordSize();
+  // }
 
   auto not_main_level = pointer_map_->str_.empty();
-  pointer_map_->str_ = std::to_string(extend_stack * (not_main_level ? 1:-1));
-
+  pointer_map_->str_ = std::to_string(arg_in_stack_ * (not_main_level ? 1:-1));
+  std::cout<<arg_in_stack_<<std::endl;
   instr_list.Append(
     new assem::OperInstr(
-      "subq $" + std::to_string( extend_stack) + ",`d0",
+      "subq $" + std::to_string( arg_in_stack_* reg_manager->WordSize()) + ",`d0",
       new temp::TempList(rsp),
       new temp::TempList(rsp),
       nullptr
@@ -782,7 +782,7 @@ temp::Temp *CallExp::Munch(assem::InstrList &instr_list, std::string_view fs) {
 
   instr_list.Append(
     new assem::OperInstr(
-      "addq $" +std::to_string(extend_stack)+",`d0",
+      "addq $" +std::to_string(arg_in_stack_* reg_manager->WordSize())+",`d0",
       new temp::TempList(rsp),
       new temp::TempList(rsp),
       nullptr

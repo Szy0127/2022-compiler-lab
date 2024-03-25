@@ -421,10 +421,11 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
   auto string_frag = tr::GetPointerMap(level->frame_,level);
   tree::Exp *call_exp;
 
+  int size = arg_size - max_arg_size - double_size;
   if(func_label){
     //func->entry->level is the level of func itself, parent is the level defines func
     arg_list->Insert(staticLink(level,func_level->parent_));
-    call_exp = new tree::CallExp(new tree::NameExp(func_label),arg_list,string_frag,arg_size+1-max_arg_size - double_size);
+    call_exp = new tree::CallExp(new tree::NameExp(func_label),arg_list,string_frag,size > 0 ? size + 1 : 1);
   }else{//env.cc externalcall label=nullptr
     //new NamedLabel
     auto func_name = func_->Name();
@@ -436,7 +437,7 @@ tr::ExpAndTy *CallExp::Translate(env::VEnvPtr venv, env::TEnvPtr tenv,
       }
       func_name += "_"+std::to_string(key);
     }
-    call_exp = frame::externalCall(func_name,arg_list,string_frag,arg_size-max_arg_size - double_size);
+    call_exp = frame::externalCall(func_name,arg_list,string_frag, size > 0 ? size+1 : 1);
   }
 
   auto res_ty = func_entry->result_;
